@@ -28,7 +28,11 @@ export default function Home() {
   // Initialize default playlist
   React.useEffect(() => {
     if (playlists.length === 0) {
-      createPlaylist("My Playlist", "Your music collection", DEFAULT_PLAYLIST_TRACKS);
+      createPlaylist(
+        "My Playlist",
+        "Your music collection",
+        DEFAULT_PLAYLIST_TRACKS
+      );
       setTimeout(() => {
         const newPlaylists = usePlaylistStore.getState().playlists;
         if (newPlaylists.length > 0) {
@@ -63,7 +67,10 @@ export default function Home() {
             <PlaylistSidebar />
           </aside>
 
-          <section className="flex flex-1 justify-center lg:items-start" aria-label="Music player">
+          <section
+            className="flex flex-1 justify-center lg:items-start"
+            aria-label="Music player"
+          >
             <div className="flex w-full max-w-4xl flex-1 flex-col gap-6 xl:max-w-5xl">
               <NowPlaying />
 

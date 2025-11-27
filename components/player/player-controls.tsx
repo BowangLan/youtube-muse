@@ -76,11 +76,11 @@ export function PlayerControls() {
           <button
             className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-lg shadow-white/15 transition hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-white/50"
             onClick={togglePlay}
-            disabled={isLoadingNewVideo || !apiReady}
+            disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
           >
             {!apiReady || isLoadingNewVideo ? (
               <Loader2 className="h-5 w-5 fill-current animate-spin" />
-            ) : isPlaying ? (
+            ) : isPlaying || pendingPlayState !== null ? (
               <Pause className="h-5 w-5 fill-current" />
             ) : (
               <Play className="h-5 w-5 fill-current translate-x-[1px]" />

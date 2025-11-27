@@ -119,6 +119,14 @@ export function useYouTubePlayer() {
           }
 
           // Update playing state based on YouTube player state
+          // Ignore transient PAUSED events while a play action is pending to avoid UI flashes
+          if (
+            pendingPlayState &&
+            event.data === window.YT.PlayerState.PAUSED
+          ) {
+            return
+          }
+
           // Clear pending state when we reach a definitive state
           if (
             event.data === window.YT.PlayerState.PLAYING ||

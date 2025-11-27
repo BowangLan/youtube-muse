@@ -72,20 +72,20 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
 
   // Player controls
   togglePlay: () => {
-    const { playerRef, isPlaying } = get()
-    if (playerRef) {
-      // Clear loading flag to allow state updates from user interaction
-      set({ isLoadingNewVideo: false })
+    const { playerRef, isPlaying, isLoadingNewVideo } = get()
+    if (!playerRef) return
 
-      if (isPlaying) {
-        // Pause is instant, no need for pending state
-        playerRef.pauseVideo()
-      } else {
-        // Play is usually fast but might need buffering
-        // We'll set pending state but the UI should handle it smartly
-        playerRef.playVideo()
-        set({ pendingPlayState: true })
-      }
+    // Clear loading flag to allow state updates from user interaction
+    set({ isLoadingNewVideo: false })
+
+    if (isPlaying) {
+      // Optimistically update pause state so the UI responds instantly
+      playerRef.pauseVideo()
+      set({ isPlaying: false, pendingPlayState: null })
+    } else {
+      // Optimistically mark as playing while guarding against buffer-induced flashes
+      playerRef.playVideo()
+      set({ isPlaying: true, pendingPlayState: true })
     }
   },
 
