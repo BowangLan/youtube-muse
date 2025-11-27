@@ -8,6 +8,7 @@ import { PlayerControls } from "@/components/player/player-controls";
 import { NowPlaying } from "@/components/player/now-playing";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { DEFAULT_PLAYLIST_TRACKS } from "@/lib/constants";
 
 export default function Home() {
   const hasMounted = useHasMounted();
@@ -27,7 +28,7 @@ export default function Home() {
   // Initialize default playlist
   React.useEffect(() => {
     if (playlists.length === 0) {
-      createPlaylist("My Playlist", "Your music collection");
+      createPlaylist("My Playlist", "Your music collection", DEFAULT_PLAYLIST_TRACKS);
       setTimeout(() => {
         const newPlaylists = usePlaylistStore.getState().playlists;
         if (newPlaylists.length > 0) {
