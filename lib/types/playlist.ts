@@ -2,6 +2,7 @@ export interface Track {
   id: string // YouTube video ID
   title: string
   author: string
+  authorUrl: string
   duration: number
   thumbnailUrl: string
   addedAt: number

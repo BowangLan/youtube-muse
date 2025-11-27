@@ -8,10 +8,34 @@ import { cn } from "@/lib/utils";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export function PlaylistSidebar() {
-  const { playlists, currentPlaylistId, currentTrackIndex, setCurrentTrackIndex, addTrackToPlaylist, removeTrackFromPlaylist } = usePlaylistStore();
+  const hasMounted = useHasMounted();
+  const {
+    playlists,
+    currentPlaylistId,
+    currentTrackIndex,
+    setCurrentTrackIndex,
+    addTrackToPlaylist,
+    removeTrackFromPlaylist,
+  } = usePlaylistStore();
   const { isPlaying } = usePlayerStore();
+
+  if (!hasMounted) {
+    return (
+      <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-black/20 backdrop-blur-xl lg:h-[calc(100vh-180px)] lg:w-[340px] lg:shrink-0 lg:rounded-3xl lg:border-b-0 lg:border-r lg:bg-black/10">
+        <div className="border-b border-white/5 px-5 py-4 sm:px-6 sm:py-5">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+            Playlist
+          </p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold tracking-tight">Loading...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
 
@@ -25,43 +49,40 @@ export function PlaylistSidebar() {
     }
   };
   return (
-    <div className="flex w-[320px] shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/30 backdrop-blur-xl">
-      <div className="border-b border-white/5 px-6 py-5">
+    <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-black/20 backdrop-blur-xl lg:h-[calc(100vh-180px)] lg:w-[340px] lg:shrink-0 lg:rounded-3xl lg:border-b-0 lg:border-r lg:bg-black/10">
+      <div className="sticky top-0 z-10 border-b border-white/5 bg-white/5 px-5 py-4 backdrop-blur-xl sm:px-6 sm:py-5">
         <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
           Playlist
         </p>
-        <h2 className="mt-2 text-lg font-semibold tracking-tight">
-          {playlist?.name || "No Playlist"}
-        </h2>
-        {playlist?.description && (
-          <p className="text-sm text-muted-foreground">
-            {playlist.description}
-          </p>
-        )}
-        <div className="mt-4 flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            {playlist?.tracks.length || 0} tracks • Always in sync
-          </p>
-          <AddTrackDialog
-            playlist={playlist || null}
-            currentPlaylistId={currentPlaylistId}
-            onAddTrack={addTrackToPlaylist}
-            triggerClassName="h-9 px-3"
-          />
+        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <h2 className="text-lg font-semibold tracking-tight text-white">
+            {playlist?.name || "No Playlist"}
+          </h2>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <AddTrackDialog
+              playlist={playlist || null}
+              currentPlaylistId={currentPlaylistId}
+              onAddTrack={addTrackToPlaylist}
+              triggerClassName="h-9 px-3"
+            />
+          </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          {playlist?.tracks.length || 0} tracks
+        </p>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 overflow-auto">
         {!playlist || playlist.tracks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <Music className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-2">No tracks yet</p>
+          <div className="flex flex-col items-center justify-center px-6 py-14 text-center sm:py-16">
+            <Music className="mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="mb-2 text-sm text-muted-foreground">No tracks yet</p>
             <p className="text-xs text-muted-foreground/60">
               Click "Add Track" to get started
             </p>
           </div>
         ) : (
-          <div className="space-y-1 p-4">
+          <div className="space-y-1 p-4 sm:p-5">
             {playlist.tracks.map((track, index) => {
               const isCurrentTrack = currentTrackIndex === index;
               return (
@@ -102,7 +123,7 @@ function TrackItem({
       className={cn(
         "group flex items-center gap-3 rounded-xl border border-transparent p-3 trans cursor-pointer hover:bg-white/5 hover:border-white/10",
         isCurrentTrack &&
-          "bg-white/5 border-white/10 shadow-[0_10px_40px_-25px_rgba(0,0,0,0.8)]",
+          "bg-white/5 border-white/10 shadow-[0_10px_40px_-25px_rgba(0,0,0,0.8)]"
       )}
       onClick={onClick}
     >
@@ -131,7 +152,7 @@ function TrackItem({
         <p
           className={cn(
             "truncate text-sm font-medium text-white/90",
-            isCurrentTrack && "text-white",
+            isCurrentTrack && "text-white"
           )}
         >
           {track.title}

@@ -39,6 +39,8 @@ interface PlayerActions {
   seek: (time: number) => void
   handleVolumeChange: (volume: number) => void
   loadVideo: (videoId: string, autoplay?: boolean) => void
+  skipForward: () => void
+  skipBackward: () => void
 }
 
 export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => ({
@@ -76,10 +78,10 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       set({ isLoadingNewVideo: false })
 
       if (isPlaying) {
-        set({ pendingPlayState: false, isPlaying: false })
+        set({ pendingPlayState: false })
         playerRef.pauseVideo()
       } else {
-        set({ pendingPlayState: true, isPlaying: true })
+        set({ pendingPlayState: true })
         playerRef.playVideo()
       }
     }
@@ -109,6 +111,24 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
         isLoadingNewVideo: true,
       })
       playerRef.loadVideoById(videoId)
+    }
+  },
+
+  skipForward: () => {
+    const { playerRef, currentTime, duration } = get()
+    if (playerRef) {
+      const newTime = Math.min(currentTime + 10, duration)
+      playerRef.seekTo(newTime, true)
+      set({ currentTime: newTime })
+    }
+  },
+
+  skipBackward: () => {
+    const { playerRef, currentTime } = get()
+    if (playerRef) {
+      const newTime = Math.max(currentTime - 10, 0)
+      playerRef.seekTo(newTime, true)
+      set({ currentTime: newTime })
     }
   },
 }))

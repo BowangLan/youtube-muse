@@ -15,6 +15,7 @@ import {
 import { Loader2, Plus } from "lucide-react";
 import { extractVideoId } from "@/lib/utils/youtube";
 import { cn } from "@/lib/utils";
+import { RichButton } from "../ui/rich-button";
 
 interface AddTrackDialogProps {
   playlist: Playlist | null;
@@ -22,6 +23,22 @@ interface AddTrackDialogProps {
   onAddTrack: (playlistId: string, track: Omit<Track, "addedAt">) => void;
   triggerClassName?: string;
 }
+
+type YouTubeVideoMetadata = {
+  title: string;
+  author_name: string;
+  author_url: string;
+  type: string;
+  height: number;
+  width: number;
+  version: string;
+  provider_name: string;
+  provider_url: string;
+  thumbnail_height: number;
+  thumbnail_width: number;
+  thumbnail_url: string;
+  html: string;
+};
 
 async function fetchVideoMetadata(
   videoId: string
@@ -35,14 +52,17 @@ async function fetchVideoMetadata(
       throw new Error("Failed to fetch video metadata");
     }
 
-    const data = await response.json();
+    const data: YouTubeVideoMetadata = await response.json();
+
+    console.log("Video metadata:", data);
 
     return {
       id: videoId,
       title: data.title,
       author: data.author_name,
+      authorUrl: data.author_url,
       duration: 0,
-      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+      thumbnailUrl: data.thumbnail_url,
     };
   } catch (error) {
     console.error("Error fetching video metadata:", error);
@@ -109,21 +129,54 @@ export function AddTrackDialog({
     setIsOpen(false);
   };
 
+  // React.useEffect(() => {
+  //   if (!isOpen && typeof window !== "undefined" && navigator.clipboard) {
+  //     // On dialog open, check clipboard for YouTube URL
+  //     navigator.clipboard
+  //       .readText()
+  //       .then((clipText) => {
+  //         // Basic YouTube URL regex
+  //         const ytPattern =
+  //           /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  //         if (ytPattern.test(clipText)) {
+  //           setVideoUrl(clipText.trim());
+  //           setIsOpen(true);
+  //         }
+  //       })
+  //       .catch(() => {});
+  //   }
+  // }, [isOpen, setIsOpen, setVideoUrl]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          setIsOpen(false);
+          setTimeout(() => {
+            setVideoUrl("");
+            setError(null);
+            setIsLoading(false);
+          }, 100);
+        } else {
+          setIsOpen(true);
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
+        <RichButton
+          tooltip="Add a track to the playlist"
+          variant="ghost"
           size="sm"
           disabled={!currentPlaylistId}
           className={cn(
-            "gap-2 rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10",
+            "rounded-full",
+            // "gap-2 rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
             triggerClassName
           )}
         >
           <Plus className="h-4 w-4" />
-          Add Track
-        </Button>
+        </RichButton>
       </DialogTrigger>
       <DialogContent className="max-w-lg overflow-hidden border border-white/10 bg-gradient-to-br from-[#0b0d12] via-[#0a0c12] to-[#06070d] p-0 shadow-[0_24px_120px_-60px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
         <div className="pointer-events-none absolute inset-0">

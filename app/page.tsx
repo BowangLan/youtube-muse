@@ -2,44 +2,27 @@
 
 import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { usePlayerStore } from "@/lib/store/player-store";
-import { Music } from "lucide-react";
+import { useYouTubePlayer } from "@/hooks/use-youtube-player";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 import { PlayerControls } from "@/components/player/player-controls";
 import { NowPlaying } from "@/components/player/now-playing";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
-import type { YTPlayer } from "@/lib/types/youtube";
-import "@/lib/types/youtube";
+import { AppHeader } from "@/components/layout/app-header";
 
 export default function Home() {
+  const hasMounted = useHasMounted();
   const {
     playlists,
     currentPlaylistId,
     setCurrentPlaylist,
     createPlaylist,
-    playNext,
     getCurrentTrack,
   } = usePlaylistStore();
 
-  const {
-    setPlayerRef,
-    apiReady,
-    setApiReady,
-    isPlaying,
-    setIsPlaying,
-    setCurrentTime,
-    setDuration,
-    isLoadingNewVideo,
-    setIsLoadingNewVideo,
-    wasPlayingBeforeLoad,
-    setWasPlayingBeforeLoad,
-    pendingPlayState,
-    setPendingPlayState,
-  } = usePlayerStore();
+  // Initialize YouTube player
+  useYouTubePlayer();
 
-  const playerRef = React.useRef<YTPlayer | null>(null);
-
-  const currentTrack = getCurrentTrack();
-  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
+  const currentTrack = hasMounted ? getCurrentTrack() : null;
 
   // Initialize default playlist
   React.useEffect(() => {
@@ -56,139 +39,8 @@ export default function Home() {
     }
   }, []);
 
-  // Load YouTube API
-  React.useEffect(() => {
-    if (window.YT && window.YT.Player) {
-      setApiReady(true);
-      return;
-    }
-
-    if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      return;
-    }
-
-    window.onYouTubeIframeAPIReady = () => {
-      setApiReady(true);
-    };
-
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-  }, []);
-
-  // Initialize player
-  React.useEffect(() => {
-    if (!apiReady || playerRef.current) {
-      return;
-    }
-
-    const player = new window.YT.Player("youtube-player", {
-      height: "1",
-      width: "1",
-      videoId: currentTrack?.id || "dQw4w9WgXcQ",
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-      },
-      events: {
-        onReady: (event: any) => {
-          const dur = event.target.getDuration();
-          setDuration(dur);
-        },
-        onStateChange: (event: any) => {
-          const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
-
-          // Update duration when video is cued or playing (new video loaded)
-          if (
-            event.data === window.YT.PlayerState.CUED ||
-            event.data === window.YT.PlayerState.PLAYING
-          ) {
-            const dur = event.target.getDuration();
-            if (dur > 0) {
-              setDuration(dur);
-              setCurrentTime(0); // Reset current time when loading new video
-            }
-            // When video is cued, clear loading flag and possibly auto-play
-            if (
-              event.data === window.YT.PlayerState.CUED &&
-              isLoadingNewVideo
-            ) {
-              setIsLoadingNewVideo(false);
-              // If we were playing before, resume playback
-              if (wasPlayingBeforeLoad) {
-                setWasPlayingBeforeLoad(false);
-                event.target.playVideo();
-              }
-            }
-          }
-
-          // If we're loading a new video, don't update playing state to prevent flash
-          if (isLoadingNewVideo) {
-            // Ignore state changes during initial video loading
-            return;
-          }
-
-          // If we have a pending state change, only update when we reach the target state
-          if (pendingPlayState !== null) {
-            if (newIsPlaying === pendingPlayState) {
-              // We've reached the desired state, clear the pending flag
-              setPendingPlayState(null);
-              setIsPlaying(newIsPlaying);
-            }
-            // Otherwise, ignore intermediate states like BUFFERING
-          } else {
-            // No pending state, update normally
-            setIsPlaying(newIsPlaying);
-          }
-
-          if (event.data === window.YT.PlayerState.ENDED) {
-            handlePlayNext();
-          }
-        },
-      },
-    });
-
-    playerRef.current = player;
-    setPlayerRef(player);
-  }, [apiReady]);
-
-  // Update current time
-  React.useEffect(() => {
-    if (!isPlaying) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      if (playerRef.current) {
-        const time = playerRef.current.getCurrentTime();
-        setCurrentTime(time);
-      }
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-
-  // Load new track
-  React.useEffect(() => {
-    if (currentTrack && playerRef.current) {
-      playerRef.current.loadVideoById(currentTrack.id);
-      // Duration will be updated in onStateChange event handler
-    }
-  }, [currentTrack?.id]);
-
-  const handlePlayNext = () => {
-    const nextTrack = playNext();
-    if (nextTrack && playerRef.current) {
-      setWasPlayingBeforeLoad(isPlaying);
-      setIsLoadingNewVideo(true);
-      playerRef.current.loadVideoById(nextTrack.id);
-    }
-  };
-
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-[#0a0c10] via-[#090a0f] to-[#050507] text-white overflow-hidden">
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#0a0c10] via-[#090a0f] to-[#050507] text-white">
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
         aria-hidden
@@ -203,45 +55,16 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        {/* Header */}
-        <header className="sticky top-0 border-b border-white/5 bg-black/40 backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-white to-zinc-200 text-black shadow-lg shadow-white/10">
-                <Music className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight">
-                  YouTube Music Player
-                </h1>
-                <p className="text-xs text-white/50">
-                  Minimal YouTube-powered playlists
-                </p>
-              </div>
-            </div>
-          </div>
-        </header>
+        <AppHeader />
 
-        {/* Main Content */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Playlist Sidebar */}
+        <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-10 pt-4 sm:px-6 lg:flex-row lg:gap-8 lg:pt-6">
           <PlaylistSidebar />
 
-          {/* Player Area */}
-          <div className="flex flex-1 items-center justify-center px-6 py-10">
-            <div className="w-full max-w-5xl space-y-6">
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/40">
-                <span>Now Playing</span>
-                <span>{currentPlaylist?.tracks.length || 0} tracks</span>
-              </div>
-
+          <div className="flex flex-1 justify-center lg:items-start">
+            <div className="flex w-full max-w-4xl flex-1 flex-col gap-6 xl:max-w-5xl">
               <NowPlaying />
 
-              {currentTrack && (
-                <div className="glass-panel rounded-2xl border border-white/5 px-6 py-5 shadow-lg shadow-black/30">
-                  <PlayerControls />
-                </div>
-              )}
+              {currentTrack && <PlayerControls />}
             </div>
           </div>
         </div>
