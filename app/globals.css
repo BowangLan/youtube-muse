@@ -41,6 +41,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --ease-in-quad: cubic-bezier(0.4, 0, 1, 1);
 }
 
 :root {
@@ -114,9 +115,41 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 min-h-0 min-w-0;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#050505] text-zinc-300 antialiased;
+    font-family: "Inter", var(--font-sans), sans-serif;
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-white/10 text-white;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism panel */
+  .glass-panel {
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Mask linear gradient */
+  .mask-linear {
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  }
+}
+
+.trans {
+  transition: all 0.4s ease-in-quad;
+  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
 }
