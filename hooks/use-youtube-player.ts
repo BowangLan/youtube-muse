@@ -1,53 +1,8 @@
 "use client"
 
 import * as React from "react"
-
-declare global {
-  interface Window {
-    YT: typeof YT
-    onYouTubeIframeAPIReady: () => void
-  }
-}
-
-interface YT {
-  Player: new (
-    elementId: string,
-    options: {
-      height?: string
-      width?: string
-      videoId: string
-      playerVars?: {
-        autoplay?: 0 | 1
-        controls?: 0 | 1
-        disablekb?: 0 | 1
-      }
-      events?: {
-        onReady?: (event: { target: YTPlayer }) => void
-        onStateChange?: (event: { data: number; target: YTPlayer }) => void
-      }
-    }
-  ) => YTPlayer
-  PlayerState: {
-    UNSTARTED: -1
-    ENDED: 0
-    PLAYING: 1
-    PAUSED: 2
-    BUFFERING: 3
-    CUED: 5
-  }
-}
-
-interface YTPlayer {
-  playVideo: () => void
-  pauseVideo: () => void
-  seekTo: (seconds: number, allowSeekAhead: boolean) => void
-  setVolume: (volume: number) => void
-  getVolume: () => number
-  getCurrentTime: () => number
-  getDuration: () => number
-  getPlayerState: () => number
-  getVideoData: () => { title: string; video_id: string; author: string }
-}
+import type { YTPlayer } from "@/lib/types/youtube"
+import "@/lib/types/youtube"
 
 interface PlayerState {
   isPlaying: boolean
@@ -111,7 +66,7 @@ export function useYouTubePlayer(videoId: string) {
         disablekb: 1,
       },
       events: {
-        onReady: (event) => {
+        onReady: (event: { target: YTPlayer }) => {
           const videoData = event.target.getVideoData()
           const duration = event.target.getDuration()
           setState((prev) => ({
@@ -121,7 +76,7 @@ export function useYouTubePlayer(videoId: string) {
             isReady: true,
           }))
         },
-        onStateChange: (event) => {
+        onStateChange: (event: { data: number; target: YTPlayer }) => {
           const isPlaying = event.data === window.YT.PlayerState.PLAYING
           setState((prev) => ({ ...prev, isPlaying }))
         },

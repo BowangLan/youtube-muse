@@ -1,15 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import type { Track } from "@/lib/types/playlist";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
 import { Music } from "lucide-react";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
 
-interface NowPlayingProps {
-  track: Track | null;
-}
-
-export function NowPlaying({ track }: NowPlayingProps) {
+export function NowPlaying() {
+  const { getCurrentTrack } = usePlaylistStore();
+  const track = getCurrentTrack();
   if (!track) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">

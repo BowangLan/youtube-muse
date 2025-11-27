@@ -2,66 +2,41 @@
 
 import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 import { Music } from "lucide-react";
 import { PlayerControls } from "@/components/player/player-controls";
 import { NowPlaying } from "@/components/player/now-playing";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
-
-// YouTube Player types
-declare global {
-  interface Window {
-    YT: typeof YT;
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
-
-interface YT {
-  Player: new (elementId: string, options: any) => YTPlayer;
-  PlayerState: {
-    UNSTARTED: -1;
-    ENDED: 0;
-    PLAYING: 1;
-    PAUSED: 2;
-    BUFFERING: 3;
-    CUED: 5;
-  };
-}
-
-interface YTPlayer {
-  playVideo: () => void;
-  pauseVideo: () => void;
-  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
-  setVolume: (volume: number) => void;
-  getCurrentTime: () => number;
-  getDuration: () => number;
-  getPlayerState: () => number;
-  loadVideoById: (videoId: string) => void;
-}
+import type { YTPlayer } from "@/lib/types/youtube";
+import "@/lib/types/youtube";
 
 export default function Home() {
   const {
     playlists,
     currentPlaylistId,
-    currentTrackIndex,
     setCurrentPlaylist,
-    setCurrentTrackIndex,
     createPlaylist,
-    addTrackToPlaylist,
-    removeTrackFromPlaylist,
     playNext,
-    playPrevious,
     getCurrentTrack,
   } = usePlaylistStore();
 
+  const {
+    setPlayerRef,
+    apiReady,
+    setApiReady,
+    isPlaying,
+    setIsPlaying,
+    setCurrentTime,
+    setDuration,
+    isLoadingNewVideo,
+    setIsLoadingNewVideo,
+    wasPlayingBeforeLoad,
+    setWasPlayingBeforeLoad,
+    pendingPlayState,
+    setPendingPlayState,
+  } = usePlayerStore();
+
   const playerRef = React.useRef<YTPlayer | null>(null);
-  const pendingPlayStateRef = React.useRef<boolean | null>(null);
-  const isLoadingNewVideoRef = React.useRef(false);
-  const wasPlayingBeforeLoadRef = React.useRef(false);
-  const [apiReady, setApiReady] = React.useState(false);
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [currentTime, setCurrentTime] = React.useState(0);
-  const [duration, setDuration] = React.useState(0);
-  const [volume, setVolume] = React.useState(100);
 
   const currentTrack = getCurrentTrack();
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
@@ -108,7 +83,7 @@ export default function Home() {
       return;
     }
 
-    playerRef.current = new window.YT.Player("youtube-player", {
+    const player = new window.YT.Player("youtube-player", {
       height: "1",
       width: "1",
       videoId: currentTrack?.id || "dQw4w9WgXcQ",
@@ -126,34 +101,40 @@ export default function Home() {
           const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
 
           // Update duration when video is cued or playing (new video loaded)
-          if (event.data === window.YT.PlayerState.CUED || event.data === window.YT.PlayerState.PLAYING) {
+          if (
+            event.data === window.YT.PlayerState.CUED ||
+            event.data === window.YT.PlayerState.PLAYING
+          ) {
             const dur = event.target.getDuration();
             if (dur > 0) {
               setDuration(dur);
               setCurrentTime(0); // Reset current time when loading new video
             }
             // When video is cued, clear loading flag and possibly auto-play
-            if (event.data === window.YT.PlayerState.CUED && isLoadingNewVideoRef.current) {
-              isLoadingNewVideoRef.current = false;
+            if (
+              event.data === window.YT.PlayerState.CUED &&
+              isLoadingNewVideo
+            ) {
+              setIsLoadingNewVideo(false);
               // If we were playing before, resume playback
-              if (wasPlayingBeforeLoadRef.current) {
-                wasPlayingBeforeLoadRef.current = false;
+              if (wasPlayingBeforeLoad) {
+                setWasPlayingBeforeLoad(false);
                 event.target.playVideo();
               }
             }
           }
 
           // If we're loading a new video, don't update playing state to prevent flash
-          if (isLoadingNewVideoRef.current) {
+          if (isLoadingNewVideo) {
             // Ignore state changes during initial video loading
             return;
           }
 
           // If we have a pending state change, only update when we reach the target state
-          if (pendingPlayStateRef.current !== null) {
-            if (newIsPlaying === pendingPlayStateRef.current) {
+          if (pendingPlayState !== null) {
+            if (newIsPlaying === pendingPlayState) {
               // We've reached the desired state, clear the pending flag
-              pendingPlayStateRef.current = null;
+              setPendingPlayState(null);
               setIsPlaying(newIsPlaying);
             }
             // Otherwise, ignore intermediate states like BUFFERING
@@ -168,6 +149,9 @@ export default function Home() {
         },
       },
     });
+
+    playerRef.current = player;
+    setPlayerRef(player);
   }, [apiReady]);
 
   // Update current time
@@ -194,68 +178,12 @@ export default function Home() {
     }
   }, [currentTrack?.id]);
 
-  const togglePlay = () => {
-    if (playerRef.current) {
-      // Clear loading flag to allow state updates from user interaction
-      isLoadingNewVideoRef.current = false;
-
-      if (isPlaying) {
-        pendingPlayStateRef.current = false;
-        setIsPlaying(false); // Optimistic update
-        playerRef.current.pauseVideo();
-      } else {
-        pendingPlayStateRef.current = true;
-        setIsPlaying(true); // Optimistic update
-        playerRef.current.playVideo();
-      }
-    }
-  };
-
-  const seek = (time: number) => {
-    if (playerRef.current) {
-      playerRef.current.seekTo(time, true);
-      setCurrentTime(time);
-    }
-  };
-
-  const handleVolumeChange = (value: number) => {
-    if (playerRef.current) {
-      playerRef.current.setVolume(value);
-      setVolume(value);
-    }
-  };
-
   const handlePlayNext = () => {
     const nextTrack = playNext();
     if (nextTrack && playerRef.current) {
-      wasPlayingBeforeLoadRef.current = isPlaying;
-      isLoadingNewVideoRef.current = true;
+      setWasPlayingBeforeLoad(isPlaying);
+      setIsLoadingNewVideo(true);
       playerRef.current.loadVideoById(nextTrack.id);
-    }
-  };
-
-  const handlePlayPrevious = () => {
-    const prevTrack = playPrevious();
-    if (prevTrack && playerRef.current) {
-      wasPlayingBeforeLoadRef.current = isPlaying;
-      isLoadingNewVideoRef.current = true;
-      playerRef.current.loadVideoById(prevTrack.id);
-    }
-  };
-
-  const handleTrackClick = (index: number) => {
-    setCurrentTrackIndex(index);
-    const track = currentPlaylist?.tracks[index];
-    if (track && playerRef.current) {
-      wasPlayingBeforeLoadRef.current = isPlaying;
-      isLoadingNewVideoRef.current = true;
-      playerRef.current.loadVideoById(track.id);
-    }
-  };
-
-  const handleRemoveTrack = (trackId: string) => {
-    if (currentPlaylistId) {
-      removeTrackFromPlaylist(currentPlaylistId, trackId);
     }
   };
 
@@ -291,22 +219,13 @@ export default function Home() {
                 </p>
               </div>
             </div>
-
           </div>
         </header>
 
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
           {/* Playlist Sidebar */}
-          <PlaylistSidebar
-            playlist={currentPlaylist || null}
-            currentPlaylistId={currentPlaylistId}
-            currentTrackIndex={currentTrackIndex}
-            isPlaying={isPlaying}
-            onTrackClick={handleTrackClick}
-            onRemoveTrack={handleRemoveTrack}
-            onAddTrack={addTrackToPlaylist}
-          />
+          <PlaylistSidebar />
 
           {/* Player Area */}
           <div className="flex flex-1 items-center justify-center px-6 py-10">
@@ -316,26 +235,11 @@ export default function Home() {
                 <span>{currentPlaylist?.tracks.length || 0} tracks</span>
               </div>
 
-              <NowPlaying track={currentTrack} />
+              <NowPlaying />
 
               {currentTrack && (
                 <div className="glass-panel rounded-2xl border border-white/5 px-6 py-5 shadow-lg shadow-black/30">
-                  <PlayerControls
-                    isPlaying={isPlaying}
-                    currentTime={currentTime}
-                    duration={duration}
-                    volume={volume}
-                    canPlayPrevious={currentTrackIndex > 0}
-                    canPlayNext={
-                      !!currentPlaylist &&
-                      currentTrackIndex < currentPlaylist.tracks.length - 1
-                    }
-                    onTogglePlay={togglePlay}
-                    onPlayPrevious={handlePlayPrevious}
-                    onPlayNext={handlePlayNext}
-                    onSeek={seek}
-                    onVolumeChange={handleVolumeChange}
-                  />
+                  <PlayerControls />
                 </div>
               )}
             </div>

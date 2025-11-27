@@ -10,34 +10,24 @@ import {
   Repeat,
 } from "lucide-react";
 import { formatTime } from "@/lib/utils/youtube";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 
-interface PlayerControlsProps {
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  canPlayPrevious: boolean;
-  canPlayNext: boolean;
-  onTogglePlay: () => void;
-  onPlayPrevious: () => void;
-  onPlayNext: () => void;
-  onSeek: (time: number) => void;
-  onVolumeChange: (volume: number) => void;
-}
+export function PlayerControls() {
+  const { playlists, currentPlaylistId, currentTrackIndex, playNext, playPrevious } = usePlaylistStore();
+  const { isPlaying, currentTime, duration, volume, togglePlay, seek, handleVolumeChange } = usePlayerStore();
 
-export function PlayerControls({
-  isPlaying,
-  currentTime,
-  duration,
-  volume,
-  canPlayPrevious,
-  canPlayNext,
-  onTogglePlay,
-  onPlayPrevious,
-  onPlayNext,
-  onSeek,
-  onVolumeChange,
-}: PlayerControlsProps) {
+  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
+  const canPlayPrevious = currentTrackIndex > 0;
+  const canPlayNext = !!currentPlaylist && currentTrackIndex < currentPlaylist.tracks.length - 1;
+
+  const handlePlayPrevious = () => {
+    playPrevious();
+  };
+
+  const handlePlayNext = () => {
+    playNext();
+  };
   return (
     <div className="flex flex-1 flex-col gap-4">
       {/* Playback Controls */}
@@ -50,7 +40,7 @@ export function PlayerControls({
         </button>
         <button
           className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-30"
-          onClick={onPlayPrevious}
+          onClick={handlePlayPrevious}
           disabled={!canPlayPrevious}
           title="Previous"
         >
@@ -58,7 +48,7 @@ export function PlayerControls({
         </button>
         <button
           className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-lg shadow-white/15 transition hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-white/50"
-          onClick={onTogglePlay}
+          onClick={togglePlay}
         >
           {isPlaying ? (
             <Pause className="h-5 w-5 fill-current" />
@@ -68,7 +58,7 @@ export function PlayerControls({
         </button>
         <button
           className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-30"
-          onClick={onPlayNext}
+          onClick={handlePlayNext}
           disabled={!canPlayNext}
           title="Next"
         >
@@ -107,7 +97,7 @@ export function PlayerControls({
             max={duration || 100}
             step="0.1"
             value={currentTime}
-            onChange={(e) => onSeek(Number(e.target.value))}
+            onChange={(e) => seek(Number(e.target.value))}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
         </div>
@@ -134,7 +124,7 @@ export function PlayerControls({
             max="100"
             step="1"
             value={volume}
-            onChange={(e) => onVolumeChange(Number(e.target.value))}
+            onChange={(e) => handleVolumeChange(Number(e.target.value))}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
         </div>

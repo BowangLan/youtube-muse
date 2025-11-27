@@ -1,31 +1,29 @@
 "use client";
 
 import Image from "next/image";
-import type { Playlist, Track } from "@/lib/types/playlist";
+import type { Track } from "@/lib/types/playlist";
 import { Button } from "@/components/ui/button";
 import { Music, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 
-interface PlaylistSidebarProps {
-  playlist: Playlist | null;
-  currentPlaylistId: string | null;
-  currentTrackIndex: number;
-  isPlaying: boolean;
-  onTrackClick: (index: number) => void;
-  onRemoveTrack: (trackId: string) => void;
-  onAddTrack: (playlistId: string, track: Omit<Track, "addedAt">) => void;
-}
+export function PlaylistSidebar() {
+  const { playlists, currentPlaylistId, currentTrackIndex, setCurrentTrackIndex, addTrackToPlaylist, removeTrackFromPlaylist } = usePlaylistStore();
+  const { isPlaying } = usePlayerStore();
 
-export function PlaylistSidebar({
-  playlist,
-  currentPlaylistId,
-  currentTrackIndex,
-  isPlaying,
-  onTrackClick,
-  onRemoveTrack,
-  onAddTrack,
-}: PlaylistSidebarProps) {
+  const playlist = playlists.find((p) => p.id === currentPlaylistId);
+
+  const handleTrackClick = (index: number) => {
+    setCurrentTrackIndex(index);
+  };
+
+  const handleRemoveTrack = (trackId: string) => {
+    if (currentPlaylistId) {
+      removeTrackFromPlaylist(currentPlaylistId, trackId);
+    }
+  };
   return (
     <div className="flex w-[320px] shrink-0 flex-col overflow-hidden border-r border-white/5 bg-black/30 backdrop-blur-xl">
       <div className="border-b border-white/5 px-6 py-5">
@@ -45,9 +43,9 @@ export function PlaylistSidebar({
             {playlist?.tracks.length || 0} tracks • Always in sync
           </p>
           <AddTrackDialog
-            playlist={playlist}
+            playlist={playlist || null}
             currentPlaylistId={currentPlaylistId}
-            onAddTrack={onAddTrack}
+            onAddTrack={addTrackToPlaylist}
             triggerClassName="h-9 px-3"
           />
         </div>
@@ -72,8 +70,8 @@ export function PlaylistSidebar({
                   track={track}
                   isCurrentTrack={isCurrentTrack}
                   isPlaying={isPlaying && isCurrentTrack}
-                  onClick={() => onTrackClick(index)}
-                  onRemove={() => onRemoveTrack(track.id)}
+                  onClick={() => handleTrackClick(index)}
+                  onRemove={() => handleRemoveTrack(track.id)}
                 />
               );
             })}
