@@ -78,7 +78,7 @@ export function PlayerControls() {
             onClick={togglePlay}
             disabled={isLoadingNewVideo || !apiReady}
           >
-            {!apiReady || isLoadingNewVideo || pendingPlayState !== null ? (
+            {!apiReady || isLoadingNewVideo ? (
               <Loader2 className="h-5 w-5 fill-current animate-spin" />
             ) : isPlaying ? (
               <Pause className="h-5 w-5 fill-current" />

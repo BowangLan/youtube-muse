@@ -39,10 +39,10 @@ export function NowPlaying() {
         <div className="group relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-3xl bg-black/30 ring-1 ring-white/5">
           <div className="absolute inset-0 scale-[1.02] bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.08),transparent_40%)]" />
           <Image
-            src={getThumbnailUrl(track.id)}
+            src={getThumbnailUrl(track.id, "maxresdefault")}
             alt={track.title}
             fill
-            sizes="1px"
+            sizes="220px"
             className="object-cover"
             priority
           />

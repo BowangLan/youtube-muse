@@ -3,7 +3,7 @@
 import Image from "next/image";
 import type { Track } from "@/lib/types/playlist";
 import { Button } from "@/components/ui/button";
-import { Music, Trash2 } from "lucide-react";
+import { Copy, Music, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -73,6 +73,20 @@ export function PlaylistSidebar() {
       </div>
 
       <div className="flex-1 overflow-auto">
+        {/* Copy tracks as json  */}
+        {/* <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => {
+            navigator.clipboard.writeText(
+              JSON.stringify(playlist?.tracks, null, 2)
+            );
+          }}
+        >
+          <Copy className="h-4 w-4" />
+        </Button> */}
+
         {!playlist || playlist.tracks.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-6 py-14 text-center sm:py-16">
             <Music className="mb-4 h-12 w-12 text-muted-foreground" />

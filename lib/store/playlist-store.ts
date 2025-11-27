@@ -4,7 +4,7 @@ import type { Playlist, Track, PlaylistState } from "@/lib/types/playlist"
 
 interface PlaylistActions {
   // Playlist management
-  createPlaylist: (name: string, description?: string) => void
+  createPlaylist: (name: string, description?: string, initialTracks?: Track[]) => void
   deletePlaylist: (playlistId: string) => void
   updatePlaylist: (playlistId: string, updates: Partial<Omit<Playlist, "id" | "tracks" | "createdAt">>) => void
 
@@ -38,12 +38,12 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
       currentTrackIndex: 0,
 
       // Playlist management
-      createPlaylist: (name, description) => {
+      createPlaylist: (name, description, initialTracks = []) => {
         const newPlaylist: Playlist = {
           id: generateId(),
           name,
           description,
-          tracks: [],
+          tracks: initialTracks,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }
@@ -81,10 +81,10 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
           playlists: state.playlists.map((p) =>
             p.id === playlistId
               ? {
-                  ...p,
-                  tracks: [...p.tracks, { ...track, addedAt: Date.now() }],
-                  updatedAt: Date.now(),
-                }
+                ...p,
+                tracks: [...p.tracks, { ...track, addedAt: Date.now() }],
+                updatedAt: Date.now(),
+              }
               : p
           ),
         }))
@@ -126,7 +126,7 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         set((state) => {
           const playlist = state.playlists.find((p) => p.id === playlistId)
           if (!playlist || fromIndex < 0 || toIndex < 0 ||
-              fromIndex >= playlist.tracks.length || toIndex >= playlist.tracks.length) {
+            fromIndex >= playlist.tracks.length || toIndex >= playlist.tracks.length) {
             return state
           }
 

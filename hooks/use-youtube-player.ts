@@ -29,7 +29,7 @@ export function useYouTubePlayer() {
   const currentTrack = getCurrentTrack()
 
   // Use ref to store latest callback to avoid stale closures in event handlers
-  const handlePlayNextRef = React.useRef<() => void>()
+  const handlePlayNextRef = React.useRef<() => void>(() => { })
   handlePlayNextRef.current = () => {
     const nextTrack = playNext()
     if (nextTrack && playerRef.current) {
@@ -118,24 +118,19 @@ export function useYouTubePlayer() {
             return
           }
 
-          // If we have a pending state change, only update when we reach the target state
-          if (pendingPlayState !== null) {
-            // Check if we've reached the desired state
-            // For play: wait for PLAYING state
-            // For pause: wait for PAUSED state (not BUFFERING)
-            const isDefinitiveState =
-              event.data === window.YT.PlayerState.PLAYING ||
-              event.data === window.YT.PlayerState.PAUSED
-
-            if (isDefinitiveState && newIsPlaying === pendingPlayState) {
-              // We've reached the desired state, clear the pending flag
-              setPendingPlayState(null)
+          // Update playing state based on YouTube player state
+          // Clear pending state when we reach a definitive state
+          if (
+            event.data === window.YT.PlayerState.PLAYING ||
+            event.data === window.YT.PlayerState.PAUSED
+          ) {
+            setPendingPlayState(null)
+            setIsPlaying(newIsPlaying)
+          } else {
+            // For other states (BUFFERING, CUED, etc.), only update if no pending operation
+            if (pendingPlayState === null) {
               setIsPlaying(newIsPlaying)
             }
-            // Otherwise, ignore intermediate states like BUFFERING
-          } else {
-            // No pending state, update normally
-            setIsPlaying(newIsPlaying)
           }
 
           if (event.data === window.YT.PlayerState.ENDED) {

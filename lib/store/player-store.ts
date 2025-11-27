@@ -78,11 +78,13 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       set({ isLoadingNewVideo: false })
 
       if (isPlaying) {
-        set({ pendingPlayState: false })
+        // Pause is instant, no need for pending state
         playerRef.pauseVideo()
       } else {
-        set({ pendingPlayState: true })
+        // Play is usually fast but might need buffering
+        // We'll set pending state but the UI should handle it smartly
         playerRef.playVideo()
+        set({ pendingPlayState: true })
       }
     }
   },
