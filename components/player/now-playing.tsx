@@ -55,7 +55,14 @@ export function NowPlaying() {
             Now playing
           </p>
           <h2 className="text-2xl font-normal leading-tight tracking-tight text-white">
-            {track.title}
+            <a
+              href={`https://www.youtube.com/watch?v=${track.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              {track.title}
+            </a>
           </h2>
           <p className="text-sm text-zinc-400">
             <a
