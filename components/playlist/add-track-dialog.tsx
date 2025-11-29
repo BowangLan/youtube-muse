@@ -178,26 +178,21 @@ export function AddTrackDialog({
           <Plus className="h-4 w-4" />
         </RichButton>
       </DialogTrigger>
-      <DialogContent className="max-w-lg overflow-hidden border border-white/10 bg-gradient-to-br from-[#0b0d12] via-[#0a0c12] to-[#06070d] p-0 shadow-[0_24px_120px_-60px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_40%),radial-gradient(circle_at_75%_0%,rgba(99,102,241,0.08),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.06),transparent_40%)]" />
-          <div className="absolute -left-16 -top-24 h-40 w-40 rounded-full bg-white/5 blur-3xl" />
-        </div>
-
-        <div className="relative space-y-6 p-6 sm:p-7">
-          <DialogHeader className="space-y-2 text-left">
-            <DialogTitle className="text-2xl font-semibold tracking-tight text-white">
+      <DialogContent className="max-w-lg rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
+        <div className="space-y-6 p-6">
+          <DialogHeader className="space-y-1 text-left">
+            <DialogTitle className="text-xl font-semibold">
               Add a track
             </DialogTitle>
-            <DialogDescription className="text-sm text-white/60">
-              Paste a YouTube link or ID. Press Enter or click Add.
+            <DialogDescription className="text-sm text-zinc-500">
+              Paste a YouTube link or ID.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
             <Input
               id="video-url-input"
-              placeholder="https://youtu.be/... or video ID"
+              placeholder="https://youtu.be/..."
               value={videoUrl}
               onChange={(e) => {
                 setVideoUrl(e.target.value);
@@ -208,7 +203,7 @@ export function AddTrackDialog({
                   handleAddTrack();
                 }
               }}
-              className="h-12 rounded-xl border-white/20 bg-black/50 text-white placeholder:text-white/40 shadow-[0_20px_80px_-60px_rgba(0,0,0,1)] backdrop-blur-xl focus-visible:border-white/60 focus-visible:ring-white/20"
+              className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
             />
             {isDuplicate && (
               <p className="text-sm text-destructive">
@@ -222,10 +217,10 @@ export function AddTrackDialog({
 
           <div className="flex items-center justify-end gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
-              className="rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-background"
+              className="rounded-full px-4 text-white hover:bg-background"
             >
               Cancel
             </Button>

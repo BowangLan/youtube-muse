@@ -3,7 +3,7 @@
 import Image from "next/image";
 import type { Track } from "@/lib/types/playlist";
 import { Button } from "@/components/ui/button";
-import { Copy, Music, Trash2 } from "lucide-react";
+import { Music, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -20,19 +20,13 @@ export function PlaylistSidebar() {
     addTrackToPlaylist,
     removeTrackFromPlaylist,
   } = usePlaylistStore();
-  const { isPlaying } = usePlayerStore();
+  const { isPlaying, togglePlay } = usePlayerStore();
 
   if (!hasMounted) {
     return (
-      <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-black/20 backdrop-blur-xl lg:h-[calc(100vh-180px)] lg:w-[340px] lg:shrink-0 lg:rounded-3xl lg:border-b-0 lg:border-r lg:bg-black/10">
-        <div className="border-b border-white/5 px-5 py-4 sm:px-6 sm:py-5">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
-            Playlist
-          </p>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold tracking-tight">Loading...</h2>
-          </div>
-        </div>
+      <div className="space-y-2 text-neutral-500 motion-preset-fade-sm">
+        <p className="text-xs uppercase tracking-[0.3em]">playlist</p>
+        <p>Loading…</p>
       </div>
     );
   }
@@ -40,7 +34,11 @@ export function PlaylistSidebar() {
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
 
   const handleTrackClick = (index: number) => {
-    setCurrentTrackIndex(index);
+    if (currentTrackIndex === index) {
+      togglePlay();
+    } else {
+      setCurrentTrackIndex(index);
+    }
   };
 
   const handleRemoveTrack = (trackId: string) => {
@@ -49,70 +47,44 @@ export function PlaylistSidebar() {
     }
   };
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-black/20 backdrop-blur-xl lg:h-[calc(100vh-180px)] lg:w-[340px] lg:shrink-0 lg:rounded-3xl lg:border-b-0 lg:border-r lg:bg-black/10">
-      <div className="sticky top-0 z-10 border-b border-white/5 bg-white/5 px-5 py-4 backdrop-blur-xl sm:px-6 sm:py-5">
-        <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
-          Playlist
-        </p>
-        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <h2 className="text-lg font-semibold tracking-tight text-white">
-            {playlist?.name || "No Playlist"}
+    <div className="space-y-4 motion-translate-y-in-[20px] motion-blur-in-md motion-opacity-in-0 motion-delay-300 min-h-screen">
+      <div className="flex items-center justify-between gap-3 text-neutral-400">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em]">playlist</p>
+          <h2 className="text-xl font-light text-white">
+            {playlist?.name || "Untitled"}
           </h2>
-          <div className="flex items-center gap-2 sm:ml-auto">
-            <AddTrackDialog
-              playlist={playlist || null}
-              currentPlaylistId={currentPlaylistId}
-              onAddTrack={addTrackToPlaylist}
-              triggerClassName="h-9 px-3"
-            />
-          </div>
+          <p className="text-xs">{playlist?.tracks.length || 0} tracks</p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {playlist?.tracks.length || 0} tracks
-        </p>
+        <AddTrackDialog
+          playlist={playlist || null}
+          currentPlaylistId={currentPlaylistId}
+          onAddTrack={addTrackToPlaylist}
+          triggerClassName="rounded-full border border-white/20 bg-transparent text-white"
+        />
       </div>
 
-      <div className="flex-1 overflow-auto">
-        {/* Copy tracks as json  */}
-        {/* <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => {
-            navigator.clipboard.writeText(
-              JSON.stringify(playlist?.tracks, null, 2)
+      {!playlist || playlist.tracks.length === 0 ? (
+        <div className="flex flex-col items-start gap-2 text-sm text-neutral-500">
+          <Music className="h-5 w-5" />
+          <p>No tracks yet. Use the plus icon to add one.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {playlist.tracks.map((track, index) => {
+            const isCurrentTrack = currentTrackIndex === index;
+            return (
+              <TrackItem
+                key={`${track.id}-${track.addedAt}`}
+                track={track}
+                isCurrentTrack={isCurrentTrack}
+                onClick={() => handleTrackClick(index)}
+                onRemove={() => handleRemoveTrack(track.id)}
+              />
             );
-          }}
-        >
-          <Copy className="h-4 w-4" />
-        </Button> */}
-
-        {!playlist || playlist.tracks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-14 text-center sm:py-16">
-            <Music className="mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="mb-2 text-sm text-muted-foreground">No tracks yet</p>
-            <p className="text-xs text-muted-foreground/60">
-              Click "Add Track" to get started
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-1 p-4 sm:p-5">
-            {playlist.tracks.map((track, index) => {
-              const isCurrentTrack = currentTrackIndex === index;
-              return (
-                <TrackItem
-                  key={`${track.id}-${track.addedAt}`}
-                  track={track}
-                  isCurrentTrack={isCurrentTrack}
-                  isPlaying={isPlaying && isCurrentTrack}
-                  onClick={() => handleTrackClick(index)}
-                  onRemove={() => handleRemoveTrack(track.id)}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -120,72 +92,85 @@ export function PlaylistSidebar() {
 interface TrackItemProps {
   track: Track;
   isCurrentTrack: boolean;
-  isPlaying: boolean;
   onClick: () => void;
   onRemove: () => void;
+}
+
+function PlayingIndicator({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+      <div className="flex items-end gap-[3px] h-4">
+        {isPlaying ? (
+          <>
+            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300" />
+            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-600" />
+            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-900" />
+          </>
+        ) : (
+          <>
+            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
+            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
+            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TrackItem({
   track,
   isCurrentTrack,
-  isPlaying,
   onClick,
   onRemove,
 }: TrackItemProps) {
+  const { pendingPlayState, isPlaying } = usePlayerStore();
+  const _isPlaying = isPlaying || pendingPlayState !== null;
+
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 rounded-xl border border-transparent p-3 trans cursor-pointer hover:bg-white/5 hover:border-white/10",
-        isCurrentTrack &&
-          "bg-white/5 border-white/10 shadow-[0_10px_40px_-25px_rgba(0,0,0,0.8)]"
+        "group flex items-center gap-3 rounded-xl px-2 py-2 text-left cursor-pointer",
+        isCurrentTrack ? "bg-white/10" : "hover:bg-white/5"
       )}
       onClick={onClick}
     >
-      {/* Thumbnail */}
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
         <Image
           src={track.thumbnailUrl}
           alt={track.title}
           fill
-          sizes="48px"
+          sizes="44px"
           className="object-cover"
         />
-        {isPlaying && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <div className="flex gap-0.5">
-              <div className="w-0.5 h-3 bg-white animate-pulse" />
-              <div className="w-0.5 h-4 bg-white animate-pulse delay-75" />
-              <div className="w-0.5 h-3 bg-white animate-pulse delay-150" />
-            </div>
-          </div>
-        )}
+        {isCurrentTrack && <PlayingIndicator isPlaying={_isPlaying} />}
       </div>
 
-      {/* Track info */}
       <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "truncate text-sm font-medium text-white/90",
-            isCurrentTrack && "text-white"
+            "truncate text-sm text-white",
+            !isCurrentTrack && "text-white/80"
           )}
         >
           {track.title}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{track.author}</p>
+        <p className="truncate text-xs text-neutral-500">{track.author}</p>
       </div>
 
-      {/* Remove button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-2 justify-end mx-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-neutral-500 opacity-0 group-hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }
