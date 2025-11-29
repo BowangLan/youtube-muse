@@ -141,6 +141,8 @@ export function AnimatedPlayerHeader() {
     return <InitialLoadingUI />;
   }
 
+  console.log("Rendering player header", { currentTime });
+
   return (
     <>
       {/* Sticky mini player bar - shown when main player is hidden */}
@@ -317,7 +319,7 @@ export function AnimatedPlayerHeader() {
                     step="0.1"
                     value={currentTime || 0}
                     onChange={(e) => seek(Number(e.target.value))}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
                   />
                 </div>
               </div>

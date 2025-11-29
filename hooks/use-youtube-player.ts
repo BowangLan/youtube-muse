@@ -153,21 +153,21 @@ export function useYouTubePlayer() {
           // console.log('[onStateChange] New track:', event.target)
 
           // Update duration when video is cued or playing (new video loaded)
-          if (
-            event.data === window.YT.PlayerState.CUED ||
+          const isCuedEvent = event.data === window.YT.PlayerState.CUED
+          const isPlayingEvent =
             event.data === window.YT.PlayerState.PLAYING
-          ) {
+
+          if (isCuedEvent || isPlayingEvent) {
             const dur = event.target.getDuration()
             if (dur > 0) {
               setDuration(dur)
-              setCurrentTime(0) // Reset current time when loading new video
+              if (isCuedEvent) {
+                setCurrentTime(0) // Only reset when a new video is cued
+              }
               syncTrackMetadataFromPlayer(event.target, { duration: dur })
             }
             // When video is cued, clear loading flag and possibly auto-play
-            if (
-              event.data === window.YT.PlayerState.CUED &&
-              isLoadingNewVideo
-            ) {
+            if (isCuedEvent && isLoadingNewVideo) {
               setIsLoadingNewVideo(false)
               // If we were playing before, resume playback
               if (wasPlayingBeforeLoad) {
