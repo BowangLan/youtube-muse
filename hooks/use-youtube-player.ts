@@ -47,7 +47,7 @@ export function useYouTubePlayer() {
 
   // Load YouTube IFrame API
   React.useEffect(() => {
-    const MIN_READY_DELAY = 500
+    const MIN_READY_DELAY = 1200
 
     // Helper to ensure setApiReady(true) fires AFTER 500ms
     let readyTimeout: NodeJS.Timeout | number | null = null

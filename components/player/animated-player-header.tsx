@@ -21,6 +21,43 @@ import Link from "next/link";
 import { AppHeader } from "../layout/app-header";
 import { Track } from "@/lib/types/playlist";
 
+const LOADING_PHRASE_LIST = [
+  "Let's grind",
+  "Let's lock in",
+  "Time to crush it, you got this",
+  "Get comfortable, let's focus",
+];
+
+const InitialLoadingUI = () => {
+  const isMounted = useHasMounted();
+  const [loadingPhrase, setLoadingPhrase] = React.useState("");
+  const [showMotion, setShowMotion] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isMounted) return;
+    setLoadingPhrase(
+      LOADING_PHRASE_LIST[
+        Math.floor(Math.random() * LOADING_PHRASE_LIST.length)
+      ]
+    );
+    const timer = setTimeout(() => setShowMotion(true), 1100);
+    return () => clearTimeout(timer);
+  }, [isMounted]);
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-8 items-center pt-[30vh] motion-opacity-in-0 motion-blur-in-lg",
+        showMotion && "motion-opacity-out-0 motion-blur-out-md"
+      )}
+    >
+      <p className="text-xl sm:text-3xl md:text-5xl font-light lowercase tracking-wider">
+        {loadingPhrase}
+      </p>
+    </div>
+  );
+};
+
 export function AnimatedPlayerHeader() {
   const hasMounted = useHasMounted();
   const playerRef = React.useRef<HTMLDivElement>(null);
@@ -86,13 +123,7 @@ export function AnimatedPlayerHeader() {
   }, [hasMounted, track?.id]); // Use track.id to detect changes
 
   if (!apiReady) {
-    return (
-      <div className="flex flex-col gap-8 items-center pt-[30vh] motion-blur-in-lg motion-duration-100">
-        <p className="text-lg sm:text-2xl font-light animate-pulse">
-          Loading...
-        </p>
-      </div>
-    );
+    return <InitialLoadingUI />;
   }
 
   return (
