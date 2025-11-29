@@ -309,7 +309,7 @@ export function AnimatedPlayerHeader() {
 
                 <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-500">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-white transition-all"
+                    className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
                     style={{ width: `${progressPercent}%` }}
                   />
                   <input
