@@ -119,6 +119,7 @@
   * {
     @apply border-border outline-ring/50 min-h-0 min-w-0;
   }
+
   body {
     @apply bg-[#050505] text-zinc-300 antialiased;
     font-family: "Inter", var(--font-sans), sans-serif;
@@ -137,6 +138,7 @@
 }
 
 @layer utilities {
+
   /* Glassmorphism panel */
   .glass-panel {
     background: rgba(20, 20, 20, 0.6);
@@ -152,6 +154,5 @@
 }
 
 .trans {
-  transition: all 0.4s ease-in-quad;
-  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }

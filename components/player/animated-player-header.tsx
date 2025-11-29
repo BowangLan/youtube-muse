@@ -10,6 +10,7 @@ import {
   Volume2,
   Shuffle,
   Repeat,
+  Repeat1,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,8 @@ export function AnimatedPlayerHeader() {
     playPrevious,
     isShuffleEnabled,
     toggleShuffle,
+    repeatMode,
+    cycleRepeatMode,
   } = usePlaylistStore();
   const {
     isPlaying,
@@ -91,8 +94,17 @@ export function AnimatedPlayerHeader() {
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayPrevious = currentTrackIndex > 0;
   const canPlayNext =
-    !!currentPlaylist && currentTrackIndex < currentPlaylist.tracks.length - 1;
+    !!currentPlaylist &&
+    (repeatMode === "playlist"
+      ? currentPlaylist.tracks.length > 0
+      : currentTrackIndex < currentPlaylist.tracks.length - 1);
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+  const repeatLabel =
+    repeatMode === "one"
+      ? "Repeat one"
+      : repeatMode === "playlist"
+      ? "Repeat playlist"
+      : "Repeat";
 
   // Intersection Observer to detect when player is hidden
   React.useEffect(() => {
@@ -284,15 +296,9 @@ export function AnimatedPlayerHeader() {
               </div>
 
               <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
-                <div className="flex items-center gap-2 min-w-[100px]">
-                  <button
-                    className={cn(
-                      "flex items-center gap-2 relative transition-all duration-200 cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
-                      isShuffleEnabled
-                        ? "text-white"
-                        : "text-neutral-500 hover:text-white"
-                    )}
-                    type="button"
+                <div className="flex items-center gap-2 min-w-[150px] -translate-x-3">
+                  <PlayerToggleButton
+                    active={isShuffleEnabled}
                     title={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
                     onClick={toggleShuffle}
                   >
@@ -307,7 +313,7 @@ export function AnimatedPlayerHeader() {
                     </div>
                     {/* {isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"} */}
                     {isShuffleEnabled ? "Shuffling" : "Shuffle"}
-                  </button>
+                  </PlayerToggleButton>
                 </div>
                 <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
                   <Volume2 className="h-4 w-4" />
@@ -332,20 +338,27 @@ export function AnimatedPlayerHeader() {
                     {Math.round(volume ?? 0)}%
                   </span>
                 </div>
-                <div className="flex items-center justify-end gap-2 min-w-[100px]">
-                  <button
-                    className={cn(
-                      "flex items-center gap-2 relative transition-all duration-200 cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none"
-                      // isRepeatEnabled
-                      //   ? "text-white"
-                      //   : "text-neutral-500 hover:text-white"
-                    )}
-                    type="button"
-                    title="Repeat"
+                <div className="flex items-center justify-end gap-2 min-w-[150px] translate-x-3">
+                  <PlayerToggleButton
+                    active={repeatMode !== "off"}
+                    title={repeatLabel}
+                    onClick={cycleRepeatMode}
                   >
-                    <Repeat className="size-3" />
-                    Repeat
-                  </button>
+                    <div className="relative">
+                      {repeatMode === "one" ? (
+                        <Repeat1 className="size-4" />
+                      ) : (
+                        <Repeat className="size-4" />
+                      )}
+                      {/* <div
+                        className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
+                        style={{
+                          opacity: repeatMode === "off" ? 0 : 1,
+                        }}
+                      ></div> */}
+                    </div>
+                    {repeatLabel}
+                  </PlayerToggleButton>
                 </div>
               </div>
             </div>
@@ -395,5 +408,30 @@ function CurrentTrackHeader({ track }: { track: Track }) {
         </p>
       </div>
     </div>
+  );
+}
+
+type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  active?: boolean;
+};
+
+function PlayerToggleButton({
+  active = false,
+  className,
+  type = "button",
+  "aria-pressed": ariaPressed,
+  ...props
+}: PlayerToggleButtonProps) {
+  return (
+    <button
+      type={type}
+      aria-pressed={ariaPressed ?? active}
+      className={cn(
+        "flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
+        active ? "text-white" : "text-neutral-500 hover:text-white",
+        className
+      )}
+      {...props}
+    />
   );
 }

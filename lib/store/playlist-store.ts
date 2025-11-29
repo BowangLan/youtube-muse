@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
-import type { Playlist, Track, PlaylistState } from "@/lib/types/playlist"
+import type { Playlist, Track, PlaylistState, RepeatMode } from "@/lib/types/playlist"
 
 interface PlaylistActions {
   // Playlist management
@@ -18,6 +18,7 @@ interface PlaylistActions {
   setCurrentTrackIndex: (index: number) => void
   playNext: () => Track | null
   playPrevious: () => Track | null
+  cycleRepeatMode: () => void
 
   // Shuffle control
   toggleShuffle: () => void
@@ -43,6 +44,7 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
       currentTrackIndex: 0,
       isShuffleEnabled: false,
       shuffleOrder: [],
+      repeatMode: "off",
 
       // Playlist management
       createPlaylist: (name, description, initialTracks = []) => {
@@ -196,11 +198,25 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
             const actualTrackIndex = state.shuffleOrder[nextIndex]
             return playlist.tracks[actualTrackIndex]
           }
+
+          if (state.repeatMode === "playlist") {
+            const restartIndex = state.shuffleOrder[0]
+            if (typeof restartIndex === "number") {
+              set({ currentTrackIndex: 0 })
+              return playlist.tracks[restartIndex] ?? null
+            }
+            return null
+          }
         } else {
           // Normal sequential mode
           if (nextIndex < playlist.tracks.length) {
             set({ currentTrackIndex: nextIndex })
             return playlist.tracks[nextIndex]
+          }
+
+          if (state.repeatMode === "playlist" && playlist.tracks.length > 0) {
+            set({ currentTrackIndex: 0 })
+            return playlist.tracks[0] ?? null
           }
         }
 
@@ -337,6 +353,17 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
             currentTrackIndex: actualTrackIndex, // Return to actual playlist position
           })
         }
+      },
+
+      cycleRepeatMode: () => {
+        set((state) => {
+          const order: Record<RepeatMode, RepeatMode> = {
+            off: "playlist",
+            playlist: "one",
+            one: "off",
+          }
+          return { repeatMode: order[state.repeatMode] }
+        })
       },
     }),
     {

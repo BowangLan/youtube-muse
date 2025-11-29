@@ -23,7 +23,7 @@ export function useYouTubePlayer() {
     setPendingPlayState,
   } = usePlayerStore()
 
-  const { playNext, getCurrentTrack } = usePlaylistStore()
+  const { playNext, getCurrentTrack, repeatMode } = usePlaylistStore()
 
   const playerRef = React.useRef<YTPlayer | null>(null)
   const playerReady = React.useRef(false)
@@ -32,11 +32,23 @@ export function useYouTubePlayer() {
   // Use ref to store latest callback to avoid stale closures in event handlers
   const handlePlayNextRef = React.useRef<() => void>(() => { })
   handlePlayNextRef.current = () => {
+    const player = playerRef.current
+    if (!player) return
+
+    if (repeatMode === "one") {
+      player.seekTo(0, true)
+      player.playVideo()
+      setCurrentTime(0)
+      setPendingPlayState(null)
+      setIsPlaying(true)
+      return
+    }
+
     const nextTrack = playNext()
-    if (nextTrack && playerRef.current) {
+    if (nextTrack) {
       setWasPlayingBeforeLoad(isPlaying)
       setIsLoadingNewVideo(true)
-      playerRef.current.loadVideoById(nextTrack.id)
+      player.loadVideoById(nextTrack.id)
     }
   }
 

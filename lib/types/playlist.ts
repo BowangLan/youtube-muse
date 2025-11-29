@@ -17,10 +17,13 @@ export interface Playlist {
   updatedAt: number
 }
 
+export type RepeatMode = "off" | "playlist" | "one"
+
 export interface PlaylistState {
   playlists: Playlist[]
   currentPlaylistId: string | null
   currentTrackIndex: number
   isShuffleEnabled: boolean
   shuffleOrder: number[] // Indexes representing the shuffled order of tracks
+  repeatMode: RepeatMode
 }
