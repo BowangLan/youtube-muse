@@ -12,7 +12,7 @@ import { usePlayerStore } from "@/lib/store/player-store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import { formatTime } from "@/lib/utils/youtube";
 
-export function PlaylistSidebar() {
+export function PlaylistSection() {
   const {
     playlists,
     currentPlaylistId,

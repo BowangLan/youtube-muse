@@ -5,10 +5,11 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { AnimatedPlayerHeader } from "@/components/player/animated-player-header";
-import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
+import { PlaylistSection } from "@/components/playlist/playlist-section";
 import { AppFooter } from "@/components/layout/app-footer";
 import { DEFAULT_PLAYLIST_TRACKS } from "@/lib/constants";
 import { useHasMounted } from "@/hooks/use-has-mounted";
+import { PlaylistSectionCardsVariant } from "@/components/playlist/playlist-section-cards-variant";
 
 export default function Home() {
   const { playlists, currentPlaylistId, setCurrentPlaylist, createPlaylist } =
@@ -53,7 +54,8 @@ export default function Home() {
           aria-label="Playlist"
           className="mt-12 md:mt-16 motion-preset-slide-up-sm"
         >
-          <PlaylistSidebar />
+          <PlaylistSection />
+          {/* <PlaylistSectionCardsVariant /> */}
         </section>
       </div>
 
