@@ -2,6 +2,9 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import type { Playlist, Track, PlaylistState, RepeatMode } from "@/lib/types/playlist"
 
+type TrackUpdatableFields = Exclude<keyof Track, "id" | "addedAt">
+type TrackUpdate = Partial<Pick<Track, TrackUpdatableFields>>
+
 interface PlaylistActions {
   // Playlist management
   createPlaylist: (name: string, description?: string, initialTracks?: Track[]) => void
@@ -12,6 +15,11 @@ interface PlaylistActions {
   addTrackToPlaylist: (playlistId: string, track: Omit<Track, "addedAt">) => void
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void
   moveTrack: (playlistId: string, fromIndex: number, toIndex: number) => void
+  updateTrackInfo: (
+    playlistId: string,
+    trackId: string,
+    updates: TrackUpdate
+  ) => void
 
   // Playback control
   setCurrentPlaylist: (playlistId: string | null) => void
@@ -166,6 +174,61 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         })
       },
 
+      updateTrackInfo: (playlistId, trackId, updates) => {
+        set((state) => {
+          let hasPlaylistBeenUpdated = false
+
+          const playlists = state.playlists.map((playlist) => {
+            if (playlist.id !== playlistId) {
+              return playlist
+            }
+
+            const trackIndex = playlist.tracks.findIndex((track) => track.id === trackId)
+            if (trackIndex === -1) {
+              return playlist
+            }
+
+            const currentTrack = playlist.tracks[trackIndex]
+            const nextTrack: Track = { ...currentTrack }
+            const mutableTrack = nextTrack as Track &
+              Record<TrackUpdatableFields, Track[TrackUpdatableFields]>
+            let trackChanged = false
+            for (const key of Object.keys(updates) as TrackUpdatableFields[]) {
+              const value = updates[key]
+              if (typeof value === "undefined") {
+                continue
+              }
+
+              if (mutableTrack[key] !== value) {
+                // TODO: Fix this type error
+                mutableTrack[key] = value as never
+                trackChanged = true
+              }
+            }
+
+            if (!trackChanged) {
+              return playlist
+            }
+
+            const newTracks = [...playlist.tracks]
+            newTracks[trackIndex] = nextTrack
+            hasPlaylistBeenUpdated = true
+
+            return {
+              ...playlist,
+              tracks: newTracks,
+              updatedAt: Date.now(),
+            }
+          })
+
+          if (!hasPlaylistBeenUpdated) {
+            return state
+          }
+
+          return { playlists }
+        })
+      },
+
       // Playback control
       setCurrentPlaylist: (playlistId) => {
         set({ currentPlaylistId: playlistId, currentTrackIndex: 0 })
@@ -178,7 +241,15 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
           : null
 
         if (playlist && index >= 0 && index < playlist.tracks.length) {
-          set({ currentTrackIndex: index })
+          if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+            // In shuffle mode, index passed in is the actual track index
+            // We need to convert it shuffle order index
+            const shuffleOrderIndex = state.shuffleOrder.indexOf(index)
+            set({ currentTrackIndex: shuffleOrderIndex })
+          } else {
+            // In normal mode, set the current track index directly
+            set({ currentTrackIndex: index })
+          }
         }
       },
 
@@ -301,7 +372,7 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         // Fisher-Yates shuffle algorithm
         for (let i = indices.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
-          ;[indices[i], indices[j]] = [indices[j], indices[i]]
+            ;[indices[i], indices[j]] = [indices[j], indices[i]]
         }
 
         set({ shuffleOrder: indices })
@@ -328,7 +399,7 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
             // Fisher-Yates shuffle
             for (let i = indices.length - 1; i > 0; i--) {
               const j = Math.floor(Math.random() * (i + 1))
-              ;[indices[i], indices[j]] = [indices[j], indices[i]]
+                ;[indices[i], indices[j]] = [indices[j], indices[i]]
             }
 
             // Put current track at the beginning of shuffle order

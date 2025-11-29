@@ -237,39 +237,66 @@ export function AnimatedPlayerHeader() {
             {/* Player controls */}
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-center gap-6">
-                <button
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[80px] motion-scale-in-75"
-                  onClick={playPrevious}
-                  disabled={!canPlayPrevious}
-                  title="Previous"
-                  type="button"
-                >
-                  <SkipBack className="h-5 w-5" />
-                </button>
-                <button
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black hover:scale-105 disabled:opacity-40 transition-all motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
-                  onClick={togglePlay}
-                  disabled={isLoadingNewVideo || !apiReady}
-                  title={isPlaying ? "Pause" : "Play"}
-                  type="button"
-                >
-                  {!apiReady || isLoadingNewVideo ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : isPlaying || pendingPlayState !== null ? (
-                    <Pause className="h-6 w-6" />
-                  ) : (
-                    <Play className="h-6 w-6 translate-x-[1px]" />
+                <div
+                  className={cn(
+                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[80px] motion-scale-in-75"
                   )}
-                </button>
-                <button
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[-80px] motion-scale-in-75"
-                  onClick={playNext}
-                  disabled={!canPlayNext}
-                  title="Next"
-                  type="button"
                 >
-                  <SkipForward className="h-5 w-5" />
-                </button>
+                  <button
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
+                      "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
+                    )}
+                    onClick={playPrevious}
+                    disabled={!canPlayPrevious}
+                    title="Previous"
+                    type="button"
+                  >
+                    <SkipBack className="h-5 w-5" />
+                  </button>
+                </div>
+                <div
+                  className={cn(
+                    "motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
+                  )}
+                >
+                  <button
+                    className={cn(
+                      "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer",
+                      "bg-white text-black disabled:opacity-40"
+                    )}
+                    onClick={togglePlay}
+                    disabled={isLoadingNewVideo || !apiReady}
+                    title={isPlaying ? "Pause" : "Play"}
+                    type="button"
+                  >
+                    {!apiReady || isLoadingNewVideo ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : isPlaying || pendingPlayState !== null ? (
+                      <Pause className="h-6 w-6" />
+                    ) : (
+                      <Play className="h-6 w-6 translate-x-[1px]" />
+                    )}
+                  </button>
+                </div>
+                <div
+                  className={cn(
+                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[-80px] motion-scale-in-75"
+                  )}
+                >
+                  <button
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
+                      "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
+                    )}
+                    onClick={playNext}
+                    disabled={!canPlayNext}
+                    title="Next"
+                    type="button"
+                  >
+                    <SkipForward className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">

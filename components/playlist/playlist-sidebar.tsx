@@ -3,12 +3,14 @@
 import Image from "next/image";
 import type { Track } from "@/lib/types/playlist";
 import { Button } from "@/components/ui/button";
-import { Music, Trash2 } from "lucide-react";
+import { ClockIcon, Music, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
+import { formatTime } from "@/lib/utils/youtube";
 
 export function PlaylistSidebar() {
   const {
@@ -152,7 +154,17 @@ function TrackItem({
         >
           {track.title}
         </p>
-        <p className="truncate text-xs text-neutral-500">{track.author}</p>
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+          <span>{formatTime(track.duration)}</span>
+          <span>•</span>
+          <Link
+            href={track.authorUrl}
+            target="_blank"
+            className="text-xs text-neutral-500 hover:underline truncate hover:text-white trans"
+          >
+            {track.author}
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 justify-end mx-2">

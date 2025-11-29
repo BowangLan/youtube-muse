@@ -29,6 +29,25 @@ export function useYouTubePlayer() {
   const playerReady = React.useRef(false)
   const currentTrack = getCurrentTrack()
 
+  const syncTrackMetadataFromPlayer = React.useCallback(
+    (playerInstance: YTPlayer, metadata?: { duration?: number }) => {
+      const playlistState = usePlaylistStore.getState()
+      const activeTrack = playlistState.getCurrentTrack()
+      const playlistId = playlistState.currentPlaylistId
+      if (!playlistId || !activeTrack) {
+        return
+      }
+
+      const playerDuration = metadata?.duration ?? playerInstance.getDuration()
+      if (activeTrack.duration === 0 && playerDuration > 0) {
+        playlistState.updateTrackInfo(playlistId, activeTrack.id, {
+          duration: playerDuration,
+        })
+      }
+    },
+    []
+  )
+
   // Use ref to store latest callback to avoid stale closures in event handlers
   const handlePlayNextRef = React.useRef<() => void>(() => { })
   handlePlayNextRef.current = () => {
@@ -131,6 +150,8 @@ export function useYouTubePlayer() {
         onStateChange: (event: any) => {
           const newIsPlaying = event.data === window.YT.PlayerState.PLAYING
 
+          // console.log('[onStateChange] New track:', event.target)
+
           // Update duration when video is cued or playing (new video loaded)
           if (
             event.data === window.YT.PlayerState.CUED ||
@@ -140,6 +161,7 @@ export function useYouTubePlayer() {
             if (dur > 0) {
               setDuration(dur)
               setCurrentTime(0) // Reset current time when loading new video
+              syncTrackMetadataFromPlayer(event.target, { duration: dur })
             }
             // When video is cued, clear loading flag and possibly auto-play
             if (
@@ -193,7 +215,7 @@ export function useYouTubePlayer() {
 
     playerRef.current = player
     setPlayerRef(player)
-  }, [apiReady])
+  }, [apiReady, syncTrackMetadataFromPlayer])
 
   // Update current time
   React.useEffect(() => {
