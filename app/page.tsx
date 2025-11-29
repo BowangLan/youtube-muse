@@ -6,6 +6,7 @@ import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { AnimatedPlayerHeader } from "@/components/player/animated-player-header";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
+import { AppFooter } from "@/components/layout/app-footer";
 import { DEFAULT_PLAYLIST_TRACKS } from "@/lib/constants";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 
@@ -55,6 +56,8 @@ export default function Home() {
           <PlaylistSidebar />
         </section>
       </div>
+
+      <AppFooter />
     </main>
   );
 }
