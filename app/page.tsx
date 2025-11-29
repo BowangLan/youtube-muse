@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useHasMounted } from "@/hooks/use-has-mounted";
+import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { PlayerControls } from "@/components/player/player-controls";
 import { NowPlaying } from "@/components/player/now-playing";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
@@ -22,6 +23,9 @@ export default function Home() {
 
   // Initialize YouTube player
   useYouTubePlayer();
+
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
 
   const currentTrack = hasMounted ? getCurrentTrack() : null;
 
