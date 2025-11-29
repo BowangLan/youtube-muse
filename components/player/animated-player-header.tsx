@@ -24,6 +24,7 @@ import { Track } from "@/lib/types/playlist";
 const LOADING_PHRASE_LIST = [
   "Let's grind",
   "Let's lock in",
+  "Time to lock in",
   "Time to crush it, you got this",
   "Get comfortable, let's focus",
 ];
@@ -70,6 +71,8 @@ export function AnimatedPlayerHeader() {
     currentTrackIndex,
     playNext,
     playPrevious,
+    isShuffleEnabled,
+    toggleShuffle,
   } = usePlaylistStore();
   const {
     isPlaying,
@@ -280,15 +283,32 @@ export function AnimatedPlayerHeader() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs uppercase text-neutral-600">
-                <button
-                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-1200"
-                  type="button"
-                  title="Shuffle"
-                >
-                  <Shuffle className="size-3" />
-                  Shuffle
-                </button>
+              <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
+                <div className="flex items-center gap-2 min-w-[100px]">
+                  <button
+                    className={cn(
+                      "flex items-center gap-2 relative transition-all duration-200 cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
+                      isShuffleEnabled
+                        ? "text-white"
+                        : "text-neutral-500 hover:text-white"
+                    )}
+                    type="button"
+                    title={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
+                    onClick={toggleShuffle}
+                  >
+                    <div className="relative">
+                      <Shuffle className="size-4" />
+                      <div
+                        className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
+                        style={{
+                          opacity: isShuffleEnabled ? 1 : 0,
+                        }}
+                      ></div>
+                    </div>
+                    {/* {isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"} */}
+                    {isShuffleEnabled ? "Shuffling" : "Shuffle"}
+                  </button>
+                </div>
                 <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
                   <Volume2 className="h-4 w-4" />
                   <div className="relative h-1 w-28 rounded-full bg-white/10">
@@ -312,14 +332,21 @@ export function AnimatedPlayerHeader() {
                     {Math.round(volume ?? 0)}%
                   </span>
                 </div>
-                <button
-                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-1200"
-                  type="button"
-                  title="Repeat"
-                >
-                  <Repeat className="size-3" />
-                  Repeat
-                </button>
+                <div className="flex items-center justify-end gap-2 min-w-[100px]">
+                  <button
+                    className={cn(
+                      "flex items-center gap-2 relative transition-all duration-200 cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none"
+                      // isRepeatEnabled
+                      //   ? "text-white"
+                      //   : "text-neutral-500 hover:text-white"
+                    )}
+                    type="button"
+                    title="Repeat"
+                  >
+                    <Repeat className="size-3" />
+                    Repeat
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -15,6 +15,7 @@ export function PlaylistSidebar() {
     playlists,
     currentPlaylistId,
     currentTrackIndex,
+    getCurrentActualTrackIndex,
     setCurrentTrackIndex,
     addTrackToPlaylist,
     removeTrackFromPlaylist,
@@ -22,9 +23,10 @@ export function PlaylistSidebar() {
   const { togglePlay, apiReady } = usePlayerStore();
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
+  const currentActualTrackIndex = getCurrentActualTrackIndex();
 
   const handleTrackClick = (index: number) => {
-    if (currentTrackIndex === index) {
+    if (currentActualTrackIndex === index) {
       togglePlay();
     } else {
       setCurrentTrackIndex(index);
@@ -67,7 +69,7 @@ export function PlaylistSidebar() {
       ) : (
         <div className="space-y-2">
           {playlist.tracks.map((track, index) => {
-            const isCurrentTrack = currentTrackIndex === index;
+            const isCurrentTrack = currentActualTrackIndex === index;
             return (
               <TrackItem
                 key={`${track.id}-${track.addedAt}`}

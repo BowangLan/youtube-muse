@@ -21,4 +21,6 @@ export interface PlaylistState {
   playlists: Playlist[]
   currentPlaylistId: string | null
   currentTrackIndex: number
+  isShuffleEnabled: boolean
+  shuffleOrder: number[] // Indexes representing the shuffled order of tracks
 }

@@ -19,8 +19,13 @@ interface PlaylistActions {
   playNext: () => Track | null
   playPrevious: () => Track | null
 
+  // Shuffle control
+  toggleShuffle: () => void
+  generateShuffleOrder: () => void
+
   // Utility
   getCurrentTrack: () => Track | null
+  getCurrentActualTrackIndex: () => number
   getPlaylist: (playlistId: string) => Playlist | undefined
   clearAllPlaylists: () => void
 }
@@ -36,6 +41,8 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
       playlists: [],
       currentPlaylistId: null,
       currentTrackIndex: 0,
+      isShuffleEnabled: false,
+      shuffleOrder: [],
 
       // Playlist management
       createPlaylist: (name, description, initialTracks = []) => {
@@ -181,9 +188,20 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         if (!playlist || playlist.tracks.length === 0) return null
 
         const nextIndex = state.currentTrackIndex + 1
-        if (nextIndex < playlist.tracks.length) {
-          set({ currentTrackIndex: nextIndex })
-          return playlist.tracks[nextIndex]
+
+        if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+          // In shuffle mode, use shuffle order
+          if (nextIndex < state.shuffleOrder.length) {
+            set({ currentTrackIndex: nextIndex })
+            const actualTrackIndex = state.shuffleOrder[nextIndex]
+            return playlist.tracks[actualTrackIndex]
+          }
+        } else {
+          // Normal sequential mode
+          if (nextIndex < playlist.tracks.length) {
+            set({ currentTrackIndex: nextIndex })
+            return playlist.tracks[nextIndex]
+          }
         }
 
         // Optionally loop back to start
@@ -200,7 +218,15 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         const prevIndex = state.currentTrackIndex - 1
         if (prevIndex >= 0) {
           set({ currentTrackIndex: prevIndex })
-          return playlist.tracks[prevIndex]
+
+          if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+            // In shuffle mode, use shuffle order
+            const actualTrackIndex = state.shuffleOrder[prevIndex]
+            return playlist.tracks[actualTrackIndex]
+          } else {
+            // Normal sequential mode
+            return playlist.tracks[prevIndex]
+          }
         }
 
         return null
@@ -214,7 +240,23 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         const playlist = state.playlists.find((p) => p.id === state.currentPlaylistId)
         if (!playlist) return null
 
+        if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+          // In shuffle mode, use shuffle order to get the actual track
+          const actualTrackIndex = state.shuffleOrder[state.currentTrackIndex]
+          return playlist.tracks[actualTrackIndex] || null
+        }
+
         return playlist.tracks[state.currentTrackIndex] || null
+      },
+
+      getCurrentActualTrackIndex: () => {
+        const state = get()
+        if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+          // In shuffle mode, return the actual track index from shuffle order
+          return state.shuffleOrder[state.currentTrackIndex] ?? state.currentTrackIndex
+        }
+        // In normal mode, return the current track index
+        return state.currentTrackIndex
       },
 
       getPlaylist: (playlistId) => {
@@ -227,6 +269,74 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
           currentPlaylistId: null,
           currentTrackIndex: 0,
         })
+      },
+
+      // Shuffle control
+      generateShuffleOrder: () => {
+        const state = get()
+        if (!state.currentPlaylistId) return
+
+        const playlist = state.playlists.find((p) => p.id === state.currentPlaylistId)
+        if (!playlist || playlist.tracks.length === 0) return
+
+        // Create an array of indices [0, 1, 2, ..., n-1]
+        const indices = Array.from({ length: playlist.tracks.length }, (_, i) => i)
+
+        // Fisher-Yates shuffle algorithm
+        for (let i = indices.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[indices[i], indices[j]] = [indices[j], indices[i]]
+        }
+
+        set({ shuffleOrder: indices })
+      },
+
+      toggleShuffle: () => {
+        const state = get()
+        const newShuffleState = !state.isShuffleEnabled
+
+        if (newShuffleState) {
+          // Turning shuffle ON - generate shuffle order
+          const playlist = state.currentPlaylistId
+            ? state.playlists.find((p) => p.id === state.currentPlaylistId)
+            : null
+
+          if (playlist && playlist.tracks.length > 0) {
+            // Get the actual current track index (in case we're already in some mode)
+            const currentActualIndex = state.currentTrackIndex
+
+            // Create an array of indices excluding the current track
+            const indices = Array.from({ length: playlist.tracks.length }, (_, i) => i)
+              .filter((i) => i !== currentActualIndex)
+
+            // Fisher-Yates shuffle
+            for (let i = indices.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1))
+              ;[indices[i], indices[j]] = [indices[j], indices[i]]
+            }
+
+            // Put current track at the beginning of shuffle order
+            const shuffleOrder = [currentActualIndex, ...indices]
+
+            set({
+              isShuffleEnabled: true,
+              shuffleOrder,
+              currentTrackIndex: 0, // Reset to first position in shuffle order
+            })
+          } else {
+            set({ isShuffleEnabled: true, shuffleOrder: [] })
+          }
+        } else {
+          // Turning shuffle OFF - find the actual track index
+          const currentShuffleIndex = state.currentTrackIndex
+          const actualTrackIndex = state.shuffleOrder[currentShuffleIndex] || 0
+
+          set({
+            isShuffleEnabled: false,
+            shuffleOrder: [],
+            currentTrackIndex: actualTrackIndex, // Return to actual playlist position
+          })
+        }
       },
     }),
     {

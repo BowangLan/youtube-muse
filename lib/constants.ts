@@ -8,6 +8,7 @@ export const YOUTUBE_VIDEO_URLS = [
   "https://www.youtube.com/watch?v=EqoT6TUq4Go",
   "https://www.youtube.com/watch?v=KEFnPnJXrjI",
   "https://www.youtube.com/watch?v=gcZfY4WSg0c",
+  "https://www.youtube.com/watch?v=A0hggqtV_2M",
 ]
 
 export const DEFAULT_PLAYLIST_TRACKS = [
