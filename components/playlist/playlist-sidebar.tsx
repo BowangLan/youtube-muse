@@ -47,7 +47,7 @@ export function PlaylistSidebar() {
     }
   };
   return (
-    <div className="space-y-4 motion-translate-y-in-[20px] motion-blur-in-md motion-opacity-in-0 motion-delay-300 min-h-screen">
+    <div className="space-y-4 motion-translate-y-in-[20px] motion-blur-in-md motion-opacity-in-0 motion-delay-300">
       <div className="flex items-center justify-between gap-3 text-neutral-400">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.3em]">playlist</p>

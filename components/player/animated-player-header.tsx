@@ -187,7 +187,7 @@ export function AnimatedPlayerHeader() {
           >
             {/* Album art & track info */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-              <div className="relative aspect-video w-full max-w-xs overflow-hidden rounded-xl">
+              <div className="relative aspect-video w-full max-w-xs md:max-w-[22rem] overflow-hidden rounded-xl">
                 <Image
                   src={getThumbnailUrl(track.id, "maxresdefault")}
                   alt={track.title}
@@ -197,11 +197,11 @@ export function AnimatedPlayerHeader() {
                   priority
                 />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-3 text-neutral-300">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 md:gap-3 text-neutral-300">
                 <span className="text-xs uppercase tracking-[0.4em] text-neutral-600">
                   playing now
                 </span>
-                <h2 className="text-3xl font-light leading-tight text-white">
+                <h2 className="md:text-3xl text-xl font-light leading-tight text-white">
                   <a
                     href={`https://www.youtube.com/watch?v=${track.id}`}
                     target="_blank"
@@ -211,7 +211,7 @@ export function AnimatedPlayerHeader() {
                     {track.title}
                   </a>
                 </h2>
-                <p className="text-sm">
+                <p className="md:text-sm text-xs">
                   <a
                     href={track.authorUrl}
                     target="_blank"
