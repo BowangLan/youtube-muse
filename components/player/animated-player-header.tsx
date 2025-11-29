@@ -85,11 +85,13 @@ export function AnimatedPlayerHeader() {
     };
   }, [hasMounted, track?.id]); // Use track.id to detect changes
 
-  if (!hasMounted) {
+  if (!apiReady) {
     return (
-      <header className="space-y-8">
-        <AppHeader />
-      </header>
+      <div className="flex flex-col gap-8 items-center pt-[30vh] motion-blur-in-lg motion-duration-100">
+        <p className="text-lg sm:text-2xl font-light animate-pulse">
+          Loading...
+        </p>
+      </div>
     );
   }
 

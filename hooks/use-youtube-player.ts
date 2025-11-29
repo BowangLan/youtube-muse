@@ -26,6 +26,7 @@ export function useYouTubePlayer() {
   const { playNext, getCurrentTrack } = usePlaylistStore()
 
   const playerRef = React.useRef<YTPlayer | null>(null)
+  const playerReady = React.useRef(false)
   const currentTrack = getCurrentTrack()
 
   // Use ref to store latest callback to avoid stale closures in event handlers
@@ -46,23 +47,52 @@ export function useYouTubePlayer() {
 
   // Load YouTube IFrame API
   React.useEffect(() => {
+    const MIN_READY_DELAY = 500
+
+    // Helper to ensure setApiReady(true) fires AFTER 500ms
+    let readyTimeout: NodeJS.Timeout | number | null = null
+    let resolved = false
+
+    const markReady = () => {
+      if (resolved) return
+      resolved = true
+      setApiReady(true)
+    }
+
+    // If already available, still wait at least 500ms before setting
     if (window.YT && window.YT.Player) {
-      setApiReady(true)
-      return
+      readyTimeout = setTimeout(markReady, MIN_READY_DELAY)
+      return () => {
+        if (readyTimeout) clearTimeout(readyTimeout)
+      }
     }
 
+    // Don't reload if script is present, but still must wait for onYouTubeIframeAPIReady
     if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      return
+      window.onYouTubeIframeAPIReady = () => {
+        // Wait at least 500ms before setting apiReady
+        readyTimeout = setTimeout(markReady, MIN_READY_DELAY)
+      }
+      return () => {
+        if (readyTimeout) clearTimeout(readyTimeout)
+      }
     }
 
+    // Otherwise, inject script and set a timer
     window.onYouTubeIframeAPIReady = () => {
-      setApiReady(true)
+      // Wait at least 500ms before setting apiReady
+      readyTimeout = setTimeout(markReady, MIN_READY_DELAY)
     }
 
     const tag = document.createElement("script")
     tag.src = "https://www.youtube.com/iframe_api"
     const firstScriptTag = document.getElementsByTagName("script")[0]
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+
+    // Clean up
+    return () => {
+      if (readyTimeout) clearTimeout(readyTimeout)
+    }
   }, [setApiReady])
 
   // Initialize player
@@ -82,6 +112,7 @@ export function useYouTubePlayer() {
       },
       events: {
         onReady: (event: any) => {
+          playerReady.current = true
           const dur = event.target.getDuration()
           setDuration(dur)
         },
@@ -170,7 +201,7 @@ export function useYouTubePlayer() {
 
   // Load new track
   React.useEffect(() => {
-    if (currentTrack && playerRef.current) {
+    if (currentTrack && playerRef.current && playerReady.current) {
       playerRef.current.loadVideoById(currentTrack.id)
       // Duration will be updated in onStateChange event handler
     }

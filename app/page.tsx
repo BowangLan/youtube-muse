@@ -7,6 +7,7 @@ import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { AnimatedPlayerHeader } from "@/components/player/animated-player-header";
 import { PlaylistSidebar } from "@/components/playlist/playlist-sidebar";
 import { DEFAULT_PLAYLIST_TRACKS } from "@/lib/constants";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export default function Home() {
   const { playlists, currentPlaylistId, setCurrentPlaylist, createPlaylist } =

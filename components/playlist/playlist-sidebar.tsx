@@ -11,7 +11,6 @@ import { usePlayerStore } from "@/lib/store/player-store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export function PlaylistSidebar() {
-  const hasMounted = useHasMounted();
   const {
     playlists,
     currentPlaylistId,
@@ -20,16 +19,7 @@ export function PlaylistSidebar() {
     addTrackToPlaylist,
     removeTrackFromPlaylist,
   } = usePlaylistStore();
-  const { isPlaying, togglePlay } = usePlayerStore();
-
-  if (!hasMounted) {
-    return (
-      <div className="space-y-2 text-neutral-500 motion-preset-fade-sm">
-        <p className="text-xs uppercase tracking-[0.3em]">playlist</p>
-        <p>Loading…</p>
-      </div>
-    );
-  }
+  const { togglePlay, apiReady } = usePlayerStore();
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
 
@@ -46,6 +36,11 @@ export function PlaylistSidebar() {
       removeTrackFromPlaylist(currentPlaylistId, trackId);
     }
   };
+
+  if (!apiReady) {
+    return null;
+  }
+
   return (
     <div className="space-y-4 motion-blur-in-md motion-opacity-in-0 motion-delay-1500">
       <div className="flex items-center justify-between gap-3 text-neutral-400">
