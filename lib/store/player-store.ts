@@ -100,7 +100,9 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   handleVolumeChange: (volume) => {
     const { playerRef } = get()
     if (playerRef) {
-      playerRef.setVolume(volume)
+      const normalizedVolume = (Math.exp(volume / 100) - 1) / (Math.E - 1) * 100
+      console.log("Volume: ", volume, "Normalized: ", normalizedVolume)
+      playerRef.setVolume(normalizedVolume)
       set({ volume })
     }
   },

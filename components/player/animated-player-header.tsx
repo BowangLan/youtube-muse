@@ -323,14 +323,14 @@ export function AnimatedPlayerHeader() {
               </div>
 
               <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
-                <div className="flex items-center gap-2 min-w-[150px] -translate-x-3">
+                <div className="flex items-center gap-2 sm:min-w-[150px] -translate-x-2 sm:-translate-x-3">
                   <PlayerToggleButton
                     active={isShuffleEnabled}
                     title={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
                     onClick={toggleShuffle}
                   >
                     <div className="relative">
-                      <Shuffle className="size-4" />
+                      <Shuffle className="size-5" />
                       <div
                         className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
                         style={{
@@ -339,14 +339,16 @@ export function AnimatedPlayerHeader() {
                       ></div>
                     </div>
                     {/* {isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"} */}
-                    {isShuffleEnabled ? "Shuffling" : "Shuffle"}
+                    <span className="hidden sm:inline-block text-xs sm:text-sm">
+                      {isShuffleEnabled ? "Shuffling" : "Shuffle"}
+                    </span>
                   </PlayerToggleButton>
                 </div>
                 <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
                   <Volume2 className="h-4 w-4" />
-                  <div className="relative h-1 w-28 rounded-full bg-white/10">
+                  <div className="relative h-1.5 w-32 rounded-full bg-white/10">
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-all"
+                      className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
                       style={{ width: `${volume}%` }}
                     />
                     <input
@@ -365,7 +367,7 @@ export function AnimatedPlayerHeader() {
                     {Math.round(volume ?? 0)}%
                   </span>
                 </div>
-                <div className="flex items-center justify-end gap-2 min-w-[150px] translate-x-3">
+                <div className="flex items-center justify-end gap-2 sm:min-w-[150px] translate-x-2 sm:translate-x-3">
                   <PlayerToggleButton
                     active={repeatMode !== "off"}
                     title={repeatLabel}
@@ -373,9 +375,9 @@ export function AnimatedPlayerHeader() {
                   >
                     <div className="relative">
                       {repeatMode === "one" ? (
-                        <Repeat1 className="size-4" />
+                        <Repeat1 className="size-5" />
                       ) : (
-                        <Repeat className="size-4" />
+                        <Repeat className="size-5" />
                       )}
                       {/* <div
                         className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
@@ -384,7 +386,9 @@ export function AnimatedPlayerHeader() {
                         }}
                       ></div> */}
                     </div>
-                    {repeatLabel}
+                    <span className="hidden sm:inline-block text-xs sm:text-sm">
+                      {repeatLabel}
+                    </span>
                   </PlayerToggleButton>
                 </div>
               </div>
@@ -454,7 +458,7 @@ function PlayerToggleButton({
       type={type}
       aria-pressed={ariaPressed ?? active}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
+        "flex group/toggle-button items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
         active ? "text-white" : "text-neutral-500 hover:text-white",
         className
       )}
