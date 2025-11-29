@@ -49,7 +49,7 @@ export default function Home() {
 
         <section
           aria-label="Playlist"
-          className="mt-8 md:mt-12 motion-preset-slide-up-sm"
+          className="mt-12 md:mt-16 motion-preset-slide-up-sm"
         >
           <PlaylistSidebar />
         </section>

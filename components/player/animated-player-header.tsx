@@ -98,7 +98,7 @@ export function AnimatedPlayerHeader() {
       {/* Sticky mini player bar - shown when main player is hidden */}
       <div
         className={cn(
-          "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
+          "fixed top-0 left-0 right-0 z-40 trans",
           isPlayerHidden
             ? "translate-y-0 opacity-100"
             : "-translate-y-full opacity-0 pointer-events-none"
@@ -190,7 +190,7 @@ export function AnimatedPlayerHeader() {
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-center gap-6">
                 <button
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-600 motion-translate-x-in-[80px] motion-scale-in-75"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[80px] motion-scale-in-75"
                   onClick={playPrevious}
                   disabled={!canPlayPrevious}
                   title="Previous"
@@ -199,7 +199,7 @@ export function AnimatedPlayerHeader() {
                   <SkipBack className="h-5 w-5" />
                 </button>
                 <button
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black hover:scale-105 disabled:opacity-40 transition-all motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg motion-delay-300"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black hover:scale-105 disabled:opacity-40 transition-all motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
                   onClick={togglePlay}
                   disabled={isLoadingNewVideo || !apiReady}
                   title={isPlaying ? "Pause" : "Play"}
@@ -214,7 +214,7 @@ export function AnimatedPlayerHeader() {
                   )}
                 </button>
                 <button
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-600 motion-translate-x-in-[-80px] motion-scale-in-75"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30 transition-all motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[-80px] motion-scale-in-75"
                   onClick={playNext}
                   disabled={!canPlayNext}
                   title="Next"
@@ -225,12 +225,12 @@ export function AnimatedPlayerHeader() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-900">
+                <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
 
-                <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-600">
+                <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-500">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-white transition-all"
                     style={{ width: `${progressPercent}%` }}
@@ -249,14 +249,14 @@ export function AnimatedPlayerHeader() {
 
               <div className="flex items-center justify-between text-xs uppercase text-neutral-600">
                 <button
-                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-900"
+                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-1200"
                   type="button"
                   title="Shuffle"
                 >
                   <Shuffle className="size-3" />
                   Shuffle
                 </button>
-                <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-900">
+                <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
                   <Volume2 className="h-4 w-4" />
                   <div className="relative h-1 w-28 rounded-full bg-white/10">
                     <div
@@ -280,7 +280,7 @@ export function AnimatedPlayerHeader() {
                   </span>
                 </div>
                 <button
-                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-900"
+                  className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors cursor-pointer motion-preset-blur-up-md motion-delay-1200"
                   type="button"
                   title="Repeat"
                 >
@@ -298,8 +298,8 @@ export function AnimatedPlayerHeader() {
 
 function CurrentTrackHeader({ track }: { track: Track }) {
   return (
-    <div className="flex flex-col gap-6 sm:flex-row sm:items-start motion-blur-in-lg motion-opacity-in-0">
-      <div className="relative aspect-video w-full max-w-xs md:max-w-[22rem] overflow-hidden rounded-xl">
+    <div className="flex flex-col gap-6 items-center sm:items-start sm:flex-row motion-blur-in-lg motion-opacity-in-0 motion-delay-1200">
+      <div className="relative aspect-video w-full max-w-[24rem] sm:max-w-[16rem] md:max-w-[22rem] overflow-hidden rounded-xl">
         <Image
           src={getThumbnailUrl(track.id, "maxresdefault")}
           alt={track.title}
@@ -310,7 +310,7 @@ function CurrentTrackHeader({ track }: { track: Track }) {
         />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2 md:gap-3 text-neutral-300">
-        <span className="text-xs uppercase tracking-[0.4em] text-neutral-600">
+        <span className="text-xs uppercase tracking-[0.4em] text-neutral-500">
           playing now
         </span>
         <h2 className="md:text-3xl text-xl font-light leading-tight text-white">
