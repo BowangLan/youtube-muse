@@ -61,7 +61,7 @@ export function PlayerControls() {
     playNext();
   };
   return (
-    <Card>
+    <Card className="md:flex fixed w-auto md:w-full md:relative bottom-8 left-4 right-4 md:left-0 md:right-0 md:bottom-0">
       <div className="flex flex-1 flex-col gap-4">
         {/* Playback Controls */}
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
@@ -111,16 +111,10 @@ export function PlayerControls() {
         </div>
 
         {/* Progress Bar */}
-        <div className="group flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="group flex w-full gap-2 flex-row items-center sm:gap-3">
           <div className="flex items-center gap-2 text-xs font-mono text-zinc-500 transition-colors duration-200">
             <span className="min-w-[36px] text-right tabular-nums transition-colors duration-200 group-hover:text-zinc-400">
               {formatTime(currentTime)}
-            </span>
-            <span className="text-white/20 transition-colors duration-200 group-hover:text-white/30">
-              /
-            </span>
-            <span className="min-w-[36px] text-right tabular-nums">
-              {formatTime(duration)}
             </span>
           </div>
           {/* Custom Range Slider */}
@@ -159,10 +153,17 @@ export function PlayerControls() {
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
+
+          {/* Right */}
+          <div className="flex items-center justify-end gap-2 text-xs font-mono text-zinc-500 transition-colors duration-200">
+            <span className="min-w-[36px] text-right tabular-nums">
+              {formatTime(duration)}
+            </span>
+          </div>
         </div>
 
         {/* Volume Control - Integrated inline */}
-        <div className="group flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+        <div className="group hidden md:flex flex-wrap items-center justify-between gap-3 sm:justify-end">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50 transition-colors duration-200 group-hover:text-white/60">
             <Volume2 className="h-4 w-4 text-zinc-400 transition-all duration-200 group-hover:scale-110 group-hover:text-zinc-300" />
             <span className="hidden sm:inline">Volume</span>
