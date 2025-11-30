@@ -177,7 +177,7 @@ export function AnimatedPlayerHeader() {
                     <p className="truncate text-sm">{track.title}</p>
                   </Link>
                   <Link
-                    href={track.authorUrl}
+                    href={track.authorUrl ?? ""}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline"
@@ -241,7 +241,7 @@ export function AnimatedPlayerHeader() {
               <div className="flex items-center justify-center gap-6">
                 <div
                   className={cn(
-                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[80px] motion-scale-in-75"
+                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[80px] motion-scale-in-75"
                   )}
                 >
                   <button
@@ -283,7 +283,7 @@ export function AnimatedPlayerHeader() {
                 </div>
                 <div
                   className={cn(
-                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-500 motion-translate-x-in-[-80px] motion-scale-in-75"
+                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[-80px] motion-scale-in-75"
                   )}
                 >
                   <button
@@ -302,12 +302,12 @@ export function AnimatedPlayerHeader() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
+                <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-500">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
 
-                <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-500">
+                <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-200">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
                     style={{ width: `${progressPercent}%` }}
@@ -346,7 +346,7 @@ export function AnimatedPlayerHeader() {
                     </span>
                   </PlayerToggleButton>
                 </div>
-                <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-1200">
+                <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-500">
                   <Volume2 className="h-4 w-4" />
                   <div className="relative h-1.5 w-32 rounded-full bg-white/10">
                     <div
@@ -404,7 +404,7 @@ export function AnimatedPlayerHeader() {
 
 function CurrentTrackHeader({ track }: { track: Track }) {
   return (
-    <div className="flex flex-col gap-6 items-center sm:items-start sm:flex-row motion-blur-in-lg motion-opacity-in-0 motion-delay-1200">
+    <div className="flex flex-col gap-6 items-center sm:items-start sm:flex-row motion-blur-in-lg motion-opacity-in-0 motion-delay-700">
       <div className="relative aspect-video w-full max-w-[24rem] sm:max-w-[16rem] md:max-w-[22rem] overflow-hidden rounded-xl">
         <Image
           src={getThumbnailUrl(track.id, "maxresdefault")}
@@ -460,7 +460,7 @@ function PlayerToggleButton({
       type={type}
       aria-pressed={ariaPressed ?? active}
       className={cn(
-        "flex group/toggle-button items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-1200 hover:scale-105 active:scale-95 select-none",
+        "flex group/toggle-button items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-500 hover:scale-105 active:scale-95 select-none",
         active ? "text-white" : "text-neutral-500 hover:text-white",
         className
       )}

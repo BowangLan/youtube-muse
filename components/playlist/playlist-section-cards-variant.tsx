@@ -28,7 +28,7 @@ export function PlaylistSectionCardsVariant() {
   }
 
   return (
-    <div className="space-y-4 motion-blur-in-md motion-opacity-in-0 motion-delay-1500">
+    <div className="space-y-4 motion-blur-in-md motion-opacity-in-0 motion-delay-1000">
       <div className="flex items-center justify-between gap-3 text-neutral-400">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.3em]">playlist</p>
@@ -233,10 +233,7 @@ function TrackItem({
             <Trash2 className="h-4 w-4" />
           </Button>
           {isCurrentTrack && (
-            <CurrentTrackOverlay
-              isPlaying={_isPlaying}
-              onAction={onClick}
-            />
+            <CurrentTrackOverlay isPlaying={_isPlaying} onAction={onClick} />
           )}
 
           <TrackHoverOverlay
@@ -273,7 +270,11 @@ function CurrentTrackOverlay({
         }}
         aria-label={isPlaying ? "Pause track" : "Play track"}
       >
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        {isPlaying ? (
+          <Pause className="h-4 w-4" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
       </Button>
     </div>
   );

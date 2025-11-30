@@ -46,7 +46,7 @@ export function PlaylistSection() {
   }
 
   return (
-    <div className="space-y-4 motion-blur-in-md motion-opacity-in-0 motion-delay-1500">
+    <div className="space-y-4 motion-blur-in-md motion-opacity-in-0 motion-delay-800">
       <div className="flex items-center justify-between gap-3 text-neutral-400">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.3em]">playlist</p>
@@ -99,19 +99,18 @@ function PlayingIndicator({ isPlaying }: { isPlaying: boolean }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
       <div className="flex items-end gap-[3px] h-4">
-        {isPlaying ? (
-          <>
-            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300" />
-            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-600" />
-            <div className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-900" />
-          </>
-        ) : (
-          <>
-            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
-            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
-            <div className="w-[3px] h-full bg-white scale-y-[0.5]" />
-          </>
-        )}
+        <div
+          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300"
+          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
+        />
+        <div
+          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-600"
+          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
+        />
+        <div
+          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-900"
+          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
+        />
       </div>
     </div>
   );
@@ -158,7 +157,7 @@ function TrackItem({
           <span>{formatTime(track.duration)}</span>
           <span>•</span>
           <Link
-            href={track.authorUrl}
+            href={track.authorUrl ?? ""}
             target="_blank"
             className="text-xs text-neutral-500 hover:underline truncate hover:text-white trans"
           >
