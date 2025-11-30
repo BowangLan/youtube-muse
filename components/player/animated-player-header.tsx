@@ -141,7 +141,7 @@ export function AnimatedPlayerHeader() {
     return <InitialLoadingUI />;
   }
 
-  console.log("Rendering player header", { currentTime });
+  // console.log("Rendering player header", { currentTime });
 
   return (
     <>

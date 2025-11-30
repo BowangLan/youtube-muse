@@ -94,8 +94,8 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
 
       // Track management
       addTrackToPlaylist: (playlistId, track) => {
-        set((state) => ({
-          playlists: state.playlists.map((p) =>
+        set((state) => {
+          const playlists = state.playlists.map((p) =>
             p.id === playlistId
               ? {
                 ...p,
@@ -103,8 +103,30 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
                 updatedAt: Date.now(),
               }
               : p
-          ),
-        }))
+          )
+
+          if (
+            state.isShuffleEnabled &&
+            state.currentPlaylistId === playlistId
+          ) {
+            const targetPlaylist = playlists.find((p) => p.id === playlistId)
+            const newTrackIndex = targetPlaylist ? targetPlaylist.tracks.length - 1 : -1
+
+            if (newTrackIndex >= 0) {
+              const alreadyInOrder = state.shuffleOrder.includes(newTrackIndex)
+
+              if (!alreadyInOrder) {
+                const shuffleOrder = [...state.shuffleOrder, newTrackIndex]
+                return {
+                  playlists,
+                  shuffleOrder,
+                }
+              }
+            }
+          }
+
+          return { playlists }
+        })
       },
 
       removeTrackFromPlaylist: (playlistId, trackId) => {
@@ -245,7 +267,16 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
             // In shuffle mode, index passed in is the actual track index
             // We need to convert it shuffle order index
             const shuffleOrderIndex = state.shuffleOrder.indexOf(index)
-            set({ currentTrackIndex: shuffleOrderIndex })
+
+            if (shuffleOrderIndex !== -1) {
+              set({ currentTrackIndex: shuffleOrderIndex })
+            } else {
+              const updatedOrder = [...state.shuffleOrder, index]
+              set({
+                shuffleOrder: updatedOrder,
+                currentTrackIndex: updatedOrder.length - 1,
+              })
+            }
           } else {
             // In normal mode, set the current track index directly
             set({ currentTrackIndex: index })
