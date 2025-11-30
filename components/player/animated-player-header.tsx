@@ -2,25 +2,15 @@
 
 import * as React from "react";
 import Image from "next/image";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  Shuffle,
-  Repeat,
-  Repeat1,
-  Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
+import { getThumbnailUrl } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
-import Link from "next/link";
 import { AppHeader } from "../layout/app-header";
 import { Track } from "@/lib/types/playlist";
+import { PlayerControls } from "./player-controls";
+import { StickyMiniPlayer } from "./sticky-mini-player";
+import { cn } from "@/lib/utils";
 
 const LOADING_PHRASE_LIST = [
   "Let's grind",
@@ -65,46 +55,10 @@ export function AnimatedPlayerHeader() {
   const playerRef = React.useRef<HTMLDivElement>(null);
   const [isPlayerHidden, setIsPlayerHidden] = React.useState(false);
 
-  const {
-    getCurrentTrack,
-    playlists,
-    currentPlaylistId,
-    currentTrackIndex,
-    playNext,
-    playPrevious,
-    isShuffleEnabled,
-    toggleShuffle,
-    repeatMode,
-    cycleRepeatMode,
-  } = usePlaylistStore();
-  const {
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    togglePlay,
-    seek,
-    handleVolumeChange,
-    isLoadingNewVideo,
-    apiReady,
-    pendingPlayState,
-  } = usePlayerStore();
+  const { getCurrentTrack } = usePlaylistStore();
+  const { apiReady } = usePlayerStore();
 
   const track = hasMounted ? getCurrentTrack() : null;
-  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
-  const canPlayPrevious = currentTrackIndex > 0;
-  const canPlayNext =
-    !!currentPlaylist &&
-    (repeatMode === "playlist"
-      ? currentPlaylist.tracks.length > 0
-      : currentTrackIndex < currentPlaylist.tracks.length - 1);
-  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
-  const repeatLabel =
-    repeatMode === "one"
-      ? "Repeat one"
-      : repeatMode === "playlist"
-      ? "Repeat playlist"
-      : "Repeat";
 
   // Intersection Observer to detect when player is hidden
   React.useEffect(() => {
@@ -141,83 +95,9 @@ export function AnimatedPlayerHeader() {
     return <InitialLoadingUI />;
   }
 
-  // console.log("Rendering player header", { currentTime });
-
   return (
     <>
-      {/* Sticky mini player bar - shown when main player is hidden */}
-      <div
-        className={cn(
-          "fixed top-0 left-0 right-0 z-40 trans",
-          isPlayerHidden
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-full opacity-0 pointer-events-none"
-        )}
-      >
-        <div className="mx-auto w-full max-w-4xl px-4 py-3 sm:px-6">
-          {track && (
-            <div className="flex items-center gap-4 rounded-full border border-white/10 px-4 py-2 text-sm text-white backdrop-blur-xl bg-[#050505]/25">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="relative h-10 w-10 overflow-hidden rounded-md aspect-video flex-shrink-0">
-                  <Image
-                    src={track.thumbnailUrl}
-                    alt={track.title}
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <Link
-                    href={`https://www.youtube.com/watch?v=${track.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    <p className="truncate text-sm">{track.title}</p>
-                  </Link>
-                  <Link
-                    href={track.authorUrl ?? ""}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    <p className="truncate text-xs uppercase text-neutral-500">
-                      {track.author || "Unknown Artist"}
-                    </p>
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  disabled={
-                    isLoadingNewVideo || pendingPlayState !== null || !apiReady
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white disabled:opacity-40 hover:bg-white/10 transition-colors"
-                >
-                  {!apiReady || isLoadingNewVideo ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  ) : isPlaying || pendingPlayState !== null ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4 translate-x-[1px]" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={playNext}
-                  disabled={!canPlayNext}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
-                >
-                  <SkipForward className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <StickyMiniPlayer isPlayerHidden={isPlayerHidden} track={track} />
 
       {/* App header and main player section */}
       <header className="space-y-8">
@@ -237,164 +117,7 @@ export function AnimatedPlayerHeader() {
             <CurrentTrackHeader track={track} />
 
             {/* Player controls */}
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-center gap-6">
-                <div
-                  className={cn(
-                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[80px] motion-scale-in-75"
-                  )}
-                >
-                  <button
-                    className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
-                      "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
-                    )}
-                    onClick={playPrevious}
-                    disabled={!canPlayPrevious}
-                    title="Previous"
-                    type="button"
-                  >
-                    <SkipBack className="h-5 w-5" />
-                  </button>
-                </div>
-                <div
-                  className={cn(
-                    "motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
-                  )}
-                >
-                  <button
-                    className={cn(
-                      "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer",
-                      "bg-white text-black disabled:opacity-40"
-                    )}
-                    onClick={togglePlay}
-                    disabled={isLoadingNewVideo || !apiReady}
-                    title={isPlaying ? "Pause" : "Play"}
-                    type="button"
-                  >
-                    {!apiReady || isLoadingNewVideo ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : isPlaying || pendingPlayState !== null ? (
-                      <Pause className="h-6 w-6" />
-                    ) : (
-                      <Play className="h-6 w-6 translate-x-[1px]" />
-                    )}
-                  </button>
-                </div>
-                <div
-                  className={cn(
-                    "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[-80px] motion-scale-in-75"
-                  )}
-                >
-                  <button
-                    className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
-                      "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
-                    )}
-                    onClick={playNext}
-                    disabled={!canPlayNext}
-                    title="Next"
-                    type="button"
-                  >
-                    <SkipForward className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-500">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-
-                <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-200">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    step="0.1"
-                    value={currentTime || 0}
-                    onChange={(e) => seek(Number(e.target.value))}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
-                <div className="flex items-center gap-2 sm:min-w-[150px] -translate-x-2 sm:-translate-x-3">
-                  <PlayerToggleButton
-                    active={isShuffleEnabled}
-                    title={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
-                    onClick={toggleShuffle}
-                  >
-                    <div className="relative">
-                      <Shuffle className="size-5" />
-                      <div
-                        className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
-                        style={{
-                          opacity: isShuffleEnabled ? 1 : 0,
-                        }}
-                      ></div>
-                    </div>
-                    {/* {isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"} */}
-                    <span className="hidden sm:inline-block text-xs sm:text-sm">
-                      {isShuffleEnabled ? "Shuffling" : "Shuffle"}
-                    </span>
-                  </PlayerToggleButton>
-                </div>
-                <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-500">
-                  <Volume2 className="h-4 w-4" />
-                  <div className="relative h-1.5 w-32 rounded-full bg-white/10">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
-                      style={{ width: `${volume}%` }}
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={volume || 0}
-                      onChange={(e) =>
-                        handleVolumeChange(Number(e.target.value))
-                      }
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                    />
-                  </div>
-                  <span className="text-xs font-mono tracking-wider">
-                    {Math.round(volume ?? 0)}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-end gap-2 sm:min-w-[150px] translate-x-2 sm:translate-x-3">
-                  <PlayerToggleButton
-                    active={repeatMode !== "off"}
-                    title={repeatLabel}
-                    onClick={cycleRepeatMode}
-                  >
-                    <div className="relative">
-                      {repeatMode === "one" ? (
-                        <Repeat1 className="size-5" />
-                      ) : (
-                        <Repeat className="size-5" />
-                      )}
-                      {/* <div
-                        className="size-[3px] absolute rounded-full -bottom-1.5 left-1/2 -translate-x-1/2 bg-white transition-all duration-200"
-                        style={{
-                          opacity: repeatMode === "off" ? 0 : 1,
-                        }}
-                      ></div> */}
-                    </div>
-                    <span className="hidden sm:inline-block text-xs sm:text-sm">
-                      {repeatLabel}
-                    </span>
-                  </PlayerToggleButton>
-                </div>
-              </div>
-            </div>
+            <PlayerControls />
           </div>
         )}
       </header>
@@ -441,30 +164,5 @@ function CurrentTrackHeader({ track }: { track: Track }) {
         </p>
       </div>
     </div>
-  );
-}
-
-type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  active?: boolean;
-};
-
-function PlayerToggleButton({
-  active = false,
-  className,
-  type = "button",
-  "aria-pressed": ariaPressed,
-  ...props
-}: PlayerToggleButtonProps) {
-  return (
-    <button
-      type={type}
-      aria-pressed={ariaPressed ?? active}
-      className={cn(
-        "flex group/toggle-button items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-500 hover:scale-105 active:scale-95 select-none",
-        active ? "text-white" : "text-neutral-500 hover:text-white",
-        className
-      )}
-      {...props}
-    />
   );
 }
