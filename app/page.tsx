@@ -12,19 +12,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { StickyMiniPlayer } from "@/components/player/sticky-mini-player";
+import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 
 export default function Home() {
-  const playlists = usePlaylistStore((state) => state.playlists);
-  const currentPlaylistId = usePlaylistStore(
-    (state) => state.currentPlaylistId
-  );
-  const setCurrentPlaylist = usePlaylistStore(
-    (state) => state.setCurrentPlaylist
-  );
-  const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
   usePlaylistStore();
-
-  const apiReady = usePlayerStore((state) => state.apiReady);
 
   // Initialize YouTube player
   useYouTubePlayer();
@@ -32,24 +23,9 @@ export default function Home() {
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Initialize default playlist
-  React.useEffect(() => {
-    if (playlists.length === 0) {
-      createPlaylist(
-        "My Playlist",
-        "Your music collection",
-        DEFAULT_PLAYLIST_TRACKS
-      );
-      setTimeout(() => {
-        const newPlaylists = usePlaylistStore.getState().playlists;
-        if (newPlaylists.length > 0) {
-          setCurrentPlaylist(newPlaylists[0].id);
-        }
-      }, 100);
-    } else if (!currentPlaylistId && playlists.length > 0) {
-      setCurrentPlaylist(playlists[0].id);
-    }
-  }, []);
+  useInitializePlaylist();
+
+  const apiReady = usePlayerStore((state) => state.apiReady);
 
   if (!apiReady) {
     return <AppLoadingUI />;

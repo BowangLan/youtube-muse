@@ -1,17 +1,11 @@
 "use client";
 
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { usePlayerStore } from "@/lib/store/player-store";
 import { PlayerControls } from "./player-controls";
 import { CurrentTrackHeader } from "./current-track-header";
 
 export function AnimatedPlayerHeader() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-  const apiReady = usePlayerStore((state) => state.apiReady);
-
-  if (!apiReady) {
-    return null;
-  }
 
   return (
     <>
@@ -23,7 +17,7 @@ export function AnimatedPlayerHeader() {
           <p className="text-2xl text-white">Drop a link to begin.</p>
         </div>
       ) : (
-        <div id="player-header" className="space-y-6">
+        <div id="player-header" className="space-y-6 md:space-y-8">
           {/* Album art & track info */}
           <CurrentTrackHeader track={track} />
 
