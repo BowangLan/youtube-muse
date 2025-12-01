@@ -17,11 +17,11 @@ import { extractVideoId } from "@/lib/utils/youtube";
 import { cn } from "@/lib/utils";
 import { RichButton } from "../ui/rich-button";
 
-interface AddTrackDialogProps {
+interface AddTrackDialogContentProps {
   playlist: Playlist | null;
   currentPlaylistId: string | null;
   onAddTrack: (playlistId: string, track: Omit<Track, "addedAt">) => void;
-  triggerClassName?: string;
+  onClose: () => void;
 }
 
 type YouTubeVideoMetadata = {
@@ -70,13 +70,12 @@ async function fetchVideoMetadata(
   }
 }
 
-export function AddTrackDialog({
+export function AddTrackDialogContent({
   playlist,
   currentPlaylistId,
   onAddTrack,
-  triggerClassName,
-}: AddTrackDialogProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  onClose,
+}: AddTrackDialogContentProps) {
   const [videoUrl, setVideoUrl] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -126,114 +125,131 @@ export function AddTrackDialog({
     setVideoUrl("");
     setError(null);
     setIsLoading(false);
-    setIsOpen(false);
+    onClose();
   };
 
-  // React.useEffect(() => {
-  //   if (!isOpen && typeof window !== "undefined" && navigator.clipboard) {
-  //     // On dialog open, check clipboard for YouTube URL
-  //     navigator.clipboard
-  //       .readText()
-  //       .then((clipText) => {
-  //         // Basic YouTube URL regex
-  //         const ytPattern =
-  //           /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-  //         if (ytPattern.test(clipText)) {
-  //           setVideoUrl(clipText.trim());
-  //           setIsOpen(true);
-  //         }
-  //       })
-  //       .catch(() => {});
-  //   }
-  // }, [isOpen, setIsOpen, setVideoUrl]);
+  return (
+    <div className="space-y-6 p-6">
+      <DialogHeader className="space-y-1 text-left">
+        <DialogTitle className="text-xl font-semibold">
+          Add a track
+        </DialogTitle>
+        <DialogDescription className="text-sm text-zinc-500">
+          Paste a YouTube link or ID.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-2">
+        <Input
+          id="video-url-input"
+          placeholder="https://youtu.be/..."
+          value={videoUrl}
+          onChange={(e) => {
+            setVideoUrl(e.target.value);
+            setError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !isLoading) {
+              handleAddTrack();
+            }
+          }}
+          className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+        />
+        {isDuplicate && (
+          <p className="text-sm text-destructive">
+            This track is already in the playlist.
+          </p>
+        )}
+        {error && !isDuplicate && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          disabled={isLoading}
+          className="rounded-full px-4 text-white hover:bg-background"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={() => handleAddTrack()}
+          disabled={!videoUrl.trim() || isLoading || isDuplicate}
+          className="rounded-full bg-white text-black hover:bg-white/90"
+        >
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Add Track
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface AddTrackDialogProps {
+  playlist: Playlist | null;
+  currentPlaylistId: string | null;
+  onAddTrack: (playlistId: string, track: Omit<Track, "addedAt">) => void;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+}
+
+export function AddTrackDialog({
+  playlist,
+  currentPlaylistId,
+  onAddTrack,
+  trigger,
+  triggerClassName,
+}: AddTrackDialogProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [dialogKey, setDialogKey] = React.useState(0);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    // Reset form state by remounting the content component
+    setTimeout(() => {
+      setDialogKey((prev) => prev + 1);
+    }, 100);
+  };
+
+  const defaultTrigger = (
+    <RichButton
+      tooltip="Add a track to the playlist"
+      variant="ghost"
+      size="sm"
+      disabled={!currentPlaylistId}
+      className={cn("rounded-full", triggerClassName)}
+    >
+      <Plus className="h-4 w-4" />
+    </RichButton>
+  );
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          setIsOpen(false);
-          setTimeout(() => {
-            setVideoUrl("");
-            setError(null);
-            setIsLoading(false);
-          }, 100);
+          handleClose();
         } else {
           setIsOpen(true);
+          setDialogKey((prev) => prev + 1);
         }
       }}
     >
-      <DialogTrigger asChild>
-        <RichButton
-          tooltip="Add a track to the playlist"
-          variant="ghost"
-          size="sm"
-          disabled={!currentPlaylistId}
-          className={cn(
-            "rounded-full",
-            // "gap-2 rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
-            triggerClassName
-          )}
-        >
-          <Plus className="h-4 w-4" />
-        </RichButton>
-      </DialogTrigger>
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>{defaultTrigger}</DialogTrigger>
+      )}
       <DialogContent className="max-w-lg rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
-        <div className="space-y-6 p-6">
-          <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="text-xl font-semibold">
-              Add a track
-            </DialogTitle>
-            <DialogDescription className="text-sm text-zinc-500">
-              Paste a YouTube link or ID.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Input
-              id="video-url-input"
-              placeholder="https://youtu.be/..."
-              value={videoUrl}
-              onChange={(e) => {
-                setVideoUrl(e.target.value);
-                setError(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isLoading) {
-                  handleAddTrack();
-                }
-              }}
-              className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
-            />
-            {isDuplicate && (
-              <p className="text-sm text-destructive">
-                This track is already in the playlist.
-              </p>
-            )}
-            {error && !isDuplicate && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => setIsOpen(false)}
-              disabled={isLoading}
-              className="rounded-full px-4 text-white hover:bg-background"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => handleAddTrack()}
-              disabled={!videoUrl.trim() || isLoading || isDuplicate}
-              className="rounded-full bg-white text-black hover:bg-white/90"
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Track
-            </Button>
-          </div>
-        </div>
+        <AddTrackDialogContent
+          key={dialogKey}
+          playlist={playlist}
+          currentPlaylistId={currentPlaylistId}
+          onAddTrack={onAddTrack}
+          onClose={handleClose}
+        />
       </DialogContent>
     </Dialog>
   );

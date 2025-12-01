@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { motion } from "motion/react";
 
 type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
@@ -54,18 +55,6 @@ export function PlayerControls() {
     repeatMode,
     cycleRepeatMode,
   } = usePlaylistStore();
-  const {
-    isPlaying,
-    currentTime,
-    duration,
-    volume,
-    togglePlay,
-    seek,
-    handleVolumeChange,
-    isLoadingNewVideo,
-    apiReady,
-    pendingPlayState,
-  } = usePlayerStore();
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayPrevious = currentTrackIndex > 0;
@@ -74,7 +63,6 @@ export function PlayerControls() {
     (repeatMode === "playlist"
       ? currentPlaylist.tracks.length > 0
       : currentTrackIndex < currentPlaylist.tracks.length - 1);
-  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const repeatLabel =
     repeatMode === "one"
       ? "Repeat one"
@@ -108,7 +96,7 @@ export function PlayerControls() {
             "motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
           )}
         >
-          <button
+          {/* <button
             className={cn(
               "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer",
               "bg-white text-black disabled:opacity-40"
@@ -125,7 +113,8 @@ export function PlayerControls() {
             ) : (
               <Play className="h-6 w-6 translate-x-[1px]" />
             )}
-          </button>
+          </button> */}
+          <PlayPauseButton />
         </div>
         <div
           className={cn(
@@ -148,26 +137,8 @@ export function PlayerControls() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between text-xs font-mono text-neutral-500 motion-preset-blur-up-md motion-delay-500">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-
-        <div className="relative h-1.5 rounded-full bg-white/10 motion-opacity-in-0 motion-scale-in-0 motion-delay-200">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
-            style={{ width: `${progressPercent}%` }}
-          />
-          <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            step="0.1"
-            value={currentTime || 0}
-            onChange={(e) => seek(Number(e.target.value))}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
-          />
-        </div>
+        <TimeDisplay className="motion-preset-blur-up-md motion-delay-500" />
+        <ProgressBar className="motion-opacity-in-0 motion-scale-in-0 motion-delay-200" />
       </div>
 
       <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
@@ -191,29 +162,9 @@ export function PlayerControls() {
             </span>
           </PlayerToggleButton>
         </div>
-        <div className="flex items-center gap-3 text-neutral-500 motion-preset-blur-up-md motion-delay-500">
-          <Volume2 className="h-4 w-4" />
-          <div className="relative h-1.5 w-32 rounded-full bg-white/10">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
-              style={{ width: `${volume}%` }}
-            />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={volume || 0}
-              onChange={(e) =>
-                handleVolumeChange(Number(e.target.value))
-              }
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            />
-          </div>
-          <span className="text-xs font-mono tracking-wider">
-            {Math.round(volume ?? 0)}%
-          </span>
-        </div>
+
+        <VolumeControl className="motion-preset-blur-up-md motion-delay-500" />
+
         <div className="flex items-center justify-end gap-2 sm:min-w-[150px] translate-x-2 sm:translate-x-3">
           <PlayerToggleButton
             active={repeatMode !== "off"}
@@ -236,3 +187,138 @@ export function PlayerControls() {
     </div>
   );
 }
+
+export const ProgressBar = React.memo(
+  ({ className }: { className?: string }) => {
+    const seek = usePlayerStore((state) => state.seek);
+    const currentTime = usePlayerStore((state) => state.currentTime);
+    const duration = usePlayerStore((state) => state.duration);
+    const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+
+    return (
+      <div className={cn("relative h-1.5 rounded-full bg-white/10", className)}>
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
+          style={{ width: `${progressPercent}%` }}
+        />
+        <input
+          type="range"
+          min="0"
+          max={duration || 100}
+          step="0.1"
+          value={currentTime || 0}
+          onChange={(e) => seek(Number(e.target.value))}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
+        />
+      </div>
+    );
+  }
+);
+
+export const TimeDisplay = React.memo(
+  ({ className }: { className?: string }) => {
+    const currentTime = usePlayerStore((state) => state.currentTime);
+    const duration = usePlayerStore((state) => state.duration);
+
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-between text-xs font-mono text-neutral-500",
+          className
+        )}
+      >
+        <span>{formatTime(currentTime)}</span>
+        <span>{formatTime(duration)}</span>
+      </div>
+    );
+  }
+);
+
+export const VolumeControl = React.memo(
+  ({ className }: { className?: string }) => {
+    const volume = usePlayerStore((state) => state.volume);
+    const handleVolumeChange = usePlayerStore(
+      (state) => state.handleVolumeChange
+    );
+
+    return (
+      <div
+        className={cn("flex items-center gap-3 text-neutral-500", className)}
+      >
+        <Volume2 className="h-4 w-4" />
+        <div className="relative h-1.5 w-32 rounded-full bg-white/10">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
+            style={{ width: `${volume}%` }}
+          />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={volume || 0}
+            onChange={(e) => handleVolumeChange(Number(e.target.value))}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
+        </div>
+        <span className="text-xs font-mono tracking-wider">
+          {Math.round(volume ?? 0)}%
+        </span>
+      </div>
+    );
+  }
+);
+
+export const PlayPauseButton = React.memo(
+  ({
+    className,
+    iconClassName,
+    variant = "default",
+  }: {
+    className?: string;
+    iconClassName?: string;
+    variant?: "default" | "ghost";
+  }) => {
+    const isPlaying = usePlayerStore((state) => state.isPlaying);
+    const togglePlay = usePlayerStore((state) => state.togglePlay);
+    const isLoadingNewVideo = usePlayerStore(
+      (state) => state.isLoadingNewVideo
+    );
+    const apiReady = usePlayerStore((state) => state.apiReady);
+    const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
+
+    return (
+      <motion.button
+        // layoutId="play-pause-button"
+        className={cn(
+          "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer bg-white",
+          variant === "ghost" && "bg-transparent hover:bg-white/10",
+          variant === "default" && "bg-white",
+          className
+        )}
+        onClick={togglePlay}
+        disabled={isLoadingNewVideo || !apiReady}
+      >
+        {isPlaying || pendingPlayState !== null ? (
+          <Pause
+            className={cn(
+              "h-6 w-6 text-black trans",
+              variant === "ghost" && "text-white",
+              iconClassName
+            )}
+            fill={variant === "ghost" ? "white" : "black"}
+          />
+        ) : (
+          <Play
+            className={cn(
+              "h-6 w-6 translate-x-[1px] text-black trans",
+              variant === "ghost" && "text-white",
+              iconClassName
+            )}
+            fill={variant === "ghost" ? "white" : "black"}
+          />
+        )}
+      </motion.button>
+    );
+  }
+);
