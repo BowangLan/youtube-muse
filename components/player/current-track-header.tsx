@@ -5,7 +5,7 @@ import { getThumbnailUrl } from "@/lib/utils/youtube";
 export function CurrentTrackHeader({ track }: { track: Track }) {
   return (
     <div className="flex flex-col gap-6 items-center sm:items-start sm:flex-row motion-blur-in-lg motion-opacity-in-0 motion-delay-700">
-      <div className="relative aspect-video w-full max-w-[24rem] sm:max-w-[16rem] md:max-w-[22rem] overflow-hidden rounded-xl">
+      <div className="relative aspect-video w-full sm:max-w-[16rem] md:max-w-[22rem] overflow-hidden rounded-xl">
         <Image
           src={getThumbnailUrl(track.id, "maxresdefault")}
           alt={track.title}
@@ -15,8 +15,8 @@ export function CurrentTrackHeader({ track }: { track: Track }) {
           priority
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 md:gap-3 text-neutral-300">
-        <span className="text-xs uppercase tracking-[0.4em] text-neutral-500">
+      <div className="flex min-w-0 w-full sm:flex-1 flex-col gap-2 md:gap-3 text-neutral-300">
+        <span className="text-xs uppercase hidden sm:block tracking-[0.4em] text-neutral-500">
           playing now
         </span>
         <h2 className="md:text-3xl text-xl font-light leading-tight text-white">
