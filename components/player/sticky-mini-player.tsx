@@ -7,19 +7,17 @@ import { Play, Pause, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { Track } from "@/lib/types/playlist";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 
-interface StickyMiniPlayerProps {
-  isPlayerHidden: boolean;
-  track: Track | null;
-}
-
-export function StickyMiniPlayer({
-  isPlayerHidden,
-  track,
-}: StickyMiniPlayerProps) {
-  const { togglePlay, isLoadingNewVideo, apiReady, pendingPlayState, isPlaying } =
-    usePlayerStore();
+export function StickyMiniPlayer() {
+  const track = usePlaylistStore((state) => state.getCurrentTrack());
+  const {
+    togglePlay,
+    isLoadingNewVideo,
+    apiReady,
+    pendingPlayState,
+    isPlaying,
+  } = usePlayerStore();
   const {
     playNext,
     repeatMode,
@@ -27,6 +25,41 @@ export function StickyMiniPlayer({
     playlists,
     currentPlaylistId,
   } = usePlaylistStore();
+  const hasMounted = useHasMounted();
+
+  const [isPlayerHidden, setIsPlayerHidden] = React.useState(false);
+
+  // Intersection Observer to detect when player is hidden
+  // TODO: Refine this
+  // React.useEffect(() => {
+  //   if (!hasMounted) return;
+  //   if (!track) {
+  //     setIsPlayerHidden(false);
+  //     return;
+  //   }
+
+  //   const observer = new IntersectionObserver(
+  //     ([entry]) => {
+  //       setIsPlayerHidden(!entry.isIntersecting);
+  //     },
+  //     {
+  //       threshold: 0.85,
+  //       rootMargin: "-0px 0px 0px 0px", // Trigger when player is 60px from top
+  //     }
+  //   );
+
+  //   const currentRef = document.getElementById("player-header");
+  //   if (currentRef) {
+  //     observer.observe(currentRef);
+  //   }
+
+  //   return () => {
+  //     if (currentRef) {
+  //       observer.unobserve(currentRef);
+  //     }
+  //     observer.disconnect();
+  //   };
+  // }, [hasMounted, track?.id]); // Use track.id to detect changes
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =

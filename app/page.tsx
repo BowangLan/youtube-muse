@@ -8,12 +8,23 @@ import { AnimatedPlayerHeader } from "@/components/player/animated-player-header
 import { PlaylistSection } from "@/components/playlist/playlist-section";
 import { AppFooter } from "@/components/layout/app-footer";
 import { DEFAULT_PLAYLIST_TRACKS } from "@/lib/constants";
-import { useHasMounted } from "@/hooks/use-has-mounted";
-import { PlaylistSectionCardsVariant } from "@/components/playlist/playlist-section-cards-variant";
+import { AppHeader } from "@/components/layout/app-header";
+import { usePlayerStore } from "@/lib/store/player-store";
+import { AppLoadingUI } from "@/components/layout/app-loading-ui";
+import { StickyMiniPlayer } from "@/components/player/sticky-mini-player";
 
 export default function Home() {
-  const { playlists, currentPlaylistId, setCurrentPlaylist, createPlaylist } =
-    usePlaylistStore();
+  const playlists = usePlaylistStore((state) => state.playlists);
+  const currentPlaylistId = usePlaylistStore(
+    (state) => state.currentPlaylistId
+  );
+  const setCurrentPlaylist = usePlaylistStore(
+    (state) => state.setCurrentPlaylist
+  );
+  const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
+  usePlaylistStore();
+
+  const apiReady = usePlayerStore((state) => state.apiReady);
 
   // Initialize YouTube player
   useYouTubePlayer();
@@ -40,6 +51,10 @@ export default function Home() {
     }
   }, []);
 
+  if (!apiReady) {
+    return <AppLoadingUI />;
+  }
+
   return (
     <main className="min-h-screen w-full bg-[#050505] text-white">
       {/* Hidden YouTube player */}
@@ -47,16 +62,19 @@ export default function Home() {
         <div id="youtube-player" />
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 pb-16 pt-8 sm:px-6">
-        <AnimatedPlayerHeader />
+      <StickyMiniPlayer />
 
-        <section
-          aria-label="Playlist"
-          className="mt-12 md:mt-16 motion-preset-slide-up-sm"
-        >
-          <PlaylistSection />
-          {/* <PlaylistSectionCardsVariant /> */}
-        </section>
+      <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6">
+        <AppHeader />
+
+        <div className="space-y-12 md:space-y-16">
+          <AnimatedPlayerHeader />
+
+          <section aria-label="Playlist" className="motion-preset-slide-up-sm">
+            <PlaylistSection />
+            {/* <PlaylistSectionCardsVariant /> */}
+          </section>
+        </div>
       </div>
 
       <AppFooter />
