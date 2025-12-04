@@ -13,6 +13,7 @@ import { usePlayerStore } from "@/lib/store/player-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { StickyMiniPlayer } from "@/components/player/sticky-mini-player";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
+import { AnimatedBackground } from "@/components/player/animated-background";
 
 export default function Home() {
   usePlaylistStore();
@@ -33,6 +34,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full bg-[#050505] text-white">
+      {/* Animated background based on current track */}
+      <AnimatedBackground />
+
       {/* Hidden YouTube player */}
       <div className="absolute left-[-9999px] h-px w-px" aria-hidden="true">
         <div id="youtube-player" />

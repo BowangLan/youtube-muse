@@ -151,6 +151,44 @@
     -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
   }
+
+  /* Pulsing glow animation for album art - uses CSS variables for colors */
+  .animate-glow-pulse {
+    animation: glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 30px var(--glow-color-1, rgba(255, 255, 255, 0.3)),
+        0 0 60px var(--glow-color-2, rgba(255, 255, 255, 0.15)),
+        0 0 90px var(--glow-color-3, rgba(255, 255, 255, 0.08));
+    }
+    50% {
+      box-shadow:
+        0 0 40px var(--glow-color-1, rgba(255, 255, 255, 0.5)),
+        0 0 80px var(--glow-color-2, rgba(255, 255, 255, 0.25)),
+        0 0 120px var(--glow-color-3, rgba(255, 255, 255, 0.12));
+    }
+  }
+
+  /* Pulsing glow for play button */
+  .animate-play-glow {
+    animation: play-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes play-glow {
+    0%, 100% {
+      box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.3),
+        0 0 30px rgba(255, 255, 255, 0.15);
+    }
+    50% {
+      box-shadow:
+        0 0 25px rgba(255, 255, 255, 0.5),
+        0 0 50px rgba(255, 255, 255, 0.25);
+    }
+  }
 }
 
 .trans {
