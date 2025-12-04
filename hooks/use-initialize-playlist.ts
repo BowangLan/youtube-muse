@@ -19,7 +19,13 @@ export function useInitializePlaylist() {
   );
   const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
 
+  const hasMounted = React.useRef(false);
+
   React.useEffect(() => {
+    // Prevent double-initialization in strict mode
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
     if (playlists.length === 0) {
       createPlaylist(
         "My Playlist",
@@ -35,6 +41,7 @@ export function useInitializePlaylist() {
     } else if (!currentPlaylistId && playlists.length > 0) {
       setCurrentPlaylist(playlists[0].id);
     }
-  }, []);
+  }, [playlists.length, currentPlaylistId, createPlaylist, setCurrentPlaylist]);
 }
+
 

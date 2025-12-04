@@ -14,8 +14,11 @@ import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { StickyMiniPlayer } from "@/components/player/sticky-mini-player";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { AnimatedBackground } from "@/components/player/animated-background";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export default function Home() {
+  const hasMounted = useHasMounted();
+
   usePlaylistStore();
 
   // Initialize YouTube player
@@ -28,7 +31,8 @@ export default function Home() {
 
   const apiReady = usePlayerStore((state) => state.apiReady);
 
-  if (!apiReady) {
+  // Show loading UI if not mounted (prevents hydration mismatch) or API not ready
+  if (!hasMounted || !apiReady) {
     return <AppLoadingUI />;
   }
 
