@@ -1,16 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import type { Track } from "@/lib/types/playlist";
-import { Button } from "@/components/ui/button";
-import { ClockIcon, Music, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { Music } from "lucide-react";
 import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useHasMounted } from "@/hooks/use-has-mounted";
-import { formatTime } from "@/lib/utils/youtube";
+import { TrackItem } from "./track-item";
 
 export function PlaylistSection() {
   const {
@@ -84,101 +78,6 @@ export function PlaylistSection() {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-interface TrackItemProps {
-  track: Track;
-  isCurrentTrack: boolean;
-  onClick: () => void;
-  onRemove: () => void;
-}
-
-function PlayingIndicator({ isPlaying }: { isPlaying: boolean }) {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-      <div className="flex items-end gap-[3px] h-4">
-        <div
-          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300"
-          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-        />
-        <div
-          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-600"
-          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-        />
-        <div
-          className="w-[3px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-900"
-          style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function TrackItem({
-  track,
-  isCurrentTrack,
-  onClick,
-  onRemove,
-}: TrackItemProps) {
-  const { pendingPlayState, isPlaying } = usePlayerStore();
-  const _isPlaying = isPlaying || pendingPlayState !== null;
-
-  return (
-    <div
-      className={cn(
-        "group flex items-center gap-3 rounded-xl px-2 py-2 text-left cursor-pointer",
-        isCurrentTrack ? "bg-white/10" : "hover:bg-white/5"
-      )}
-      onClick={onClick}
-    >
-      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
-        <Image
-          src={track.thumbnailUrl}
-          alt={track.title}
-          fill
-          sizes="44px"
-          className="object-cover"
-        />
-        {isCurrentTrack && <PlayingIndicator isPlaying={_isPlaying} />}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p
-          className={cn(
-            "truncate text-sm text-white",
-            !isCurrentTrack && "text-white/80"
-          )}
-        >
-          {track.title}
-        </p>
-        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-          <span>{formatTime(track.duration)}</span>
-          <span>•</span>
-          <Link
-            href={track.authorUrl ?? ""}
-            target="_blank"
-            className="text-xs text-neutral-500 hover:underline truncate hover:text-white trans"
-          >
-            {track.author}
-          </Link>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 justify-end mx-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-neutral-500 opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div>
     </div>
   );
 }

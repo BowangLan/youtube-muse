@@ -11,6 +11,7 @@ import { AddTrackDialogContent } from "@/components/playlist/add-track-dialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { TrackItemSmall } from "@/components/playlist/track-item-small";
 
 export function PlaylistSection() {
   const {
@@ -89,12 +90,13 @@ export function PlaylistSection() {
           {playlist.tracks.map((track, index) => {
             const isCurrentTrack = currentActualTrackIndex === index;
             return (
-              <TrackItem
+              <TrackItemSmall
                 key={`${track.id}-${track.addedAt}`}
                 track={track}
                 isCurrentTrack={isCurrentTrack}
                 onClick={() => handleTrackClick(index)}
                 onRemove={() => handleRemoveTrack(track.id)}
+                align="right"
               />
             );
           })}
@@ -138,106 +140,6 @@ export function PlaylistSection() {
           />
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-interface TrackItemProps {
-  track: Track;
-  isCurrentTrack: boolean;
-  onClick: () => void;
-  onRemove: () => void;
-}
-
-function PlayingIndicator({ isPlaying }: { isPlaying: boolean }) {
-  return (
-    <div className="flex items-end gap-[3px] h-3 flex-none">
-      <div
-        className="w-[2px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300"
-        style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-      />
-      <div
-        className="w-[2px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-600"
-        style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-      />
-      <div
-        className="w-[2px] h-full bg-white rounded-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-900"
-        style={{ animationPlayState: isPlaying ? "running" : "paused" }}
-      />
-    </div>
-  );
-}
-
-function TrackItem({
-  track,
-  isCurrentTrack,
-  onClick,
-  onRemove,
-}: TrackItemProps) {
-  const { pendingPlayState, isPlaying } = usePlayerStore();
-  const _isPlaying = isPlaying || pendingPlayState !== null;
-
-  return (
-    <div
-      className={cn(
-        "group flex items-center gap-3 cursor-pointer py-1.5"
-        // isCurrentTrack ? "bg-white/10" : "hover:bg-white/5"
-      )}
-      onClick={onClick}
-    >
-      {/* <div className="relative aspect-video w-12 shrink-0 overflow-hidden rounded-md">
-        <Image
-          src={track.thumbnailUrl}
-          alt={track.title}
-          fill
-          sizes="36px"
-          className="object-cover"
-        />
-        {isCurrentTrack && <PlayingIndicator isPlaying={_isPlaying} />}
-      </div> */}
-
-      <div className="min-w-0 flex-1 flex items-center justify-end gap-2">
-        {isCurrentTrack && <PlayingIndicator isPlaying={_isPlaying} />}
-        <p
-          className={cn(
-            "truncate text-sm text-white text-left md:text-right",
-            !isCurrentTrack && "text-white/60 hover:text-white"
-          )}
-        >
-          {track.title}
-        </p>
-        {/* <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-          <span>{formatTime(track.duration)}</span>
-          <span>•</span>
-          <Link
-            href={track.authorUrl ?? ""}
-            target="_blank"
-            className="text-xs text-neutral-500 hover:underline truncate hover:text-white trans"
-          >
-            {track.author}
-          </Link>
-        </div> */}
-      </div>
-
-      {/* <div className="flex items-center flex-none gap-2 justify-end overflow-hidden w-0 group-hover:w-12 transition-all duration-100">
-        <span className="text-xs text-white/60 hover:text-white">
-          {formatTime(track.duration)}
-        </span>
-      </div> */}
-
-      {/* <div className="flex items-center gap-2 justify-end mx-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-neutral-500 opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div> */}
     </div>
   );
 }

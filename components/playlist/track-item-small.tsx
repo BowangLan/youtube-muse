@@ -1,0 +1,77 @@
+import { usePlayerStore } from "@/lib/store/player-store";
+import { Track } from "@/lib/types/playlist";
+import { cn } from "@/lib/utils";
+import { PlayingIndicatorSmall } from "./playing-indicator";
+import { motion } from "motion/react";
+
+export function TrackItemSmall({
+  track,
+  isCurrentTrack,
+  onClick,
+  onRemove,
+  align = "left",
+}: {
+  track: Track;
+  isCurrentTrack: boolean;
+  onClick: () => void;
+  onRemove: () => void;
+  align?: "left" | "right";
+}) {
+  const { pendingPlayState, isPlaying } = usePlayerStore();
+  const _isPlaying = isPlaying || pendingPlayState !== null;
+
+  return (
+    <motion.div
+      className={cn("group flex items-center gap-3 cursor-pointer py-1.5")}
+      onClick={onClick}
+      layoutId={`track-item-${track.id}`}
+    >
+      <div
+        className="min-w-0 flex-1 flex items-center gap-2"
+        style={{
+          justifyContent: align === "right" ? "flex-end" : "flex-start",
+        }}
+      >
+        {isCurrentTrack && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PlayingIndicatorSmall isPlaying={_isPlaying} />
+          </motion.div>
+        )}
+        <motion.div
+          layout
+          className={cn(
+            "truncate text-sm text-white text-left md:text-right",
+            !isCurrentTrack && "text-white/60 hover:text-white"
+          )}
+        >
+          {track.title}
+        </motion.div>
+      </div>
+
+      {/* <div className="flex items-center flex-none gap-2 justify-end overflow-hidden w-0 group-hover:w-12 transition-all duration-100">
+        <span className="text-xs text-white/60 hover:text-white">
+          {formatTime(track.duration)}
+        </span>
+      </div> */}
+
+      {/* <div className="flex items-center gap-2 justify-end mx-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-neutral-500 opacity-0 group-hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div> */}
+    </motion.div>
+  );
+}
