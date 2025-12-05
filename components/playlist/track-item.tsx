@@ -26,8 +26,12 @@ export function TrackItem({
   return (
     <motion.div
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-2 py-2 text-left cursor-pointer",
-        isCurrentTrack ? "bg-white/10" : "hover:bg-white/5"
+        "group relative flex items-center gap-3 rounded-xl px-2 py-2 text-left cursor-pointer transition-all duration-300",
+        "overflow-hidden border border-white/5 backdrop-blur-3xl shadow-[0_10px_28px_rgba(10,10,35,0.25),0_4px_12px_rgba(255,255,255,0.05)] hover:shadow-[0_14px_38px_rgba(12,12,45,0.32),0_5px_16px_rgba(255,255,255,0.08)] before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-br before:from-white/10 before:via-white/4 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 group-hover:before:opacity-70",
+        // "hover:scale-[102%] transition-all duration-200 ease-out active:scale-[100%]",
+        isCurrentTrack
+          ? "bg-neutral-800"
+          : "bg-neutral-900 hover:bg-neutral-800"
       )}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}

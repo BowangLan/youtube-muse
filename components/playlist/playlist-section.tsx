@@ -5,6 +5,61 @@ import { AddTrackDialog } from "@/components/playlist/add-track-dialog";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { TrackItem } from "./track-item";
+import { motion, useScroll, useTransform } from "motion/react";
+import { useRef } from "react";
+import type { Track } from "@/lib/types/playlist";
+
+function AnimatedTrackItem({
+  track,
+  index,
+  isCurrentTrack,
+  onTrackClick,
+  onRemoveTrack,
+}: {
+  track: Track;
+  index: number;
+  isCurrentTrack: boolean;
+  onTrackClick: (index: number) => void;
+  onRemoveTrack: (trackId: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["end 0.9", "end 1.5"],
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const translateY = useTransform(scrollYProgress, [0, 1], [0, -400]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="backdrop-blur-3xl rounded-xl"
+      style={{
+        scale,
+        translateY,
+        zIndex: 500 - index,
+        position: "relative",
+      }}
+      // whileHover={{
+      //   scale: 1.02,
+      //   zIndex: 501,
+      //   transition: {
+      //     duration: 0.2,
+      //     ease: "easeOut",
+      //   },
+      // }}
+    >
+      <TrackItem
+        track={track}
+        isCurrentTrack={isCurrentTrack}
+        onClick={() => onTrackClick(index)}
+        onRemove={() => onRemoveTrack(track.id)}
+      />
+    </motion.div>
+  );
+}
 
 export function PlaylistSection() {
   const {
@@ -67,12 +122,13 @@ export function PlaylistSection() {
           {playlist.tracks.map((track, index) => {
             const isCurrentTrack = currentActualTrackIndex === index;
             return (
-              <TrackItem
+              <AnimatedTrackItem
                 key={`${track.id}-${track.addedAt}`}
                 track={track}
+                index={index}
                 isCurrentTrack={isCurrentTrack}
-                onClick={() => handleTrackClick(index)}
-                onRemove={() => handleRemoveTrack(track.id)}
+                onTrackClick={handleTrackClick}
+                onRemoveTrack={handleRemoveTrack}
               />
             );
           })}
