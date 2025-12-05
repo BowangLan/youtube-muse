@@ -15,7 +15,9 @@ export function AnimatedBackground() {
   return (
     <>
       {/* Fixed background container */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div
+        className="pointer-events-none fixed inset-0 overflow-hidden z-0"
+      >
         {/* Static base background */}
         <div className="absolute inset-0 bg-[#050505]" />
 

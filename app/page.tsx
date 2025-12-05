@@ -48,7 +48,7 @@ export default function Home() {
 
       <StickyMiniPlayer />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6">
+      <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6 z-10 isolate">
         <AppHeader />
 
         <div className="space-y-12 md:space-y-16">
