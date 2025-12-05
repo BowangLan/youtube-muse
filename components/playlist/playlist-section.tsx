@@ -29,8 +29,8 @@ function AnimatedTrackItem({
     offset: ["end 0.9", "end 1.5"],
   });
 
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
-  const translateY = useTransform(scrollYProgress, [0, 1], [0, -400]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
+  // const translateY = useTransform(scrollYProgress, [0, 1], [0, -400]);
 
   return (
     <motion.div
@@ -38,7 +38,7 @@ function AnimatedTrackItem({
       className="backdrop-blur-3xl rounded-xl"
       style={{
         scale,
-        translateY,
+        // translateY,
         zIndex: 500 - index,
         position: "relative",
       }}
