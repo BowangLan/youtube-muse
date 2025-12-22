@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useYouTubePlayer } from "./use-youtube-player"
+import { useMediaSession } from "./use-media-session"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { usePlayerStore } from "@/lib/store/player-store"
 
@@ -34,6 +35,9 @@ export function usePlaylistPlayer() {
 
   // Initialize YouTube player with current track
   useYouTubePlayer()
+
+  // Initialize OS-level media controls
+  useMediaSession()
 
   const isReady = duration > 0
 
