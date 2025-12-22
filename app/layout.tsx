@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { StructuredData } from "@/components/seo/structured-data";
-import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -115,11 +114,17 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <StructuredData />
+        {process.env.NODE_ENV === "production" && (
+          <script
+            defer
+            src="https://umami-production-252d.up.railway.app/script.js"
+            data-website-id="0550256b-75b5-4806-b0d9-f9caf6c80488"
+          ></script>
+        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Analytics />
         <Toaster />
         {children}
       </body>
