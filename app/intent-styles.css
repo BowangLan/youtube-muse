@@ -1,7 +1,8 @@
 /* Intent-specific gradients.
    These are plain CSS so they don't rely on Tailwind class generation. */
 
-.intent-gradient-deep-focus::before {
+/* 1: Deep Focus - sky to indigo to fuchsia */
+.intent-gradient-1::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(56, 189, 248, 0.18),
@@ -10,7 +11,17 @@
   );
 }
 
-.intent-gradient-momentum::before {
+.intent-gradient-1-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(56, 189, 248, 0.55),
+    rgba(129, 140, 248, 0.25),
+    rgba(232, 121, 249, 0.45)
+  );
+}
+
+/* 2: Momentum - emerald to cyan to blue */
+.intent-gradient-2::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(52, 211, 153, 0.16),
@@ -19,7 +30,17 @@
   );
 }
 
-.intent-gradient-sprint::before {
+.intent-gradient-2-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(52, 211, 153, 0.50),
+    rgba(34, 211, 238, 0.25),
+    rgba(96, 165, 250, 0.45)
+  );
+}
+
+/* 3: Sprint - amber to orange to rose */
+.intent-gradient-3::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(252, 211, 77, 0.18),
@@ -28,7 +49,17 @@
   );
 }
 
-.intent-gradient-float::before {
+.intent-gradient-3-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(252, 211, 77, 0.55),
+    rgba(251, 146, 60, 0.30),
+    rgba(251, 113, 133, 0.48)
+  );
+}
+
+/* 4: Float - violet to sky to emerald */
+.intent-gradient-4::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(167, 139, 250, 0.18),
@@ -37,7 +68,17 @@
   );
 }
 
-.intent-gradient-background::before {
+.intent-gradient-4-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(167, 139, 250, 0.55),
+    rgba(56, 189, 248, 0.28),
+    rgba(110, 231, 183, 0.42)
+  );
+}
+
+/* 5: Background - zinc to slate to indigo */
+.intent-gradient-5::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(212, 212, 216, 0.10),
@@ -46,7 +87,17 @@
   );
 }
 
-.intent-gradient-grind::before {
+.intent-gradient-5-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(212, 212, 216, 0.38),
+    rgba(148, 163, 184, 0.24),
+    rgba(129, 140, 248, 0.36)
+  );
+}
+
+/* 6: Grind - red to orange to yellow */
+.intent-gradient-6::before {
   background-image: linear-gradient(
     to bottom right,
     rgba(248, 113, 113, 0.16),
@@ -54,6 +105,16 @@
     rgba(253, 224, 71, 0.12)
   );
 }
+
+.intent-gradient-6-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(248, 113, 113, 0.50),
+    rgba(251, 146, 60, 0.28),
+    rgba(253, 224, 71, 0.42)
+  );
+}
+
 /* Metallic-like border sheen for intent cards.
    Uses inset shadows (not pseudo-elements) to avoid clobbering existing ::before/::after effects. */
 .intent-card {
@@ -77,57 +138,306 @@
     0 0 40px rgba(255, 255, 255, 0.03);
 }
 
-/* Active gradient states - intensified colors (~3-4x opacity) */
-.intent-gradient-deep-focus-active::before {
+/* 7: Ultraviolet - purple to pink to orange */
+.intent-gradient-7::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(56, 189, 248, 0.55),
-    rgba(129, 140, 248, 0.25),
-    rgba(232, 121, 249, 0.45)
+    rgba(168, 85, 247, 0.18),
+    rgba(236, 72, 153, 0.08),
+    rgba(251, 146, 60, 0.14)
   );
 }
 
-.intent-gradient-momentum-active::before {
+.intent-gradient-7-active::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(52, 211, 153, 0.50),
-    rgba(34, 211, 238, 0.25),
-    rgba(96, 165, 250, 0.45)
+    rgba(168, 85, 247, 0.55),
+    rgba(236, 72, 153, 0.30),
+    rgba(251, 146, 60, 0.45)
   );
 }
 
-.intent-gradient-sprint-active::before {
+/* 8: Rainforest - cyan to emerald to lime */
+.intent-gradient-8::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(252, 211, 77, 0.55),
-    rgba(251, 146, 60, 0.30),
-    rgba(251, 113, 133, 0.48)
+    rgba(34, 211, 238, 0.18),
+    rgba(16, 185, 129, 0.08),
+    rgba(132, 204, 22, 0.14)
   );
 }
 
-.intent-gradient-float-active::before {
+.intent-gradient-8-active::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(167, 139, 250, 0.55),
-    rgba(56, 189, 248, 0.28),
-    rgba(110, 231, 183, 0.42)
+    rgba(34, 211, 238, 0.55),
+    rgba(16, 185, 129, 0.30),
+    rgba(132, 204, 22, 0.45)
   );
 }
 
-.intent-gradient-background-active::before {
+/* 9: Crimson Dusk - rose to purple to indigo */
+.intent-gradient-9::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(212, 212, 216, 0.38),
-    rgba(148, 163, 184, 0.24),
-    rgba(129, 140, 248, 0.36)
+    rgba(244, 63, 94, 0.18),
+    rgba(168, 85, 247, 0.08),
+    rgba(99, 102, 241, 0.14)
   );
 }
 
-.intent-gradient-grind-active::before {
+.intent-gradient-9-active::before {
   background-image: linear-gradient(
     to bottom right,
-    rgba(248, 113, 113, 0.50),
-    rgba(251, 146, 60, 0.28),
-    rgba(253, 224, 71, 0.42)
+    rgba(244, 63, 94, 0.55),
+    rgba(168, 85, 247, 0.30),
+    rgba(99, 102, 241, 0.45)
+  );
+}
+
+/* 10: Solar Flare - amber to red to fuchsia */
+.intent-gradient-10::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(245, 158, 11, 0.18),
+    rgba(239, 68, 68, 0.08),
+    rgba(217, 70, 239, 0.14)
+  );
+}
+
+.intent-gradient-10-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(245, 158, 11, 0.55),
+    rgba(239, 68, 68, 0.30),
+    rgba(217, 70, 239, 0.45)
+  );
+}
+
+/* 11: Electric Blue - cyan to blue to violet */
+.intent-gradient-11::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(6, 182, 212, 0.18),
+    rgba(59, 130, 246, 0.08),
+    rgba(139, 92, 246, 0.14)
+  );
+}
+
+.intent-gradient-11-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(6, 182, 212, 0.55),
+    rgba(59, 130, 246, 0.30),
+    rgba(139, 92, 246, 0.45)
+  );
+}
+
+/* 12: Coral Sunset - pink to red to amber */
+.intent-gradient-12::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(236, 72, 153, 0.18),
+    rgba(248, 113, 113, 0.08),
+    rgba(251, 191, 36, 0.14)
+  );
+}
+
+.intent-gradient-12-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(236, 72, 153, 0.55),
+    rgba(248, 113, 113, 0.30),
+    rgba(251, 191, 36, 0.45)
+  );
+}
+
+/* 13: Ocean Depths - teal to navy to indigo */
+.intent-gradient-13::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(20, 184, 166, 0.18),
+    rgba(30, 64, 175, 0.08),
+    rgba(79, 70, 229, 0.14)
+  );
+}
+
+.intent-gradient-13-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(20, 184, 166, 0.55),
+    rgba(30, 64, 175, 0.30),
+    rgba(79, 70, 229, 0.45)
+  );
+}
+
+/* 14: Aurora Borealis - mint to cyan to electric blue */
+.intent-gradient-14::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(52, 211, 153, 0.18),
+    rgba(6, 182, 212, 0.08),
+    rgba(37, 99, 235, 0.14)
+  );
+}
+
+.intent-gradient-14-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(52, 211, 153, 0.55),
+    rgba(6, 182, 212, 0.30),
+    rgba(37, 99, 235, 0.45)
+  );
+}
+
+/* 15: Sunset Beach - coral to pink to magenta */
+.intent-gradient-15::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(251, 113, 133, 0.18),
+    rgba(244, 114, 182, 0.08),
+    rgba(192, 38, 211, 0.14)
+  );
+}
+
+.intent-gradient-15-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(251, 113, 133, 0.55),
+    rgba(244, 114, 182, 0.30),
+    rgba(192, 38, 211, 0.45)
+  );
+}
+
+/* 16: Emerald Forest - emerald to teal to sea green */
+.intent-gradient-16::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(16, 185, 129, 0.18),
+    rgba(13, 148, 136, 0.08),
+    rgba(34, 197, 94, 0.14)
+  );
+}
+
+.intent-gradient-16-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(16, 185, 129, 0.55),
+    rgba(13, 148, 136, 0.30),
+    rgba(34, 197, 94, 0.45)
+  );
+}
+
+/* 17: Neon Nights - hot pink to electric blue to violet */
+.intent-gradient-17::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(236, 72, 153, 0.18),
+    rgba(59, 130, 246, 0.08),
+    rgba(124, 58, 237, 0.14)
+  );
+}
+
+.intent-gradient-17-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(236, 72, 153, 0.55),
+    rgba(59, 130, 246, 0.30),
+    rgba(124, 58, 237, 0.45)
+  );
+}
+
+/* 18: Golden Hour - amber to orange to warm rose */
+.intent-gradient-18::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(245, 158, 11, 0.18),
+    rgba(249, 115, 22, 0.08),
+    rgba(225, 29, 72, 0.14)
+  );
+}
+
+.intent-gradient-18-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(245, 158, 11, 0.55),
+    rgba(249, 115, 22, 0.30),
+    rgba(225, 29, 72, 0.45)
+  );
+}
+
+/* 19: Lavender Dreams - lilac to periwinkle to sky */
+.intent-gradient-19::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(192, 132, 252, 0.18),
+    rgba(129, 140, 248, 0.08),
+    rgba(56, 189, 248, 0.14)
+  );
+}
+
+.intent-gradient-19-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(192, 132, 252, 0.55),
+    rgba(129, 140, 248, 0.30),
+    rgba(56, 189, 248, 0.45)
+  );
+}
+
+/* 20: Cherry Blossom - soft pink to peach to coral */
+.intent-gradient-20::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(251, 207, 232, 0.20),
+    rgba(254, 202, 202, 0.10),
+    rgba(253, 164, 175, 0.16)
+  );
+}
+
+.intent-gradient-20-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(251, 207, 232, 0.58),
+    rgba(254, 202, 202, 0.35),
+    rgba(253, 164, 175, 0.50)
+  );
+}
+
+/* 21: Midnight Galaxy - deep purple to indigo to dark blue */
+.intent-gradient-21::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(126, 34, 206, 0.18),
+    rgba(67, 56, 202, 0.08),
+    rgba(30, 58, 138, 0.14)
+  );
+}
+
+.intent-gradient-21-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(126, 34, 206, 0.55),
+    rgba(67, 56, 202, 0.30),
+    rgba(30, 58, 138, 0.45)
+  );
+}
+
+/* 22: Tropical Paradise - lime to turquoise to aqua */
+.intent-gradient-22::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(163, 230, 53, 0.18),
+    rgba(45, 212, 191, 0.08),
+    rgba(34, 211, 238, 0.14)
+  );
+}
+
+.intent-gradient-22-active::before {
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(163, 230, 53, 0.55),
+    rgba(45, 212, 191, 0.30),
+    rgba(34, 211, 238, 0.45)
   );
 }

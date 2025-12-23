@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { INTENTS, buildIntentQuery, getIntentByName } from "@/lib/intents";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
+import { INTENTS, buildIntentQuery, buildCustomIntentQuery, getIntentByName } from "@/lib/intents";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
@@ -38,6 +39,8 @@ export function IntentDetailSection() {
 
   const togglePlay = usePlayerStore((state) => state.togglePlay);
 
+  const customIntents = useCustomIntentsStore((state) => state.customIntents);
+
   const [isAdding, setIsAdding] = React.useState(false);
 
   // Derive active playlist from stores
@@ -46,11 +49,15 @@ export function IntentDetailSection() {
     return playlists.find((p) => p.id === activePlaylistId);
   }, [activePlaylistId, playlists]);
 
-  // Derive active intent from playlist name
-  const activeIntent = React.useMemo(
-    () => getIntentByName(activePlaylist?.name),
-    [activePlaylist?.name]
-  );
+  // Derive active intent from playlist name (check both built-in and custom)
+  const activeIntent = React.useMemo(() => {
+    // First check built-in intents
+    const builtIn = getIntentByName(activePlaylist?.name);
+    if (builtIn) return builtIn;
+    // Then check custom intents
+    if (!activePlaylistId) return undefined;
+    return customIntents.find((ci) => ci.playlistId === activePlaylistId);
+  }, [activePlaylist?.name, activePlaylistId, customIntents]);
 
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
@@ -86,14 +93,17 @@ export function IntentDetailSection() {
   );
 
   const handleAddToIntent = React.useCallback(async () => {
-    if (!activePlaylistId || !activePlaylist) return;
-
-    const intent = INTENTS.find((i) => i.name === activePlaylist.name);
-    if (!intent) return;
+    if (!activePlaylistId || !activePlaylist || !activeIntent) return;
 
     setIsAdding(true);
     try {
-      const { results } = await searchYouTubeVideos(buildIntentQuery(intent));
+      // Build query based on intent type (built-in or custom)
+      const builtInIntent = INTENTS.find((i) => i.name === activePlaylist.name);
+      const query = builtInIntent
+        ? buildIntentQuery(builtInIntent)
+        : buildCustomIntentQuery([...activeIntent.keywords]);
+
+      const { results } = await searchYouTubeVideos(query);
       const existing = new Set(activePlaylist.tracks.map((t) => t.id));
       const next = results.find((r) => r?.id && !existing.has(r.id));
       if (!next) return;
@@ -115,7 +125,7 @@ export function IntentDetailSection() {
     } finally {
       setIsAdding(false);
     }
-  }, [activePlaylist, activePlaylistId, addTrackToPlaylist]);
+  }, [activePlaylist, activePlaylistId, activeIntent, addTrackToPlaylist]);
 
   if (!activePlaylist) return null;
 

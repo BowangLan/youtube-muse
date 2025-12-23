@@ -3,24 +3,39 @@
 import * as React from "react";
 import type { Playlist } from "@/lib/types/playlist";
 import { getIntentByName } from "@/lib/intents";
+import { useCustomIntentsStore, type CustomIntent } from "@/lib/store/custom-intents-store";
 import { IntentCard } from "./intent-card";
+import { CreateIntentDialog } from "./create-intent-dialog";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 export function IntentGridSection({
   intentPlaylists,
+  customIntentPlaylists = [],
 }: {
   intentPlaylists: Playlist[];
+  customIntentPlaylists?: Playlist[];
 }) {
+  const customIntents = useCustomIntentsStore((state) => state.customIntents);
+
+  // Get custom intent definition for a playlist
+  const getCustomIntent = (playlist: Playlist): CustomIntent | undefined => {
+    return customIntents.find((ci) => ci.playlistId === playlist.id);
+  };
+
+  // Combine built-in and custom playlists
+  const allPlaylists = [...intentPlaylists, ...customIntentPlaylists];
+
   return (
     <section
       aria-label="Intent Grid"
       className="space-y-6 md:space-y-8 motion-preset-slide-up-sm"
     >
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4")}>
-        {intentPlaylists.slice(0, 9).map((playlist, index) => {
-          const intent = getIntentByName(playlist.name);
+        {allPlaylists.map((playlist, index) => {
+          // First try built-in intent, then custom intent
+          const intent = getIntentByName(playlist.name) ?? getCustomIntent(playlist);
 
           return (
             <motion.div
@@ -46,6 +61,23 @@ export function IntentGridSection({
             </motion.div>
           );
         })}
+
+        {/* Create Intent Button */}
+        <motion.div
+          key="create-intent"
+          style={
+            {
+              "--motion-delay": `${allPlaylists.length * 100}ms`,
+            } as React.CSSProperties
+          }
+          layout
+          transition={{
+            duration: EASING_DURATION_CARD,
+            ease: EASING_EASE_OUT,
+          }}
+        >
+          <CreateIntentDialog />
+        </motion.div>
       </div>
     </section>
   );

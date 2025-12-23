@@ -8,6 +8,7 @@ import { AppFooterFixed } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { AnimatedBackground } from "@/components/player/animated-background";
@@ -38,6 +39,7 @@ export default function Home() {
 
   const view = useAppStateStore((state) => state.view);
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
+  const customIntents = useCustomIntentsStore((state) => state.customIntents);
 
   const intentPlaylists = React.useMemo(() => {
     const intentNames = new Set(INTENTS.map((i) => i.name));
@@ -49,6 +51,12 @@ export default function Home() {
           INTENTS.findIndex((i) => i.name === b.name)
       );
   }, [playlists]);
+
+  // Get playlists for custom intents
+  const customIntentPlaylists = React.useMemo(() => {
+    const customPlaylistIds = new Set(customIntents.map((ci) => ci.playlistId));
+    return playlists.filter((p) => customPlaylistIds.has(p.id));
+  }, [playlists, customIntents]);
 
   // Show loading UI if not mounted (prevents hydration mismatch) or API not ready
   if (!hasMounted || !apiReady) {
@@ -73,7 +81,11 @@ export default function Home() {
 
         <AnimatePresence mode="wait" initial={false}>
           {view === "grid" ? (
-            <IntentGridSection key="grid" intentPlaylists={intentPlaylists} />
+            <IntentGridSection
+              key="grid"
+              intentPlaylists={intentPlaylists}
+              customIntentPlaylists={customIntentPlaylists}
+            />
           ) : (
             <IntentDetailSection key="detail" />
           )}
