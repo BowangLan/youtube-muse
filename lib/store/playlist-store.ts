@@ -110,9 +110,64 @@ function validateStorageValue(
   }
 }
 
+// Clean up duplicate "My Playlist" entries created by legacy initialization bugs
+function cleanupLegacyDuplicatePlaylists(state: PlaylistState): PlaylistState {
+  const LEGACY_PLAYLIST_NAME = "My Playlist"
+
+  // Find all playlists with the legacy name
+  const legacyPlaylists = state.playlists.filter((p) => p.name === LEGACY_PLAYLIST_NAME)
+
+  // If 0 or 1 legacy playlists, nothing to clean up
+  if (legacyPlaylists.length <= 1) {
+    return state
+  }
+
+  console.info(
+    `[playlist-store] Found ${legacyPlaylists.length} duplicate "${LEGACY_PLAYLIST_NAME}" playlists. Consolidating...`
+  )
+
+  // Keep the one with the most tracks, or if tied, the most recently updated
+  const sortedLegacy = [...legacyPlaylists].sort((a, b) => {
+    // Prefer more tracks
+    if (b.tracks.length !== a.tracks.length) {
+      return b.tracks.length - a.tracks.length
+    }
+    // Then prefer more recently updated
+    return b.updatedAt - a.updatedAt
+  })
+
+  const keepPlaylist = sortedLegacy[0]!
+  const removeIds = new Set(sortedLegacy.slice(1).map((p) => p.id))
+
+  // Filter out duplicates
+  const cleanedPlaylists = state.playlists.filter((p) => !removeIds.has(p.id))
+
+  // If current playlist was removed, switch to the kept one or first available
+  let newCurrentPlaylistId = state.currentPlaylistId
+  if (state.currentPlaylistId && removeIds.has(state.currentPlaylistId)) {
+    newCurrentPlaylistId = keepPlaylist.id
+  }
+
+  console.info(
+    `[playlist-store] Kept "${keepPlaylist.name}" (${keepPlaylist.tracks.length} tracks), removed ${removeIds.size} duplicates.`
+  )
+
+  return {
+    ...state,
+    playlists: cleanedPlaylists,
+    currentPlaylistId: newCurrentPlaylistId,
+    // Reset playback state if we changed the current playlist
+    currentTrackIndex: newCurrentPlaylistId !== state.currentPlaylistId ? 0 : state.currentTrackIndex,
+    shuffleOrder: newCurrentPlaylistId !== state.currentPlaylistId ? [] : state.shuffleOrder,
+  }
+}
+
 // Sanitize the state to fix any logical inconsistencies
 function sanitizePlaylistState(state: PlaylistState): PlaylistState {
   let sanitized = { ...state }
+
+  // Migration: Clean up duplicate "My Playlist" entries (legacy bug)
+  sanitized = cleanupLegacyDuplicatePlaylists(sanitized)
 
   // Ensure currentPlaylistId references a valid playlist
   if (sanitized.currentPlaylistId !== null) {

@@ -20,7 +20,8 @@ export function useInitializePlaylist() {
     const store = usePlaylistStore as unknown as {
       persist?: { hasHydrated?: () => boolean; onFinishHydration?: (cb: () => void) => () => void };
     };
-    return store.persist?.hasHydrated?.() ?? true;
+    // Default to false to prevent initialization before hydration completes
+    return store.persist?.hasHydrated?.() ?? false;
   });
 
   React.useEffect(() => {
