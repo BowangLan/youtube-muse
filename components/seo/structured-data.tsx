@@ -1,15 +1,28 @@
 import Script from 'next/script';
 
+import {
+  SITE_DESCRIPTION_FULL,
+  SITE_DESCRIPTION_SHORT,
+  SITE_GITHUB_URL,
+  SITE_NAME,
+  SITE_TWITTER_URL,
+  SITE_URL,
+} from '@/lib/site';
+
 export function StructuredData() {
+  const webAppId = `${SITE_URL}/#webapp`;
+  const websiteId = `${SITE_URL}/#website`;
+  const organizationId = `${SITE_URL}/#organization`;
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'WebApplication',
-        '@id': 'https://youtube-muse.app/#webapp',
-        name: 'YouTube Muse',
-        url: 'https://youtube-muse.app',
-        description: 'Create, manage, and enjoy your favorite YouTube music playlists with YouTube Muse. A beautiful, intuitive music player for organizing your YouTube music collection.',
+        '@id': webAppId,
+        name: SITE_NAME,
+        url: SITE_URL,
+        description: SITE_DESCRIPTION_FULL,
         applicationCategory: 'MultimediaApplication',
         operatingSystem: 'Web Browser',
         offers: {
@@ -27,27 +40,24 @@ export function StructuredData() {
       },
       {
         '@type': 'WebSite',
-        '@id': 'https://youtube-muse.app/#website',
-        url: 'https://youtube-muse.app',
-        name: 'YouTube Muse',
-        description: 'Your Personal Music Playlist Manager',
+        '@id': websiteId,
+        url: SITE_URL,
+        name: SITE_NAME,
+        description: SITE_DESCRIPTION_SHORT,
         inLanguage: 'en-US',
       },
       {
         '@type': 'Organization',
-        '@id': 'https://youtube-muse.app/#organization',
-        name: 'YouTube Muse',
-        url: 'https://youtube-muse.app',
+        '@id': organizationId,
+        name: SITE_NAME,
+        url: SITE_URL,
         logo: {
           '@type': 'ImageObject',
-          url: 'https://youtube-muse.app/icon-512.png',
+          url: `${SITE_URL}/icon-512.png`,
           width: 512,
           height: 512,
         },
-        sameAs: [
-          'https://twitter.com/youtubemuse',
-          'https://github.com/youtubemuse',
-        ],
+        sameAs: [SITE_TWITTER_URL, SITE_GITHUB_URL].filter(Boolean) as string[],
       },
     ],
   };

@@ -25,7 +25,7 @@ export function StickyMiniPlayer() {
     playlists,
     currentPlaylistId,
   } = usePlaylistStore();
-  const hasMounted = useHasMounted();
+  // const hasMounted = useHasMounted();
 
   const [isPlayerHidden, setIsPlayerHidden] = React.useState(false);
 

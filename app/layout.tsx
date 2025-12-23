@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./intent-styles.css";
 import { StructuredData } from "@/components/seo/structured-data";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  SITE_DESCRIPTION_FULL,
+  SITE_DESCRIPTION_SHORT,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,13 +22,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://youtube-muse.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "YouTube Muse - Your Personal Music Playlist Manager",
-    template: "%s | YouTube Muse",
+    default: `${SITE_NAME} - ${SITE_DESCRIPTION_SHORT}`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Create, manage, and enjoy your favorite YouTube music playlists with YouTube Muse. A beautiful, intuitive music player for organizing your YouTube music collection.",
+  description: SITE_DESCRIPTION_FULL,
   keywords: [
     "YouTube music",
     "playlist manager",
@@ -30,27 +36,32 @@ export const metadata: Metadata = {
     "online music",
     "streaming music",
     "music organizer",
+    "mood music app",
+    "focus music",
+    "productivity music",
+    "ambient playlists",
+    "music for work",
+    "intent-based music",
   ],
-  authors: [{ name: "YouTube Muse" }],
-  creator: "YouTube Muse",
-  publisher: "YouTube Muse",
-  applicationName: "YouTube Muse",
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  applicationName: SITE_NAME,
 
   // OpenGraph
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://youtube-muse.app",
-    title: "YouTube Muse - Your Personal Music Playlist Manager",
-    description:
-      "Create, manage, and enjoy your favorite YouTube music playlists with YouTube Muse. A beautiful, intuitive music player for organizing your YouTube music collection.",
-    siteName: "YouTube Muse",
+    url: SITE_URL,
+    title: `${SITE_NAME} - ${SITE_DESCRIPTION_SHORT}`,
+    description: SITE_DESCRIPTION_FULL,
+    siteName: SITE_NAME,
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "YouTube Muse - Personal Music Playlist Manager",
+        alt: `${SITE_NAME} - ${SITE_DESCRIPTION_SHORT}`,
       },
     ],
   },
@@ -58,11 +69,10 @@ export const metadata: Metadata = {
   // Twitter
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Muse - Your Personal Music Playlist Manager",
-    description:
-      "Create, manage, and enjoy your favorite YouTube music playlists with YouTube Muse.",
+    title: `${SITE_NAME} - ${SITE_DESCRIPTION_SHORT}`,
+    description: SITE_DESCRIPTION_FULL,
     images: ["/twitter-image.png"],
-    creator: "@youtubemuse",
+    creator: "@jeffbl25",
   },
 
   // Icons

@@ -79,6 +79,9 @@
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+
+  --easing-ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 .dark {
