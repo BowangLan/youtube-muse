@@ -35,6 +35,7 @@ export function CreateIntentDialog({
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = React.useState<string>("");
+  const [nameOverwritten, setNameOverwritten] = React.useState(false);
 
   const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
   const addTrackToPlaylist = usePlaylistStore(
@@ -50,12 +51,44 @@ export function CreateIntentDialog({
     (state) => state.getCustomIntentByName
   );
 
+  // Helper to generate name from keywords
+  const generateNameFromKeywords = React.useCallback(
+    (keywordList: string[]): string => {
+      if (keywordList.length === 0) return "";
+
+      // Randomly pick 2-3 keywords (or fewer if not enough)
+      const count = Math.min(
+        keywordList.length,
+        keywordList.length === 1 ? 1 : Math.random() > 0.5 ? 3 : 2
+      );
+
+      // Shuffle and take first 'count' keywords
+      const shuffled = [...keywordList].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, count);
+
+      // Capitalize each keyword and join with space
+      return selected
+        .map((k) => k.charAt(0).toUpperCase() + k.slice(1).toLowerCase())
+        .join(" ");
+    },
+    []
+  );
+
+  // Auto-generate name when keywords change and name hasn't been manually edited
+  React.useEffect(() => {
+    if (keywords.length > 0 && (!nameOverwritten || !name.trim())) {
+      setName(generateNameFromKeywords(keywords));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only regenerate on keyword changes, not name changes
+  }, [keywords, nameOverwritten, generateNameFromKeywords]);
+
   const resetForm = () => {
     setName("");
     setKeywords([]);
     setDescription("");
     setError(null);
     setLoadingStatus("");
+    setNameOverwritten(false);
   };
 
   const handleClose = () => {
@@ -202,7 +235,7 @@ export function CreateIntentDialog({
       }}
     >
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="max-w-lg rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
+      <DialogContent className="sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
         <div className="space-y-4 p-6">
           <DialogHeader className="space-y-1 text-left">
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
@@ -231,9 +264,10 @@ export function CreateIntentDialog({
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
+                  setNameOverwritten(true);
                   setError(null);
                 }}
-                className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+                className="h-11 max-w-sm rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
                 disabled={isLoading}
               />
             </div>

@@ -178,7 +178,7 @@ export function EditIntentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
+      <DialogContent className="sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
         <div className="space-y-5 p-6">
           <DialogHeader className="space-y-1 text-left">
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold">

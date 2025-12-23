@@ -6,8 +6,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // 30+ built-in keyword suggestions for music intents
-export const SUGGESTED_KEYWORDS = [
-  // Mood/Energy
+export const MOOD_ENERGY_KEYWORDS = [
   "chill",
   "upbeat",
   "calm",
@@ -16,7 +15,43 @@ export const SUGGESTED_KEYWORDS = [
   "intense",
   "mellow",
   "peaceful",
-  // Genre/Style
+  "happy",
+  "joyful",
+  "playful",
+  "optimistic",
+  "bright",
+  "warm",
+  "romantic",
+  "dreamy",
+  "nostalgic",
+  "sentimental",
+  "emotional",
+  "melancholic",
+  "sad",
+  "dark",
+  "moody",
+  "brooding",
+  "mysterious",
+  "eerie",
+  "tense",
+  "dramatic",
+  "aggressive",
+  "angry",
+  "raw",
+  "powerful",
+  "epic",
+  "uplifting",
+  "inspiring",
+  "motivational",
+  "focused",
+  "contemplative",
+  "meditative",
+  "hypnotic",
+  "laid-back",
+  "smooth",
+];
+
+export const GENRE_STYLE_KEYWORDS = [
   "ambient",
   "lo-fi",
   "electronic",
@@ -72,7 +107,9 @@ export const SUGGESTED_KEYWORDS = [
   "chillout",
   "downtempo",
   "vaporwave",
-  // Activity/Purpose
+];
+
+export const ACTIVITY_PURPOSE_KEYWORDS = [
   "focus",
   "study",
   "work",
@@ -81,14 +118,51 @@ export const SUGGESTED_KEYWORDS = [
   "workout",
   "coding",
   "creative",
-  // Atmosphere
-  "dreamy",
-  "dark",
-  "minimal",
-  "nature",
-  "night",
-  "morning",
-  "cozy",
+  "reading",
+  "writing",
+  "brainstorming",
+  "deep work",
+  "background listening",
+  "stress management",
+  "yoga",
+  "mindfulness practice",
+  "breathing exercises",
+  "commuting",
+  "traveling",
+  "gaming",
+  "streaming",
+  "presenting",
+  "reflection",
+];
+
+export const ATMOSPHERE_KEYWORDS = [
+  "minimalist",
+  "natural",
+  "nocturnal",
+  "dawn",
+  "intimate",
+  "spacious",
+  "airy",
+  "cinematic space",
+  "ethereal texture",
+  "urban setting",
+  "futuristic setting",
+  "retro aesthetic",
+  "organic texture",
+  "analog feel",
+  "digital feel",
+  "immersive",
+  "environmental",
+  "abstract",
+  "textural",
+  "atmospheric layers",
+];
+
+export const SUGGESTED_KEYWORDS = [
+  ...MOOD_ENERGY_KEYWORDS,
+  ...GENRE_STYLE_KEYWORDS,
+  ...ACTIVITY_PURPOSE_KEYWORDS,
+  ...ATMOSPHERE_KEYWORDS,
 ] as const;
 
 interface KeywordSelectorProps {
@@ -99,6 +173,59 @@ interface KeywordSelectorProps {
   onError?: (error: string | null) => void;
 }
 
+// Helper to get color classes for a keyword based on its category
+const getKeywordColorClasses = (keyword: string) => {
+  if (MOOD_ENERGY_KEYWORDS.includes(keyword)) {
+    return "bg-rose-500/25 text-rose-200 border-rose-500/40";
+  }
+  if (GENRE_STYLE_KEYWORDS.includes(keyword)) {
+    return "bg-violet-500/25 text-violet-200 border-violet-500/40";
+  }
+  if (ACTIVITY_PURPOSE_KEYWORDS.includes(keyword)) {
+    return "bg-emerald-500/25 text-emerald-200 border-emerald-500/40";
+  }
+  if (ATMOSPHERE_KEYWORDS.includes(keyword)) {
+    return "bg-sky-500/25 text-sky-200 border-sky-500/40";
+  }
+  // Custom keywords - neutral white
+  return "bg-white/20 text-white border-white/30";
+};
+
+const KEYWORD_CATEGORIES = [
+  {
+    id: "mood",
+    label: "Mood & Energy",
+    keywords: MOOD_ENERGY_KEYWORDS,
+    activeClass: "bg-rose-500/20 text-rose-300 border-rose-500/30",
+    pillClass:
+      "bg-rose-500/10 text-rose-300/80 border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-200",
+  },
+  {
+    id: "genre",
+    label: "Genre & Style",
+    keywords: GENRE_STYLE_KEYWORDS,
+    activeClass: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+    pillClass:
+      "bg-violet-500/10 text-violet-300/80 border-violet-500/20 hover:bg-violet-500/20 hover:text-violet-200",
+  },
+  {
+    id: "activity",
+    label: "Activity",
+    keywords: ACTIVITY_PURPOSE_KEYWORDS,
+    activeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    pillClass:
+      "bg-emerald-500/10 text-emerald-300/80 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-200",
+  },
+  {
+    id: "atmosphere",
+    label: "Atmosphere",
+    keywords: ATMOSPHERE_KEYWORDS,
+    activeClass: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+    pillClass:
+      "bg-sky-500/10 text-sky-300/80 border-sky-500/20 hover:bg-sky-500/20 hover:text-sky-200",
+  },
+] as const;
+
 export function KeywordSelector({
   keywords,
   onChange,
@@ -106,6 +233,8 @@ export function KeywordSelector({
   disabled = false,
   onError,
 }: KeywordSelectorProps) {
+  const [activeCategory, setActiveCategory] = React.useState<string>("mood");
+
   const handleToggleKeyword = (keyword: string) => {
     if (keywords.includes(keyword)) {
       onChange(keywords.filter((k) => k !== keyword));
@@ -156,8 +285,8 @@ export function KeywordSelector({
               disabled={disabled}
               className={cn(
                 "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium",
-                "transition-all duration-200",
-                "bg-white/20 text-white border border-white/30"
+                "transition-all duration-200 border",
+                getKeywordColorClasses(keyword)
               )}
             >
               <Check className="h-3 w-3" />
@@ -167,38 +296,71 @@ export function KeywordSelector({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {SUGGESTED_KEYWORDS.map((keyword) => {
-          const isSelected = keywords.includes(keyword);
+      <div className="flex rounded-lg border border-white/10 bg-white/2 overflow-hidden h-56">
+        {/* Sidebar */}
+        <div className="flex p-1.5 gap-1.5 flex-col bg-white/5 shrink-0">
+          {KEYWORD_CATEGORIES.map((category) => {
+            const isActive = activeCategory === category.id;
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setActiveCategory(category.id)}
+                className={cn(
+                  "px-3 py-2 text-xs font-medium rounded-md text-left transition-all duration-200",
+                  isActive
+                    ? cn(category.activeClass, "border-current")
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                )}
+              >
+                {category.label}
+              </button>
+            );
+          })}
+        </div>
 
-          if (isSelected) {
-            return null;
-          }
+        {/* Content */}
+        <div className="flex-1 p-3 overflow-y-auto">
+          {KEYWORD_CATEGORIES.map((category) => {
+            if (activeCategory !== category.id) return null;
 
-          return (
-            <button
-              key={keyword}
-              type="button"
-              onClick={() => handleToggleKeyword(keyword)}
-              disabled={disabled || keywords.length >= maxKeywords}
-              className={cn(
-                "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium",
-                "transition-all duration-200",
-                "bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white",
-                keywords.length >= maxKeywords &&
-                  "opacity-40 cursor-not-allowed"
-              )}
-            >
-              {keyword}
-            </button>
-          );
-        })}
+            return (
+              <div
+                key={category.id}
+                className="flex flex-wrap gap-1.5 content-start"
+              >
+                {category.keywords.map((keyword) => {
+                  const isSelected = keywords.includes(keyword);
+                  if (isSelected) return null;
+
+                  return (
+                    <button
+                      key={keyword}
+                      type="button"
+                      onClick={() => handleToggleKeyword(keyword)}
+                      disabled={disabled || keywords.length >= maxKeywords}
+                      className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                        "transition-all duration-200 border",
+                        category.pillClass,
+                        keywords.length >= maxKeywords &&
+                          "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      {keyword}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <Input
-        placeholder="Type custom keyword and press Enter..."
+        placeholder="Or enter a custom keyword..."
         onKeyDown={handleAddCustomKeyword}
-        className="h-10 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+        className="h-10 rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
         disabled={disabled || keywords.length >= maxKeywords}
       />
     </div>
