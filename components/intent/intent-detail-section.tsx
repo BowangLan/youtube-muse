@@ -29,6 +29,9 @@ export function IntentDetailSection() {
   const setCurrentTrackIndex = usePlaylistStore(
     (state) => state.setCurrentTrackIndex
   );
+  const setCurrentPlaylist = usePlaylistStore(
+    (state) => state.setCurrentPlaylist
+  );
   const addTrackToPlaylist = usePlaylistStore(
     (state) => state.addTrackToPlaylist
   );
@@ -59,17 +62,25 @@ export function IntentDetailSection() {
 
   const handleTrackClick = React.useCallback(
     (index: number) => {
-      if (!currentPlaylistId) return;
-      if (currentActualTrackIndex === index) {
+      if (!activePlaylistId) return;
+
+      // If viewing a different playlist than the one currently playing, switch to it
+      if (currentPlaylistId !== activePlaylistId) {
+        setCurrentPlaylist(activePlaylistId);
+        // setCurrentPlaylist resets to index 0, so we need to set the correct index
+        setCurrentTrackIndex(index);
+      } else if (currentActualTrackIndex === index) {
         togglePlay();
       } else {
         setCurrentTrackIndex(index);
       }
     },
     [
+      activePlaylistId,
       currentPlaylistId,
       currentActualTrackIndex,
       togglePlay,
+      setCurrentPlaylist,
       setCurrentTrackIndex,
     ]
   );
