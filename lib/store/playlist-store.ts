@@ -1,6 +1,170 @@
 import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
+import { persist, createJSONStorage, type PersistStorage, type StorageValue } from "zustand/middleware"
+import { z } from "zod/v4"
 import type { Playlist, Track, PlaylistState, RepeatMode } from "@/lib/types/playlist"
+
+// Zod schemas for validation
+const TrackSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  author: z.string(),
+  authorUrl: z.string(),
+  duration: z.number(),
+  thumbnailUrl: z.string(),
+  addedAt: z.number(),
+})
+
+const PlaylistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  tracks: z.array(TrackSchema),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+})
+
+const RepeatModeSchema = z.enum(["off", "playlist", "one"])
+
+const PlaylistStateSchema = z.object({
+  playlists: z.array(PlaylistSchema),
+  currentPlaylistId: z.string().nullable(),
+  currentTrackIndex: z.number(),
+  isShuffleEnabled: z.boolean(),
+  shuffleOrder: z.array(z.number()),
+  repeatMode: RepeatModeSchema,
+})
+
+// Default state for when localStorage is empty or corrupt
+const DEFAULT_STATE: PlaylistState = {
+  playlists: [],
+  currentPlaylistId: null,
+  currentTrackIndex: 0,
+  isShuffleEnabled: false,
+  shuffleOrder: [],
+  repeatMode: "off",
+}
+
+// Custom storage with Zod validation
+const createValidatedStorage = (): PersistStorage<PlaylistState> => {
+  const jsonStorage = createJSONStorage<PlaylistState>(() => localStorage)
+
+  // Fallback implementations if jsonStorage is undefined
+  const fallbackSetItem = (name: string, value: StorageValue<PlaylistState>) => {
+    localStorage.setItem(name, JSON.stringify(value))
+  }
+
+  const fallbackRemoveItem = (name: string) => {
+    localStorage.removeItem(name)
+  }
+
+  return {
+    getItem: (name) => {
+      try {
+        const rawValue = jsonStorage?.getItem(name)
+
+        // Handle both sync and async returns from jsonStorage
+        if (rawValue instanceof Promise) {
+          return rawValue.then((value) => validateStorageValue(value, name))
+        }
+
+        return validateStorageValue(rawValue ?? null, name)
+      } catch (error) {
+        console.warn(`[playlist-store] Error reading from localStorage: ${error}`)
+        return null
+      }
+    },
+    setItem: jsonStorage?.setItem ?? fallbackSetItem,
+    removeItem: jsonStorage?.removeItem ?? fallbackRemoveItem,
+  }
+}
+
+function validateStorageValue(
+  value: StorageValue<PlaylistState> | null,
+  storageName: string
+): StorageValue<PlaylistState> | null {
+  if (!value) return null
+
+  try {
+    // Validate the state portion of the storage value
+    const validatedState = PlaylistStateSchema.parse(value.state)
+
+    // Additional validation: ensure currentTrackIndex is within bounds
+    const sanitizedState = sanitizePlaylistState(validatedState)
+
+    return {
+      ...value,
+      state: sanitizedState,
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.warn(
+        `[playlist-store] Corrupt data in localStorage key "${storageName}". Resetting to defaults.`,
+        error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+      )
+    } else {
+      console.warn(`[playlist-store] Invalid data in localStorage: ${error}`)
+    }
+
+    // Return null to trigger default state initialization
+    return null
+  }
+}
+
+// Sanitize the state to fix any logical inconsistencies
+function sanitizePlaylistState(state: PlaylistState): PlaylistState {
+  let sanitized = { ...state }
+
+  // Ensure currentPlaylistId references a valid playlist
+  if (sanitized.currentPlaylistId !== null) {
+    const playlistExists = sanitized.playlists.some(
+      (p) => p.id === sanitized.currentPlaylistId
+    )
+    if (!playlistExists) {
+      sanitized.currentPlaylistId = null
+      sanitized.currentTrackIndex = 0
+      sanitized.shuffleOrder = []
+    }
+  }
+
+  // Get current playlist for further validation
+  const currentPlaylist = sanitized.currentPlaylistId
+    ? sanitized.playlists.find((p) => p.id === sanitized.currentPlaylistId)
+    : null
+
+  if (currentPlaylist) {
+    const trackCount = currentPlaylist.tracks.length
+
+    // Ensure currentTrackIndex is within bounds
+    if (sanitized.currentTrackIndex < 0 || sanitized.currentTrackIndex >= trackCount) {
+      sanitized.currentTrackIndex = Math.max(0, Math.min(sanitized.currentTrackIndex, trackCount - 1))
+      if (trackCount === 0) sanitized.currentTrackIndex = 0
+    }
+
+    // Validate shuffleOrder if shuffle is enabled
+    if (sanitized.isShuffleEnabled && sanitized.shuffleOrder.length > 0) {
+      const validShuffleOrder = sanitized.shuffleOrder.every(
+        (idx) => typeof idx === "number" && idx >= 0 && idx < trackCount
+      )
+
+      if (!validShuffleOrder || sanitized.shuffleOrder.length !== trackCount) {
+        // Reset shuffle order if invalid
+        sanitized.shuffleOrder = []
+        sanitized.currentTrackIndex = 0
+      }
+    }
+  } else {
+    // No current playlist - reset playback state
+    sanitized.currentTrackIndex = 0
+    sanitized.shuffleOrder = []
+  }
+
+  // Validate repeatMode
+  if (!["off", "playlist", "one"].includes(sanitized.repeatMode)) {
+    sanitized.repeatMode = "off"
+  }
+
+  return sanitized
+}
 
 type TrackUpdatableFields = Exclude<keyof Track, "id" | "addedAt">
 type TrackUpdate = Partial<Pick<Track, TrackUpdatableFields>>
@@ -46,13 +210,8 @@ const generateId = () => {
 export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
   persist(
     (set, get) => ({
-      // Initial state
-      playlists: [],
-      currentPlaylistId: null,
-      currentTrackIndex: 0,
-      isShuffleEnabled: false,
-      shuffleOrder: [],
-      repeatMode: "off",
+      // Initial state (spread from defaults for consistency)
+      ...DEFAULT_STATE,
 
       // Playlist management
       createPlaylist: (name, description, initialTracks = []) => {
@@ -470,7 +629,7 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
     }),
     {
       name: "playlist-storage",
-      storage: createJSONStorage(() => localStorage),
+      storage: createValidatedStorage(),
     }
   )
 )
