@@ -581,7 +581,10 @@ export function MiniPlayerViewMobile() {
           e.preventDefault();
           setIsOpen(!isOpen);
         }}
-        className="relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
+        className={cn(
+          "relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
+          isOpen ? "border-zinc-900/50" : "border-zinc-500/10"
+        )}
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}

@@ -544,7 +544,10 @@ export function MiniPlayerViewDesktop() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         layout
-        className="relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
+        className={cn(
+          "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-zinc-900/50 bg-zinc-500/10 text-white backdrop-blur-xl",
+          isHovered ? "border-zinc-900/50" : "border-zinc-500/10"
+        )}
         variants={containerVariants}
         initial="collapsed"
         animate={isHovered ? "expanded" : "collapsed"}
