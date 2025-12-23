@@ -3,13 +3,13 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, X } from "lucide-react";
 import { AnimatePresence, cubicBezier, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
-import { getThumbnailUrl } from "@/lib/utils/youtube";
+import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
 import {
   PlayPauseButton,
   ProgressBar,
@@ -23,7 +23,7 @@ import { BackgroundOverlay } from "./mini-player-view";
 // Constants
 // =============================================================================
 
-const EXPANDED_HEIGHT = "80vh";
+const EXPANDED_HEIGHT = "100vh";
 const COLLAPSED_HEIGHT = 66;
 
 const EXPAND_DURATION = 0.5;
@@ -117,6 +117,7 @@ const TrackCoverCollapsed = ({
 }: TrackCoverProps) => (
   <motion.div
     layoutId="track-cover-mobile"
+    layout
     className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
     transition={{ duration: COLLAPSE_DURATION, ease: EASING }}
   >
@@ -180,20 +181,21 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           onClick={(e) => {
             e.stopPropagation();
           }}
-        >
-          <p className="truncate text-sm">{track.title}</p>
-        </Link>
-        <Link
-          href={track.authorUrl ?? ""}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:underline w-fit max-w-[50vw] flex"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <p className="truncate text-xs text-neutral-400">{track.author}</p>
-        </Link>
+        ></Link>
+        <p className="truncate text-sm">{track.title}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-xs/tight text-neutral-400">
+            {track.author}
+          </p>
+
+          {/* Dot */}
+          {/* <span className="size-[2px] rounded-full bg-neutral-400" /> */}
+
+          {/* Total duration */}
+          {/* <p className="truncate text-xs/tight text-neutral-400">
+            {formatTime(track.duration)}
+          </p> */}
+        </div>
       </div>
     );
   }
@@ -272,7 +274,7 @@ const PlayerControls = ({
     "flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150";
 
   const playButtonClass =
-    "flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150";
+    "flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150";
 
   return (
     <div className="flex items-center text-foreground justify-center gap-4 mt-2">
@@ -282,7 +284,7 @@ const PlayerControls = ({
         disabled={!apiReady}
         className={controlButtonClass}
       >
-        <SkipBack className="h-5 w-5" fill="currentColor" />
+        <SkipBack className="h-8 w-8" fill="currentColor" />
       </button>
       <button
         type="button"
@@ -291,11 +293,11 @@ const PlayerControls = ({
         className={playButtonClass}
       >
         {!apiReady || isLoadingNewVideo ? (
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         ) : isPlaying || pendingPlayState !== null ? (
-          <Pause className="h-6 w-6" fill="currentColor" />
+          <Pause className="h-8 w-8" fill="currentColor" />
         ) : (
-          <Play className="h-6 w-6" fill="currentColor" />
+          <Play className="h-8 w-8" fill="currentColor" />
         )}
       </button>
       <button
@@ -304,7 +306,7 @@ const PlayerControls = ({
         disabled={!canPlayNext}
         className={controlButtonClass}
       >
-        <SkipForward className="h-5 w-5" fill="currentColor" />
+        <SkipForward className="h-8 w-8" fill="currentColor" />
       </button>
     </div>
   );
@@ -436,6 +438,18 @@ const CollapsedStateView = ({
   </motion.div>
 );
 
+const ExpandedViewCloseButton = () => {
+  return (
+    <button
+      // type="button"
+      onClick={() => {}}
+      className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
+    >
+      <X className="h-6 w-6" fill="currentColor" />
+    </button>
+  );
+};
+
 // =============================================================================
 // Expanded State View
 // =============================================================================
@@ -466,7 +480,7 @@ const ExpandedStateView = ({
   onPlayNext: () => void;
 }) => (
   <motion.div
-    className="absolute inset-0 z-10 flex flex-col items-center justify-center px-4"
+    className="absolute inset-0 z-99 flex flex-col items-center justify-center px-4"
     initial={false}
     animate={{
       opacity: isHovered ? 1 : 0,
@@ -478,6 +492,8 @@ const ExpandedStateView = ({
       delay: isHovered ? 0.1 : 0,
     }}
   >
+    <ExpandedViewCloseButton />
+
     <TrackCoverExpanded
       track={track}
       isPlaying={isPlaying}
@@ -547,7 +563,7 @@ export function MiniPlayerViewMobile() {
   if (!track) {
     return (
       <div
-        className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40"
+        className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-60"
         style={{
           bottom: `-${COLLAPSED_HEIGHT}px`,
           minHeight: COLLAPSED_HEIGHT,
@@ -558,7 +574,7 @@ export function MiniPlayerViewMobile() {
 
   return (
     <div
-      className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40 trans"
+      className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-60 trans"
       style={{
         minHeight: COLLAPSED_HEIGHT,
         paddingLeft: !isOpen ? "16px" : "0",
@@ -574,9 +590,10 @@ export function MiniPlayerViewMobile() {
         }}
         className={cn(
           "relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
-          isOpen ? "border-zinc-900/50" : "border-zinc-500/20"
+          isOpen ? "border-zinc-900/50" : "border-zinc-500/10",
+          isPlaying && "animate-container-glow"
         )}
-        style={beatStyle}
+        style={{ ...glowStyle, ...beatStyle }}
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}
