@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
@@ -13,6 +13,27 @@ import { ProgressBar, TimeDisplay } from "@/components/player/player-controls";
 
 const EXPANDED_HEIGHT = 160;
 const EXPANDED_PADDING = 20;
+const COLLAPSED_HEIGHT = 66;
+
+// Animation variants
+const containerVariants: Variants = {
+  collapsed: {
+    height: COLLAPSED_HEIGHT,
+    backgroundColor: "rgba(63, 63, 70, 0.1)",
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+  expanded: {
+    height: EXPANDED_HEIGHT,
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
 
 export function MiniPlayerView() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
@@ -79,36 +100,35 @@ export function MiniPlayerView() {
       className="mx-auto w-full max-w-4xl px-4 sm:px-6"
       style={{
         bottom: !track ? "-60px" : undefined,
-        minHeight: "66px",
+        minHeight: COLLAPSED_HEIGHT,
       }}
     >
       <div>
         {track && (
-          <div
+          <motion.div
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className="relative rounded-xl overflow-hidden border border-white/10 text-white backdrop-blur-xl"
-            style={{
-              height: isHovered ? EXPANDED_HEIGHT : "66px",
-              backgroundColor: isHovered
-                ? "rgba(0, 0, 0, 0.95)"
-                : "rgba(63, 63, 70, 0.1)",
-              transition:
-                "height 0.3s var(--easing-ease-in-out), background-color 0.3s var(--easing-ease-in-out), transform 0.3s var(--easing-ease-in-out)",
-              // transform: isHovered ? "scale(1.1)" : "scale(1)",
-            }}
+            variants={containerVariants}
+            initial="collapsed"
+            animate={isHovered ? "expanded" : "collapsed"}
           >
             {/* Collapsed state */}
-            <div
+            <motion.div
               className="absolute inset-0 flex items-center gap-4 p-3"
-              style={{
+              initial={false}
+              animate={{
                 opacity: isHovered ? 0 : 1,
                 pointerEvents: isHovered ? "none" : "auto",
-                transition: "opacity 0.2s var(--easing-ease-in-out)",
               }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="relative h-10 w-10 shrink-0 overflow-visible rounded-md">
+                <motion.div
+                  layoutId="track-cover"
+                  className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
                   <div className="relative w-full h-full overflow-hidden rounded-md">
                     <Image
                       src={track.thumbnailUrl}
@@ -134,7 +154,7 @@ export function MiniPlayerView() {
                       />
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
                 <div className="min-w-0">
                   <motion.div layoutId="track-title">
                     <Link
@@ -146,64 +166,49 @@ export function MiniPlayerView() {
                       <p className="truncate text-sm">{track.title}</p>
                     </Link>
                   </motion.div>
-                  <Link
-                    href={track.authorUrl ?? ""}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    <p className="truncate text-xs text-neutral-400">
-                      {track.author || "Unknown Artist"}
-                    </p>
-                  </Link>
+                  <motion.div layoutId="track-author">
+                    <Link
+                      href={track.authorUrl ?? ""}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      <p className="truncate text-xs text-neutral-400">
+                        {track.author || "Unknown Artist"}
+                      </p>
+                    </Link>
+                  </motion.div>
                 </div>
               </div>
-              <div className="items-center gap-2 shrink-0 hidden">
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  disabled={
-                    isLoadingNewVideo || pendingPlayState !== null || !apiReady
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white disabled:opacity-40 hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 transition-all duration-150"
-                >
-                  {!apiReady || isLoadingNewVideo ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  ) : isPlaying || pendingPlayState !== null ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4 translate-x-px" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={playNext}
-                  disabled={!canPlayNext}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white disabled:opacity-30 hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 transition-all duration-150"
-                >
-                  <SkipForward className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            </motion.div>
 
             {/* Expanded state */}
-            <div
+            <motion.div
               className="absolute inset-0 flex flex-row"
-              style={{
+              initial={false}
+              animate={{
                 opacity: isHovered ? 1 : 0,
                 pointerEvents: isHovered ? "auto" : "none",
+              }}
+              transition={{
+                duration: 0.2,
+                ease: [0.4, 0, 0.2, 1],
+                delay: isHovered ? 0.1 : 0,
+              }}
+              style={{
                 padding: EXPANDED_PADDING,
                 gap: EXPANDED_PADDING,
-                transition: "opacity 0.2s var(--easing-ease-in-out) 0.1s",
               }}
             >
               {/* Left - Album art */}
-              <div
+              <motion.div
+                layoutId="track-cover"
                 className="relative shrink-0 overflow-visible rounded-lg flex-none"
                 style={{
                   width: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
                   height: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
                 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
               >
                 <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
                   <Image
@@ -230,7 +235,7 @@ export function MiniPlayerView() {
                     />
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
 
               {/* Center + Right - Track info */}
               <div className="flex flex-col flex-1">
@@ -247,26 +252,52 @@ export function MiniPlayerView() {
                       </h3>
                     </Link>
                   </motion.div>
-                  <Link
-                    href={track.authorUrl ?? ""}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    <p className="text-sm/tight text-neutral-400">
-                      {track.author || "Unknown Artist"}
-                    </p>
-                  </Link>
+                  <motion.div layoutId="track-author">
+                    <Link
+                      href={track.authorUrl ?? ""}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      <p className="text-sm/tight text-neutral-400">
+                        {track.author || "Unknown Artist"}
+                      </p>
+                    </Link>
+                  </motion.div>
                 </div>
 
                 {/* Progress bar section */}
-                <div className="flex flex-col gap-4 mt-7">
+                <motion.div
+                  className="flex flex-col gap-4 mt-7"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{
+                    opacity: isHovered ? 1 : 0,
+                    y: isHovered ? 0 : 10,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1],
+                    delay: isHovered ? 0.15 : 0,
+                  }}
+                >
                   <ProgressBar />
                   <TimeDisplay />
-                </div>
+                </motion.div>
 
                 {/* Controls section */}
-                <div className="flex items-center text-foreground justify-center gap-4 mt-2">
+                <motion.div
+                  className="flex items-center text-foreground justify-center gap-4 mt-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{
+                    opacity: isHovered ? 1 : 0,
+                    y: isHovered ? 0 : 10,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1],
+                    delay: isHovered ? 0.2 : 0,
+                  }}
+                >
                   <button
                     type="button"
                     onClick={skipBackward}
@@ -301,10 +332,10 @@ export function MiniPlayerView() {
                   >
                     <SkipForward className="h-5 w-5" fill="currentColor" />
                   </button>
-                </div>
+                </motion.div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </div>
     </div>
