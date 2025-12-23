@@ -44,6 +44,30 @@ const DEFAULT_STATE: PlaylistState = {
   repeatMode: "off",
 }
 
+// Version key for migration - bump this to clear old data
+const PLAYLIST_VERSION_KEY = "playlist-version"
+const CURRENT_VERSION = "v3"
+
+// Check if storage version matches current version
+function checkAndUpdateVersion(): boolean {
+  if (typeof window === "undefined") return true
+
+  const storedVersion = localStorage.getItem(PLAYLIST_VERSION_KEY)
+
+  if (storedVersion !== CURRENT_VERSION) {
+    console.info(
+      `[playlist-store] Version mismatch (stored: ${storedVersion ?? "none"}, current: ${CURRENT_VERSION}). Clearing playlist data.`
+    )
+    // Clear the playlist storage
+    localStorage.removeItem("playlist-storage")
+    // Set the new version
+    localStorage.setItem(PLAYLIST_VERSION_KEY, CURRENT_VERSION)
+    return false // Indicates data was cleared
+  }
+
+  return true // Version matches
+}
+
 // Custom storage with Zod validation
 const createValidatedStorage = (): PersistStorage<PlaylistState> => {
   const jsonStorage = createJSONStorage<PlaylistState>(() => localStorage)
@@ -60,6 +84,12 @@ const createValidatedStorage = (): PersistStorage<PlaylistState> => {
   return {
     getItem: (name) => {
       try {
+        // Check version first - if mismatch, data will be cleared
+        const versionValid = checkAndUpdateVersion()
+        if (!versionValid) {
+          return null // Return null to trigger fresh state
+        }
+
         const rawValue = jsonStorage?.getItem(name)
 
         // Handle both sync and async returns from jsonStorage
@@ -110,64 +140,9 @@ function validateStorageValue(
   }
 }
 
-// Clean up duplicate "My Playlist" entries created by legacy initialization bugs
-function cleanupLegacyDuplicatePlaylists(state: PlaylistState): PlaylistState {
-  const LEGACY_PLAYLIST_NAME = "My Playlist"
-
-  // Find all playlists with the legacy name
-  const legacyPlaylists = state.playlists.filter((p) => p.name === LEGACY_PLAYLIST_NAME)
-
-  // If 0 or 1 legacy playlists, nothing to clean up
-  if (legacyPlaylists.length <= 1) {
-    return state
-  }
-
-  console.info(
-    `[playlist-store] Found ${legacyPlaylists.length} duplicate "${LEGACY_PLAYLIST_NAME}" playlists. Consolidating...`
-  )
-
-  // Keep the one with the most tracks, or if tied, the most recently updated
-  const sortedLegacy = [...legacyPlaylists].sort((a, b) => {
-    // Prefer more tracks
-    if (b.tracks.length !== a.tracks.length) {
-      return b.tracks.length - a.tracks.length
-    }
-    // Then prefer more recently updated
-    return b.updatedAt - a.updatedAt
-  })
-
-  const keepPlaylist = sortedLegacy[0]!
-  const removeIds = new Set(sortedLegacy.slice(1).map((p) => p.id))
-
-  // Filter out duplicates
-  const cleanedPlaylists = state.playlists.filter((p) => !removeIds.has(p.id))
-
-  // If current playlist was removed, switch to the kept one or first available
-  let newCurrentPlaylistId = state.currentPlaylistId
-  if (state.currentPlaylistId && removeIds.has(state.currentPlaylistId)) {
-    newCurrentPlaylistId = keepPlaylist.id
-  }
-
-  console.info(
-    `[playlist-store] Kept "${keepPlaylist.name}" (${keepPlaylist.tracks.length} tracks), removed ${removeIds.size} duplicates.`
-  )
-
-  return {
-    ...state,
-    playlists: cleanedPlaylists,
-    currentPlaylistId: newCurrentPlaylistId,
-    // Reset playback state if we changed the current playlist
-    currentTrackIndex: newCurrentPlaylistId !== state.currentPlaylistId ? 0 : state.currentTrackIndex,
-    shuffleOrder: newCurrentPlaylistId !== state.currentPlaylistId ? [] : state.shuffleOrder,
-  }
-}
-
 // Sanitize the state to fix any logical inconsistencies
 function sanitizePlaylistState(state: PlaylistState): PlaylistState {
   let sanitized = { ...state }
-
-  // Migration: Clean up duplicate "My Playlist" entries (legacy bug)
-  sanitized = cleanupLegacyDuplicatePlaylists(sanitized)
 
   // Ensure currentPlaylistId references a valid playlist
   if (sanitized.currentPlaylistId !== null) {
