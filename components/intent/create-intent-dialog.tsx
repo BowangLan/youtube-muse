@@ -17,6 +17,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { buildCustomIntentQuery } from "@/lib/intents";
+import { KeywordSelector } from "./keyword-selector";
 
 interface CreateIntentDialogProps {
   trigger?: React.ReactNode;
@@ -29,7 +30,7 @@ export function CreateIntentDialog({
 }: CreateIntentDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState("");
-  const [keywords, setKeywords] = React.useState("");
+  const [keywords, setKeywords] = React.useState<string[]>([]);
   const [description, setDescription] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -51,7 +52,7 @@ export function CreateIntentDialog({
 
   const resetForm = () => {
     setName("");
-    setKeywords("");
+    setKeywords([]);
     setDescription("");
     setError(null);
     setLoadingStatus("");
@@ -64,15 +65,14 @@ export function CreateIntentDialog({
 
   const handleCreate = async () => {
     const trimmedName = name.trim();
-    const trimmedKeywords = keywords.trim();
 
     if (!trimmedName) {
       setError("Please enter an intent name");
       return;
     }
 
-    if (!trimmedKeywords) {
-      setError("Please enter at least one keyword");
+    if (keywords.length === 0) {
+      setError("Please add at least one keyword");
       return;
     }
 
@@ -87,18 +87,11 @@ export function CreateIntentDialog({
     setError(null);
 
     try {
-      // Parse keywords (comma or space separated)
-      const keywordList = trimmedKeywords
-        .split(/[,\s]+/)
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0)
-        .slice(0, 3) as [string] | [string, string] | [string, string, string];
-
-      if (keywordList.length < 1) {
-        setError("Please enter valid keywords");
-        setIsLoading(false);
-        return;
-      }
+      // Use the keywords array directly (already validated)
+      const keywordList = keywords.slice(0, 10) as
+        | [string]
+        | [string, string]
+        | [string, string, string];
 
       setLoadingStatus("Creating playlist...");
 
@@ -224,12 +217,14 @@ export function CreateIntentDialog({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="intent-name"
-                className="text-sm font-medium text-white/70"
-              >
-                Intent Name
-              </label>
+              <div>
+                <label
+                  htmlFor="intent-name"
+                  className="text-sm font-medium text-white/70"
+                >
+                  Name
+                </label>
+              </div>
               <Input
                 id="intent-name"
                 placeholder="e.g., Night Owl, Coding Mode, Zen Garden"
@@ -243,26 +238,19 @@ export function CreateIntentDialog({
               />
             </div>
 
+            {/* Keywords */}
             <div className="space-y-2">
-              <label
-                htmlFor="intent-keywords"
-                className="text-sm font-medium text-white/70"
-              >
-                Keywords{" "}
-                <span className="text-zinc-500">
-                  (1-3, comma or space separated)
-                </span>
-              </label>
-              <Input
-                id="intent-keywords"
-                placeholder="e.g., chill, ambient, lo-fi"
-                value={keywords}
-                onChange={(e) => {
-                  setKeywords(e.target.value);
-                  setError(null);
-                }}
-                className="h-11 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+              <div>
+                <label className="text-sm font-medium text-white/70">
+                  Keywords <span className="text-zinc-500">(max 10)</span>
+                </label>
+              </div>
+              <KeywordSelector
+                keywords={keywords}
+                onChange={setKeywords}
+                maxKeywords={10}
                 disabled={isLoading}
+                onError={setError}
               />
               <p className="text-xs text-zinc-500">
                 These keywords will be used to search for music that matches
@@ -271,12 +259,14 @@ export function CreateIntentDialog({
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="intent-description"
-                className="text-sm font-medium text-white/70"
-              >
-                Description <span className="text-zinc-500">(optional)</span>
-              </label>
+              <div>
+                <label
+                  htmlFor="intent-description"
+                  className="text-sm font-medium text-white/70"
+                >
+                  Description <span className="text-zinc-500">(optional)</span>
+                </label>
+              </div>
               <Input
                 id="intent-description"
                 placeholder="e.g., For late night coding sessions"
@@ -308,7 +298,7 @@ export function CreateIntentDialog({
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={!name.trim() || !keywords.trim() || isLoading}
+              disabled={!name.trim() || keywords.length === 0 || isLoading}
               className="rounded-full bg-white text-black hover:bg-white/90"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

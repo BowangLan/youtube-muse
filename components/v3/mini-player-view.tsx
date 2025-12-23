@@ -8,10 +8,12 @@ import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
+import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
 import { ProgressBar, TimeDisplay } from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
+import { EASING_EASE_OUT } from "@/lib/styles/animation";
 
 // =============================================================================
 // Constants
@@ -475,13 +477,12 @@ const ExpandedStateView = ({
 // Background Overlay
 // =============================================================================
 
-const BackgroundOverlay = ({ isHovered }: { isHovered: boolean }) => (
+export const BackgroundOverlay = () => (
   <motion.div
     aria-hidden="true"
     className="absolute inset-0 z-0 pointer-events-none bg-black/95"
     initial={false}
-    animate={{ opacity: isHovered ? 1 : 0 }}
-    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+    transition={{ duration: 0.3, ease: EASING_EASE_OUT }}
   />
 );
 
@@ -516,6 +517,9 @@ export function MiniPlayerViewDesktop() {
   const colors = useImageColors(thumbnailUrl);
   const glowStyle = useGlowStyle(colors);
 
+  // Get beat-synced animation timing
+  const { style: beatStyle, isListening, startListening } = useBeatSyncStyles();
+
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =
     !!currentPlaylist &&
@@ -545,14 +549,16 @@ export function MiniPlayerViewDesktop() {
         onMouseLeave={() => setIsHovered(false)}
         layout
         className={cn(
-          "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-zinc-900/50 bg-zinc-500/10 text-white backdrop-blur-xl",
-          isHovered ? "border-zinc-900/50" : "border-zinc-500/20"
+          "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
+          isHovered ? "border-zinc-500/20" : "border-zinc-500/20",
+          isPlaying && "animate-container-glow"
         )}
+        style={{ ...glowStyle, ...beatStyle }}
         variants={containerVariants}
         initial="collapsed"
         animate={isHovered ? "expanded" : "collapsed"}
       >
-        <BackgroundOverlay isHovered={isHovered} />
+        <BackgroundOverlay />
 
         <CollapsedStateView
           track={track}

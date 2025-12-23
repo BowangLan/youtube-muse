@@ -8,6 +8,7 @@ import { AnimatePresence, cubicBezier, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
+import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
 import {
   PlayPauseButton,
@@ -16,6 +17,7 @@ import {
 } from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
+import { BackgroundOverlay } from "./mini-player-view";
 
 // =============================================================================
 // Constants
@@ -502,20 +504,6 @@ const ExpandedStateView = ({
 );
 
 // =============================================================================
-// Background Overlay
-// =============================================================================
-
-const BackgroundOverlay = ({ isHovered }: { isHovered: boolean }) => (
-  <motion.div
-    aria-hidden="true"
-    className="absolute inset-0 z-0 pointer-events-none bg-black/95"
-    initial={false}
-    animate={{ opacity: isHovered ? 1 : 0 }}
-    transition={{ duration: 0.2, ease: EASING }}
-  />
-);
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -545,6 +533,9 @@ export function MiniPlayerViewMobile() {
     : undefined;
   const colors = useImageColors(thumbnailUrl);
   const glowStyle = useGlowStyle(colors);
+
+  // Get beat-synced animation timing
+  const { style: beatStyle, isListening, startListening } = useBeatSyncStyles();
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =
@@ -585,11 +576,12 @@ export function MiniPlayerViewMobile() {
           "relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
           isOpen ? "border-zinc-900/50" : "border-zinc-500/20"
         )}
+        style={beatStyle}
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}
       >
-        <BackgroundOverlay isHovered={isOpen} />
+        <BackgroundOverlay />
 
         <CollapsedStateView
           track={track}

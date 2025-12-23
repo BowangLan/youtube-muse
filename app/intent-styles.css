@@ -1,3 +1,33 @@
+/* Metallic-like border sheen for intent cards.
+   Uses inset shadows (not pseudo-elements) to avoid clobbering existing ::before/::after effects. */
+.intent-card {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    inset 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset -1px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Active state: brighter border with outer glow */
+.intent-card-active {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset -1px 0 0 rgba(0, 0, 0, 0.25),
+    0 0 20px rgba(255, 255, 255, 0.06),
+    0 0 40px rgba(255, 255, 255, 0.03);
+}
+
+.intent-card::before {
+  transition: background-image 0.3s ease-in-out;
+}
+.intent-card-active::before {
+  transition: background-image 0.3s ease-in-out;
+}
+
 /* Intent-specific gradients.
    These are plain CSS so they don't rely on Tailwind class generation. */
 
@@ -113,29 +143,6 @@
     rgba(251, 146, 60, 0.28),
     rgba(253, 224, 71, 0.42)
   );
-}
-
-/* Metallic-like border sheen for intent cards.
-   Uses inset shadows (not pseudo-elements) to avoid clobbering existing ::before/::after effects. */
-.intent-card {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 1px 0 0 rgba(255, 255, 255, 0.08),
-    inset -1px 0 0 rgba(0, 0, 0, 0.35);
-}
-
-/* Active state: brighter border with outer glow */
-.intent-card-active {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-    inset 1px 0 0 rgba(255, 255, 255, 0.12),
-    inset -1px 0 0 rgba(0, 0, 0, 0.25),
-    0 0 20px rgba(255, 255, 255, 0.06),
-    0 0 40px rgba(255, 255, 255, 0.03);
 }
 
 /* 7: Ultraviolet - purple to pink to orange */

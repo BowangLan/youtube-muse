@@ -155,23 +155,44 @@
     mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
   }
 
-  /* Pulsing glow animation for album art - uses CSS variables for colors */
+  /* Pulsing glow animation for album art - uses CSS variables for colors and timing */
   .animate-glow-pulse {
-    animation: glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: glow-pulse var(--beat-pulse-duration, 1s) cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes glow-pulse {
     0%, 100% {
       box-shadow:
-        0 0 30px var(--glow-color-1, rgba(255, 255, 255, 0.3)),
-        0 0 60px var(--glow-color-2, rgba(255, 255, 255, 0.15)),
-        0 0 90px var(--glow-color-3, rgba(255, 255, 255, 0.08));
+        0 0 12px var(--glow-color-1, rgba(255, 255, 255, 0.1)),
+        0 0 24px var(--glow-color-2, rgba(255, 255, 255, 0.05)),
+        0 0 36px var(--glow-color-3, rgba(255, 255, 255, 0.02));
     }
     50% {
       box-shadow:
-        0 0 40px var(--glow-color-1, rgba(255, 255, 255, 0.5)),
-        0 0 80px var(--glow-color-2, rgba(255, 255, 255, 0.25)),
-        0 0 120px var(--glow-color-3, rgba(255, 255, 255, 0.12));
+        /* 0 0 55px var(--glow-color-1, rgba(255, 255, 255, 0.7)),
+        0 0 110px var(--glow-color-2, rgba(255, 255, 255, 0.4)),
+        0 0 165px var(--glow-color-3, rgba(255, 255, 255, 0.2)); */
+        0 0 12px var(--glow-color-1, rgba(255, 255, 255, 0.1)),
+        0 0 24px var(--glow-color-2, rgba(255, 255, 255, 0.05)),
+        0 0 36px var(--glow-color-3, rgba(255, 255, 255, 0.02));
+    }
+  }
+
+  /* Pulsing glow for mini player container when playing - synced to beat */
+  .animate-container-glow {
+    animation: container-glow-pulse var(--beat-pulse-duration, 1s) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes container-glow-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 15px var(--glow-color-1, rgba(255, 255, 255, 0.35)),
+        0 0 25px var(--glow-color-2, rgba(255, 255, 255, 0.18));
+    }
+    50% {
+      box-shadow:
+        0 0 6px var(--glow-color-1, rgba(255, 255, 255, 0.04)),
+        0 0 12px var(--glow-color-2, rgba(255, 255, 255, 0.02));
     }
   }
 

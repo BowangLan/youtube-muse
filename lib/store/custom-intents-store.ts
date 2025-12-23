@@ -11,10 +11,17 @@ export interface CustomIntent extends IntentDefinition {
   playlistId: string // Links to the playlist with this intent
 }
 
+// Keyword override type for built-in intents
+export type KeywordsOverride = [string] | [string, string] | [string, string, string]
+
 interface CustomIntentsState {
   customIntents: CustomIntent[]
   // Gradient overrides for any playlist (built-in or custom) - keyed by playlist ID
   gradientOverrides: Record<string, GradientClassName>
+  // Keyword overrides for built-in intents - keyed by playlist ID
+  keywordOverrides: Record<string, KeywordsOverride>
+  // Description overrides for built-in intents - keyed by playlist ID
+  descriptionOverrides: Record<string, string>
   // Set of built-in intent names that have been hidden/deleted by user
   hiddenBuiltInIntents: string[]
 }
@@ -22,7 +29,7 @@ interface CustomIntentsState {
 interface CustomIntentsActions {
   addCustomIntent: (intent: Omit<CustomIntent, "id" | "gradientClassName" | "isCustom">) => CustomIntent
   removeCustomIntent: (id: string) => void
-  updateCustomIntent: (id: string, updates: Partial<Pick<CustomIntent, "name" | "gradientClassName" | "keywords">>) => void
+  updateCustomIntent: (id: string, updates: Partial<Pick<CustomIntent, "name" | "gradientClassName" | "keywords" | "description">>) => void
   getCustomIntent: (id: string) => CustomIntent | undefined
   getCustomIntentByPlaylistId: (playlistId: string) => CustomIntent | undefined
   getCustomIntentByName: (name: string) => CustomIntent | undefined
@@ -30,6 +37,14 @@ interface CustomIntentsActions {
   setGradientOverride: (playlistId: string, gradient: GradientClassName) => void
   getGradientOverride: (playlistId: string) => GradientClassName | undefined
   clearGradientOverride: (playlistId: string) => void
+  // Keyword override methods (for built-in intents)
+  setKeywordOverride: (playlistId: string, keywords: KeywordsOverride) => void
+  getKeywordOverride: (playlistId: string) => KeywordsOverride | undefined
+  clearKeywordOverride: (playlistId: string) => void
+  // Description override methods (for built-in intents)
+  setDescriptionOverride: (playlistId: string, description: string) => void
+  getDescriptionOverride: (playlistId: string) => string | undefined
+  clearDescriptionOverride: (playlistId: string) => void
   // Hidden built-in intents methods
   hideBuiltInIntent: (intentName: string) => void
   unhideBuiltInIntent: (intentName: string) => void
@@ -45,6 +60,8 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
     (set, get) => ({
       customIntents: [],
       gradientOverrides: {},
+      keywordOverrides: {},
+      descriptionOverrides: {},
       hiddenBuiltInIntents: [],
 
       addCustomIntent: (intent) => {
@@ -108,6 +125,48 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
         set((state) => {
           const { [playlistId]: _, ...rest } = state.gradientOverrides
           return { gradientOverrides: rest }
+        })
+      },
+
+      // Keyword override methods (for built-in intents)
+      setKeywordOverride: (playlistId, keywords) => {
+        set((state) => ({
+          keywordOverrides: {
+            ...state.keywordOverrides,
+            [playlistId]: keywords,
+          },
+        }))
+      },
+
+      getKeywordOverride: (playlistId) => {
+        return get().keywordOverrides[playlistId]
+      },
+
+      clearKeywordOverride: (playlistId) => {
+        set((state) => {
+          const { [playlistId]: _, ...rest } = state.keywordOverrides
+          return { keywordOverrides: rest }
+        })
+      },
+
+      // Description override methods (for built-in intents)
+      setDescriptionOverride: (playlistId, description) => {
+        set((state) => ({
+          descriptionOverrides: {
+            ...state.descriptionOverrides,
+            [playlistId]: description,
+          },
+        }))
+      },
+
+      getDescriptionOverride: (playlistId) => {
+        return get().descriptionOverrides[playlistId]
+      },
+
+      clearDescriptionOverride: (playlistId) => {
+        set((state) => {
+          const { [playlistId]: _, ...rest } = state.descriptionOverrides
+          return { descriptionOverrides: rest }
         })
       },
 

@@ -8,9 +8,11 @@ import {
   Loader2,
   MoreVertical,
   Palette,
+  Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
+import { EditIntentDialog } from "@/components/intent/edit-intent-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -78,6 +80,7 @@ export function IntentDetailSection() {
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
 
   const [isAdding, setIsAdding] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   // Derive active playlist from stores
   const activePlaylist = React.useMemo(() => {
@@ -323,6 +326,10 @@ export function IntentDetailSection() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                  <Pencil />
+                  Edit Keywords
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSwitchGradient}>
                   <Palette />
                   Random Gradient
@@ -366,6 +373,15 @@ export function IntentDetailSection() {
           ))}
         </div>
       </div>
+
+      {/* Edit Intent Dialog */}
+      {activePlaylistId && (
+        <EditIntentDialog
+          playlistId={activePlaylistId}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+        />
+      )}
     </motion.section>
   );
 }
