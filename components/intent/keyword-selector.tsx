@@ -296,9 +296,10 @@ export function KeywordSelector({
         </div>
       )}
 
-      <div className="flex rounded-lg border border-white/10 bg-white/2 overflow-hidden h-56">
+      {/* Keyword Selector - Desktop */}
+      <div className="hidden sm:flex rounded-lg border border-white/10 bg-white/2 overflow-hidden h-56">
         {/* Sidebar */}
-        <div className="flex p-1.5 gap-1.5 flex-col bg-white/5 shrink-0">
+        <div className="flex p-1 gap-1 flex-col border-r border-white/10 bg-white/2 shrink-0">
           {KEYWORD_CATEGORIES.map((category) => {
             const isActive = activeCategory === category.id;
             return (
@@ -357,10 +358,72 @@ export function KeywordSelector({
         </div>
       </div>
 
+      {/* Keyword Selector - Mobile */}
+      <div className="flex flex-col sm:hidden">
+        {/* top bar */}
+        <div className="flex mt-1 max-w-full overflow-x-auto min-w-0 min-h-0 gap-1 flex-row items-center flex-none scrollbar-none">
+          {KEYWORD_CATEGORIES.map((category) => {
+            const isActive = activeCategory === category.id;
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setActiveCategory(category.id)}
+                className={cn(
+                  "px-3 py-2 text-xs flex-none font-medium rounded-md text-left transition-all duration-200",
+                  isActive
+                    ? cn(category.activeClass, "border-current")
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                )}
+              >
+                {category.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 mt-3 overflow-y-auto max-h-56">
+          {KEYWORD_CATEGORIES.map((category) => {
+            if (activeCategory !== category.id) return null;
+
+            return (
+              <div
+                key={category.id}
+                className="flex flex-wrap gap-1.5 content-start"
+              >
+                {category.keywords.map((keyword) => {
+                  const isSelected = keywords.includes(keyword);
+                  if (isSelected) return null;
+
+                  return (
+                    <button
+                      key={keyword}
+                      type="button"
+                      onClick={() => handleToggleKeyword(keyword)}
+                      disabled={disabled || keywords.length >= maxKeywords}
+                      className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                        "transition-all duration-200 border",
+                        category.pillClass,
+                        keywords.length >= maxKeywords &&
+                          "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      {keyword}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <Input
         placeholder="Or enter a custom keyword..."
         onKeyDown={handleAddCustomKeyword}
-        className="h-10 rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+        className="h-10 text-sm rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
         disabled={disabled || keywords.length >= maxKeywords}
       />
     </div>

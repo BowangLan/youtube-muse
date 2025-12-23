@@ -178,25 +178,25 @@ export function EditIntentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm">
-        <div className="space-y-5 p-6">
+      <DialogContent className="w-full h-full sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm max-h-[90vh] overflow-hidden">
+        <div className="space-y-3 p-4 sm:space-y-4 sm:p-6 overflow-y-auto max-h-[90vh] flex flex-col">
           <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-              <Pencil className="h-5 w-5 text-purple-400" />
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold sm:text-xl">
+              <Pencil className="h-4 w-4 shrink-0 text-purple-400 sm:h-5 sm:w-5" />
               Edit Intent
             </DialogTitle>
-            <DialogDescription className="text-sm text-zinc-500">
+            <DialogDescription className="text-xs text-zinc-500 sm:text-sm">
               Customize the keywords and description for &quot;{playlist.name}
               &quot;
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
+          <div className="space-y-3 sm:space-y-4 flex-1">
             {/* Keywords */}
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <div>
-                <label className="text-sm font-medium text-white/70">
-                  Keywords (max 10)
+                <label className="text-xs font-medium text-white/70 sm:text-sm">
+                  Keywords <span className="text-zinc-500">(max 10)</span>
                 </label>
               </div>
               <KeywordSelector
@@ -208,11 +208,11 @@ export function EditIntentDialog({
               />
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
+            {/* Description - hidden on mobile */}
+            <div className="space-y-1.5 sm:space-y-2 hidden sm:block">
               <label
                 htmlFor="intent-description"
-                className="text-sm font-medium text-white/70"
+                className="text-xs font-medium text-white/70 sm:text-sm"
               >
                 Description <span className="text-zinc-500">(optional)</span>
               </label>
@@ -221,27 +221,29 @@ export function EditIntentDialog({
                 placeholder="Describe the vibe or purpose of this intent..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="min-h-20 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-zinc-500 resize-none"
+                className="min-h-20 rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 resize-none sm:text-base"
                 disabled={isSaving}
               />
             </div>
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && (
+              <p className="text-xs text-red-400 sm:text-sm">{error}</p>
+            )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-end">
             <Button
               variant="ghost"
               onClick={handleClose}
               disabled={isSaving}
-              className="rounded-full px-4 text-white hover:bg-white/10"
+              className="h-10 w-full rounded-full px-4 text-white hover:bg-white/10 sm:h-auto sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={keywords.length === 0 || isSaving}
-              className="rounded-full bg-white text-black hover:bg-white/90"
+              className="h-10 w-full rounded-full bg-white text-black hover:bg-white/90 sm:h-auto sm:w-auto"
             >
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
