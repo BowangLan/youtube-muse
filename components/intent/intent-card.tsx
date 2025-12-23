@@ -5,6 +5,7 @@ import type { Playlist } from "@/lib/types/playlist";
 import type { IntentDefinition } from "@/lib/intents";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { Button } from "../ui/button";
 
 interface IntentCardProps {
   playlist: Playlist;
@@ -29,7 +30,7 @@ export function IntentCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative group w-full flex min-h-32 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
+        "relative group trans w-full flex min-h-32 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
         "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[radial-gradient(60%_60%_at_20%_10%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_70%)] after:opacity-50",
@@ -82,19 +83,26 @@ export function IntentCard({
       )}
 
       <div className="relative z-10 space-y-1">
-        <div className="text-xs/tight uppercase tracking-[0.32em] text-white/50">
+        <div className="text-[10px]/[12px] md:text-xs/tight uppercase tracking-[0.32em] text-white/50">
           Intent
         </div>
-        <div className="text-base/tight font-light text-white">
+        <div className="text-base/tight md:text-lg/tight font-normal text-white">
           {playlist.name}
         </div>
-        <div className="line-clamp-2 text-xs/tight text-white/45">
+        <div className="line-clamp-2 text-[11px]/[13px] md:text-xs/tight text-white/45">
           {intent?.description ?? ""}
         </div>
       </div>
       <div className="relative z-10 flex items-center justify-between text-xs text-white/45">
         <span>{trackCount} tracks</span>
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white/30">
+        <span
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white/30"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onClick();
+          }}
+        >
           tap to enter
         </span>
       </div>

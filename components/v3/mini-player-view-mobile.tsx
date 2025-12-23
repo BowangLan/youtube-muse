@@ -583,7 +583,7 @@ export function MiniPlayerViewMobile() {
         }}
         className={cn(
           "relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
-          isOpen ? "border-zinc-900/50" : "border-zinc-500/10"
+          isOpen ? "border-zinc-900/50" : "border-zinc-500/20"
         )}
         variants={containerVariants}
         initial="collapsed"

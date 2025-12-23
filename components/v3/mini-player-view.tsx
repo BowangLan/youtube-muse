@@ -546,7 +546,7 @@ export function MiniPlayerViewDesktop() {
         layout
         className={cn(
           "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-zinc-900/50 bg-zinc-500/10 text-white backdrop-blur-xl",
-          isHovered ? "border-zinc-900/50" : "border-zinc-500/10"
+          isHovered ? "border-zinc-900/50" : "border-zinc-500/20"
         )}
         variants={containerVariants}
         initial="collapsed"
