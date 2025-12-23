@@ -4,12 +4,16 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
-import { AnimatePresence, motion, Variants } from "motion/react";
+import { AnimatePresence, cubicBezier, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
-import { ProgressBar, TimeDisplay } from "@/components/player/player-controls";
+import {
+  PlayPauseButton,
+  ProgressBar,
+  TimeDisplay,
+} from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 
@@ -17,12 +21,12 @@ import { Track } from "@/lib/types/playlist";
 // Constants
 // =============================================================================
 
-const EXPANDED_HEIGHT = 200;
-const EXPANDED_PADDING = 20;
+const EXPANDED_HEIGHT = "80vh";
 const COLLAPSED_HEIGHT = 66;
 
 const EXPAND_DURATION = 0.5;
 const COLLAPSE_DURATION = 0.5;
+const EASING = cubicBezier(0.165, 0.84, 0.44, 1.0);
 
 const containerVariants: Variants = {
   collapsed: {
@@ -30,7 +34,7 @@ const containerVariants: Variants = {
     maxWidth: "56rem",
     transition: {
       duration: COLLAPSE_DURATION,
-      ease: [0.4, 0, 0.2, 1],
+      ease: EASING,
     },
   },
   expanded: {
@@ -38,7 +42,7 @@ const containerVariants: Variants = {
     maxWidth: "64rem",
     transition: {
       duration: EXPAND_DURATION,
-      ease: [0.4, 0, 0.2, 1],
+      ease: EASING,
     },
   },
 };
@@ -89,7 +93,7 @@ const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{ duration: 0.4, ease: EASING }}
           className={cn(
             "absolute inset-0 pointer-events-none animate-glow-pulse",
             borderRadius
@@ -110,9 +114,9 @@ const TrackCoverCollapsed = ({
   glowStyle,
 }: TrackCoverProps) => (
   <motion.div
-    layoutId="track-cover"
+    layoutId="track-cover-mobile"
     className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
-    transition={{ duration: COLLAPSE_DURATION, ease: [0.4, 0, 0.2, 1] }}
+    transition={{ duration: COLLAPSE_DURATION, ease: EASING }}
   >
     <div className="relative w-full h-full overflow-hidden rounded-md">
       <Image
@@ -138,20 +142,16 @@ const TrackCoverExpanded = ({
 }: TrackCoverProps) => {
   return (
     <motion.div
-      layoutId="track-cover"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none"
-      style={{
-        width: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
-        height: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
-      }}
-      transition={{ duration: EXPAND_DURATION, ease: [0.4, 0, 0.2, 1] }}
+      layoutId="track-cover-mobile"
+      className="relative shrink-0 overflow-visible rounded-lg flex-none w-[60vw] sm:w-[50vw] aspect-square"
+      transition={{ duration: EXPAND_DURATION, ease: EASING }}
     >
       <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
         <Image
           src={track.thumbnailUrl}
           alt={track.title}
           fill
-          sizes={`${EXPANDED_HEIGHT - EXPANDED_PADDING * 2}px`}
+          sizes="64vw"
           className="object-cover"
         />
       </div>
@@ -164,99 +164,64 @@ const TrackCoverExpanded = ({
   );
 };
 
-const TrackTitleCollapsed = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-title">
-      <Link
-        href={`https://www.youtube.com/watch?v=${track.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <p className="truncate text-sm">{track.title}</p>
-      </Link>
-    </motion.div>
-  );
-};
-
-const TrackTitleExpanded = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-title">
-      <Link
-        href={`https://www.youtube.com/watch?v=${track.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
-          {track.title}
-        </h3>
-      </Link>
-    </motion.div>
-  );
-};
-
-export const TrackAuthorCollapsed = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-author">
-      <Link
-        href={track.authorUrl ?? ""}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <p className="truncate text-xs/tight text-neutral-400">
-          {track.author}
-        </p>
-      </Link>
-    </motion.div>
-  );
-};
-
-export const TrackAuthorExpanded = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-author">
-      <Link
-        href={track.authorUrl ?? ""}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <p className="truncate text-sm/tight text-neutral-400">
-          {track.author}
-        </p>
-      </Link>
-    </motion.div>
-  );
-};
-
 const TrackInfo = ({ track, variant }: TrackInfoProps) => {
   const isCollapsed = variant === "collapsed";
 
-  return (
-    <div className={cn("min-w-0", !isCollapsed && "flex flex-col gap-3")}>
-      <motion.div layoutId="track-title">
+  if (isCollapsed) {
+    return (
+      <div className="flex flex-col flex-1 min-w-0">
         <Link
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline"
+          className="hover:underline max-w-[50vw] flex"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
-          {isCollapsed ? (
-            <p className="truncate text-sm">{track.title}</p>
-          ) : (
-            <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
-              {track.title}
-            </h3>
-          )}
+          <p className="truncate text-sm">{track.title}</p>
         </Link>
-      </motion.div>
-      <motion.div layoutId="track-author">
         <Link
           href={track.authorUrl ?? ""}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline"
+          className="hover:underline max-w-[50vw] flex"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <p className="truncate text-xs text-neutral-400">{track.author}</p>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("w-full", "flex flex-col gap-4")}>
+      <motion.div layoutId="track-title-mobile">
+        <Link
+          href={`https://www.youtube.com/watch?v=${track.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline flex"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2 max-w-[50vw]">
+            {track.title}
+          </h3>
+        </Link>
+      </motion.div>
+      <motion.div layoutId="track-author-mobile">
+        <Link
+          href={track.authorUrl ?? ""}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline max-w-[50vw] flex"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <p
             className={cn(
@@ -282,7 +247,7 @@ const ProgressSection = ({ isHovered }: { isHovered: boolean }) => (
     }}
     transition={{
       duration: 0.3,
-      ease: [0.4, 0, 0.2, 1],
+      ease: EASING,
       delay: isHovered ? 0.15 : 0,
     }}
   >
@@ -343,6 +308,34 @@ const PlayerControls = ({
   );
 };
 
+export const NextButton = () => {
+  const {
+    playNext,
+    repeatMode,
+    currentTrackIndex,
+    playlists,
+    currentPlaylistId,
+  } = usePlaylistStore();
+
+  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
+  const canPlayNext =
+    !!currentPlaylist &&
+    (repeatMode === "playlist"
+      ? currentPlaylist.tracks.length > 0
+      : currentTrackIndex < currentPlaylist.tracks.length - 1);
+
+  return (
+    <button
+      type="button"
+      onClick={playNext}
+      disabled={!canPlayNext}
+      className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
+    >
+      <SkipForward className="h-5 w-5" fill="currentColor" />
+    </button>
+  );
+};
+
 const AnimatedControlsWrapper = ({
   isHovered,
   children,
@@ -358,7 +351,7 @@ const AnimatedControlsWrapper = ({
     }}
     transition={{
       duration: 0.3,
-      ease: [0.4, 0, 0.2, 1],
+      ease: EASING,
       delay: isHovered ? 0.2 : 0,
     }}
   >
@@ -419,15 +412,24 @@ const CollapsedStateView = ({
       opacity: isHovered ? 0 : 1,
       pointerEvents: isHovered ? "none" : "auto",
     }}
-    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+    transition={{ duration: 0.2, ease: EASING }}
   >
     <div className="flex items-center gap-3 min-w-0 flex-1">
+      {/* Left */}
       <TrackCoverCollapsed
         track={track}
         isPlaying={isPlaying}
         glowStyle={glowStyle}
       />
+
+      {/* Center */}
       <TrackInfo track={track} variant="collapsed" />
+
+      {/* Right */}
+      <div className="flex-none flex items-center">
+        <PlayPauseButton variant="ghost" className="h-10 w-10" />
+        {/* <NextButton /> */}
+      </div>
     </div>
   </motion.div>
 );
@@ -462,7 +464,7 @@ const ExpandedStateView = ({
   onPlayNext: () => void;
 }) => (
   <motion.div
-    className="absolute inset-0 z-10 flex flex-row"
+    className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8"
     initial={false}
     animate={{
       opacity: isHovered ? 1 : 0,
@@ -470,12 +472,8 @@ const ExpandedStateView = ({
     }}
     transition={{
       duration: 0.2,
-      ease: [0.4, 0, 0.2, 1],
+      ease: EASING,
       delay: isHovered ? 0.1 : 0,
-    }}
-    style={{
-      padding: EXPANDED_PADDING,
-      gap: EXPANDED_PADDING,
     }}
   >
     <TrackCoverExpanded
@@ -484,7 +482,7 @@ const ExpandedStateView = ({
       glowStyle={glowStyle}
     />
 
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col w-full mt-14">
       <TrackInfo track={track} variant="expanded" />
       <ProgressSection isHovered={isHovered} />
       <AnimatedControlsWrapper isHovered={isHovered}>
@@ -513,7 +511,7 @@ const BackgroundOverlay = ({ isHovered }: { isHovered: boolean }) => (
     className="absolute inset-0 z-0 pointer-events-none bg-black/95"
     initial={false}
     animate={{ opacity: isHovered ? 1 : 0 }}
-    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+    transition={{ duration: 0.2, ease: EASING }}
   />
 );
 
@@ -521,7 +519,7 @@ const BackgroundOverlay = ({ isHovered }: { isHovered: boolean }) => (
 // Main Component
 // =============================================================================
 
-export function MiniPlayerViewDesktop() {
+export function MiniPlayerViewMobile() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
   const {
     togglePlay,
@@ -539,7 +537,7 @@ export function MiniPlayerViewDesktop() {
     currentPlaylistId,
   } = usePlaylistStore();
 
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   // Extract colors from thumbnail for glow effect
   const thumbnailUrl = track
@@ -573,28 +571,30 @@ export function MiniPlayerViewDesktop() {
       style={{ minHeight: COLLAPSED_HEIGHT }}
     >
       <motion.div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        layout
-        className="relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
+        className="relative active:scale-95 trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
         variants={containerVariants}
         initial="collapsed"
-        animate={isHovered ? "expanded" : "collapsed"}
+        animate={isOpen ? "expanded" : "collapsed"}
       >
-        <BackgroundOverlay isHovered={isHovered} />
+        <BackgroundOverlay isHovered={isOpen} />
 
         <CollapsedStateView
           track={track}
           isPlaying={isPlaying}
           glowStyle={glowStyle}
-          isHovered={isHovered}
+          isHovered={isOpen}
         />
 
         <ExpandedStateView
           track={track}
           isPlaying={isPlaying}
           glowStyle={glowStyle}
-          isHovered={isHovered}
+          isHovered={isOpen}
           isLoadingNewVideo={isLoadingNewVideo}
           pendingPlayState={pendingPlayState}
           apiReady={apiReady}

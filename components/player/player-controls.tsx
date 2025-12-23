@@ -296,7 +296,11 @@ export const PlayPauseButton = React.memo(
           variant === "default" && "bg-white",
           className
         )}
-        onClick={togglePlay}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          togglePlay();
+        }}
         disabled={isLoadingNewVideo || !apiReady}
       >
         {isPlaying || pendingPlayState !== null ? (

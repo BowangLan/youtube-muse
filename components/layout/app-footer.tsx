@@ -28,3 +28,13 @@ export function AppFooter() {
     </footer>
   );
 }
+
+export const AppFooterFixed = () => {
+  return (
+    <footer className="fixed top-0 right-0 z-50">
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+        <AppFooterInner />
+      </div>
+    </footer>
+  );
+};

@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
-import { AppFooter } from "@/components/layout/app-footer";
+import { AppFooter, AppFooterFixed } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
@@ -16,10 +16,13 @@ import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { useShallow } from "zustand/shallow";
 import { IntentGridSection } from "@/components/intent/intent-grid-section";
 import { IntentDetailSection } from "@/components/intent/intent-detail-section";
-import { MiniPlayerView } from "@/components/v3/mini-player-view";
+import { MiniPlayerViewDesktop } from "@/components/v3/mini-player-view";
+import { MiniPlayerViewMobile } from "@/components/v3/mini-player-view-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Home() {
   const hasMounted = useHasMounted();
+  const isMobile = useIsMobile();
 
   const {
     playlists,
@@ -172,9 +175,7 @@ export default function Home() {
       </div>
 
       {/* Mini Player View - bottom of the screen */}
-      <div className="fixed bottom-8 left-0 right-0 z-40 trans">
-        <MiniPlayerView />
-      </div>
+      {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />}
 
       <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6 z-10 isolate">
         <AppHeader />
@@ -199,7 +200,7 @@ export default function Home() {
         )}
       </div>
 
-      <AppFooter />
+      <AppFooterFixed />
     </main>
   );
 }
