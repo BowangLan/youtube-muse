@@ -5,30 +5,49 @@ import type { Playlist } from "@/lib/types/playlist";
 import type { IntentDefinition } from "@/lib/intents";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { Button } from "../ui/button";
+import { useAppStateStore } from "@/lib/store/app-state-store";
+import { motion } from "motion/react";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 interface IntentCardProps {
   playlist: Playlist;
   intent: IntentDefinition | undefined;
-  isActive: boolean;
-  onClick: () => void;
 }
 
-export function IntentCard({
-  playlist,
-  intent,
-  isActive,
-  onClick,
-}: IntentCardProps) {
+export function IntentCard({ playlist, intent }: IntentCardProps) {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const openIntent = useAppStateStore((state) => state.openIntent);
   const trackCount = playlist.tracks.length;
+  const openIntentAction = useAppStateStore((state) => state.openIntent);
+  const setCurrentPlaylist = usePlaylistStore(
+    (state) => state.setCurrentPlaylist
+  );
+  const setCurrentTrackIndex = usePlaylistStore(
+    (state) => state.setCurrentTrackIndex
+  );
+  const currentPlaylistId = usePlaylistStore(
+    (state) => state.currentPlaylistId
+  );
+
+  const isActive = currentPlaylistId === playlist.id;
 
   const isCurrentlyPlaying = isActive && isPlaying;
 
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (isActive) {
+          togglePlay();
+        } else {
+          setCurrentPlaylist(playlist.id);
+          setCurrentTrackIndex(0);
+        }
+      }}
       className={cn(
         "relative group trans w-full flex min-h-32 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
         "transition-colors hover:bg-white/6 active:bg-white/8",
@@ -82,13 +101,18 @@ export function IntentCard({
         </div>
       )}
 
-      <div className="relative z-10 space-y-1">
+      <div className="relative z-10 flex flex-col gap-1">
         <div className="text-[10px]/[12px] md:text-xs/tight uppercase tracking-[0.32em] text-white/50">
           Intent
         </div>
-        <div className="text-base/tight md:text-lg/tight font-normal text-white">
+        <motion.div
+          className="text-base/tight md:text-lg/tight font-normal text-white"
+          layoutId={`intent-name-${playlist.id}`}
+          layout="position"
+          transition={{ duration: EASING_DURATION_CARD, ease: EASING_EASE_OUT }}
+        >
           {playlist.name}
-        </div>
+        </motion.div>
         <div className="line-clamp-2 text-[11px]/[13px] md:text-xs/tight text-white/45">
           {intent?.description ?? ""}
         </div>
@@ -96,11 +120,11 @@ export function IntentCard({
       <div className="relative z-10 flex items-center justify-between text-xs text-white/45">
         <span>{trackCount} tracks</span>
         <span
-          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white/30"
+          className="md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white/30 hover:text-white trans select-none cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            onClick();
+            openIntent(playlist.id);
           }}
         >
           tap to enter
