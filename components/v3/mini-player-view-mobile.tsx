@@ -174,7 +174,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline max-w-[50vw] flex"
+          className="hover:underline w-fit max-w-[50vw] flex"
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -185,7 +185,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           href={track.authorUrl ?? ""}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline max-w-[50vw] flex"
+          className="hover:underline w-fit max-w-[50vw] flex"
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -197,18 +197,18 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
   }
 
   return (
-    <div className={cn("w-full", "flex flex-col gap-4")}>
+    <div className={cn("w-full", "flex flex-col gap-3")}>
       <motion.div layoutId="track-title-mobile">
         <Link
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline flex"
+          className="hover:underline w-fit flex"
           onClick={(e) => {
             e.stopPropagation();
           }}
         >
-          <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2 max-w-[50vw]">
+          <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
             {track.title}
           </h3>
         </Link>
@@ -218,7 +218,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           href={track.authorUrl ?? ""}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline max-w-[50vw] flex"
+          className="hover:underline w-fit flex"
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -464,7 +464,7 @@ const ExpandedStateView = ({
   onPlayNext: () => void;
 }) => (
   <motion.div
-    className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8"
+    className="absolute inset-0 z-10 flex flex-col items-center justify-center px-4"
     initial={false}
     animate={{
       opacity: isHovered ? 1 : 0,
@@ -482,7 +482,7 @@ const ExpandedStateView = ({
       glowStyle={glowStyle}
     />
 
-    <div className="flex flex-col w-full mt-14">
+    <div className="flex flex-col w-full gap-3 mt-14">
       <TrackInfo track={track} variant="expanded" />
       <ProgressSection isHovered={isHovered} />
       <AnimatedControlsWrapper isHovered={isHovered}>
@@ -567,8 +567,13 @@ export function MiniPlayerViewMobile() {
 
   return (
     <div
-      className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40"
-      style={{ minHeight: COLLAPSED_HEIGHT }}
+      className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40 trans"
+      style={{
+        minHeight: COLLAPSED_HEIGHT,
+        paddingLeft: !isOpen ? "16px" : "0",
+        paddingRight: !isOpen ? "16px" : "0",
+        bottom: !isOpen ? `2rem` : "0",
+      }}
     >
       <motion.div
         onClick={(e) => {
@@ -576,7 +581,7 @@ export function MiniPlayerViewMobile() {
           e.preventDefault();
           setIsOpen(!isOpen);
         }}
-        className="relative active:scale-95 trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
+        className="relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border border-white/10 bg-zinc-500/10 text-white backdrop-blur-xl"
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}

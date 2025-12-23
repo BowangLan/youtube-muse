@@ -164,38 +164,6 @@ const TrackCoverExpanded = ({
   );
 };
 
-const TrackTitleCollapsed = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-title">
-      <Link
-        href={`https://www.youtube.com/watch?v=${track.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <p className="truncate text-sm">{track.title}</p>
-      </Link>
-    </motion.div>
-  );
-};
-
-const TrackTitleExpanded = ({ track }: { track: Track }) => {
-  return (
-    <motion.div layoutId="track-title">
-      <Link
-        href={`https://www.youtube.com/watch?v=${track.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
-          {track.title}
-        </h3>
-      </Link>
-    </motion.div>
-  );
-};
-
 export const TrackAuthorCollapsed = ({ track }: { track: Track }) => {
   return (
     <motion.div layoutId="track-author">
@@ -240,7 +208,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline"
+          className="hover:underline w-fit max-w-[50vw] flex"
         >
           {isCollapsed ? (
             <p className="truncate text-sm">{track.title}</p>
@@ -256,7 +224,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           href={track.authorUrl ?? ""}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline"
+          className="hover:underline w-fit max-w-[50vw] flex"
         >
           <p
             className={cn(
