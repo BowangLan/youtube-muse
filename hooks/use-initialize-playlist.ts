@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { buildIntentQuery, INTENTS } from "@/lib/intents";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 
@@ -47,12 +48,18 @@ export function useInitializePlaylist() {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const intentNames = INTENTS.map((i) => i.name);
+    // Get hidden intents from the custom intents store
+    const hiddenIntents = new Set(useCustomIntentsStore.getState().hiddenBuiltInIntents);
+    
+    // Filter out hidden intents
+    const visibleIntents = INTENTS.filter((i) => !hiddenIntents.has(i.name));
+    const intentNames = visibleIntents.map((i) => i.name);
     const intentNameSet = new Set(intentNames);
 
     const repairIntentPlaylists = () => {
       const state = usePlaylistStore.getState();
       const playlists = state.playlists;
+      const currentHidden = new Set(useCustomIntentsStore.getState().hiddenBuiltInIntents);
 
       const byIntentName = new Map<string, typeof playlists>();
       for (const p of playlists) {
@@ -63,7 +70,7 @@ export function useInitializePlaylist() {
       }
 
       const missingNames = intentNames.filter(
-        (name) => (byIntentName.get(name)?.length ?? 0) === 0
+        (name) => !currentHidden.has(name) && (byIntentName.get(name)?.length ?? 0) === 0
       );
 
       const renamePool = intentNames.flatMap((name) => {
@@ -77,7 +84,7 @@ export function useInitializePlaylist() {
       // reclaim duplicates to fill in missing intent names.
       for (let i = 0; i < Math.min(missingNames.length, renamePool.length); i++) {
         const targetName = missingNames[i]!;
-        const targetIntent = INTENTS.find((intent) => intent.name === targetName);
+        const targetIntent = visibleIntents.find((intent) => intent.name === targetName);
         if (!targetIntent) continue;
 
         updatePlaylist(renamePool[i]!.id, {
@@ -87,10 +94,11 @@ export function useInitializePlaylist() {
       }
 
       // Create any still-missing intent playlists (do not delete user data).
+      // Skip hidden intents.
       const latest = usePlaylistStore.getState().playlists;
       const latestNames = new Set(latest.map((p) => p.name));
-      for (const intent of INTENTS) {
-        if (!latestNames.has(intent.name)) {
+      for (const intent of visibleIntents) {
+        if (!latestNames.has(intent.name) && !currentHidden.has(intent.name)) {
           createPlaylist(intent.name, intent.description, []);
         }
       }
@@ -102,7 +110,8 @@ export function useInitializePlaylist() {
 
     if (playlists.length === 0) {
       // Create intent playlists (empty for now, then seed via YouTube search).
-      for (const intent of INTENTS) {
+      // Skip hidden intents.
+      for (const intent of visibleIntents) {
         createPlaylist(intent.name, intent.description, []);
       }
 
@@ -110,10 +119,10 @@ export function useInitializePlaylist() {
       setTimeout(() => {
         const state = usePlaylistStore.getState();
         const newlyCreatedPlaylists = state.playlists.filter((p) =>
-          INTENTS.some((intent) => intent.name === p.name)
+          visibleIntents.some((intent) => intent.name === p.name)
         );
 
-        const firstIntentName = INTENTS[0]?.name;
+        const firstIntentName = visibleIntents[0]?.name;
         const firstIntent = newlyCreatedPlaylists.find((p) => p.name === firstIntentName);
         if (firstIntent) {
           setCurrentPlaylist(firstIntent.id);
@@ -124,7 +133,7 @@ export function useInitializePlaylist() {
         void (async () => {
           await Promise.allSettled(
             newlyCreatedPlaylists.map(async (playlist) => {
-              const intent = INTENTS.find((i) => i.name === playlist.name);
+              const intent = visibleIntents.find((i) => i.name === playlist.name);
               if (!intent) return;
 
               // Only seed if empty (never overwrite user data).

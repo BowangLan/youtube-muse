@@ -3,13 +3,32 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
-import { ArrowLeft, Loader2, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  MoreVertical,
+  Palette,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
-import { INTENTS, buildIntentQuery, buildCustomIntentQuery, getIntentByName } from "@/lib/intents";
+import {
+  INTENTS,
+  buildIntentQuery,
+  buildCustomIntentQuery,
+  getIntentByName,
+  getRandomGradient,
+} from "@/lib/intents";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
@@ -40,6 +59,23 @@ export function IntentDetailSection() {
   const togglePlay = usePlayerStore((state) => state.togglePlay);
 
   const customIntents = useCustomIntentsStore((state) => state.customIntents);
+  const removeCustomIntent = useCustomIntentsStore(
+    (state) => state.removeCustomIntent
+  );
+  const updateCustomIntent = useCustomIntentsStore(
+    (state) => state.updateCustomIntent
+  );
+  const setGradientOverride = useCustomIntentsStore(
+    (state) => state.setGradientOverride
+  );
+  const gradientOverrides = useCustomIntentsStore(
+    (state) => state.gradientOverrides
+  );
+  const hideBuiltInIntent = useCustomIntentsStore(
+    (state) => state.hideBuiltInIntent
+  );
+
+  const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
 
   const [isAdding, setIsAdding] = React.useState(false);
 
@@ -59,13 +95,25 @@ export function IntentDetailSection() {
     return customIntents.find((ci) => ci.playlistId === activePlaylistId);
   }, [activePlaylist?.name, activePlaylistId, customIntents]);
 
+  // Check if this is a custom intent (can be deleted/modified)
+  const isCustomIntent = React.useMemo(() => {
+    return (
+      activeIntent &&
+      "isCustom" in activeIntent &&
+      activeIntent.isCustom === true
+    );
+  }, [activeIntent]);
+
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
     isShuffleEnabled && shuffleOrder.length > 0
       ? shuffleOrder[currentTrackIndex] ?? currentTrackIndex
       : currentTrackIndex;
 
-  const intentGradient = activeIntent?.gradientClassName ?? undefined;
+  // Get gradient - check for override first, then use intent's default
+  const intentGradient = activePlaylistId
+    ? gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
+    : activeIntent?.gradientClassName;
 
   const handleTrackClick = React.useCallback(
     (index: number) => {
@@ -127,6 +175,83 @@ export function IntentDetailSection() {
     }
   }, [activePlaylist, activePlaylistId, activeIntent, addTrackToPlaylist]);
 
+  const handleDelete = React.useCallback(() => {
+    if (!activePlaylistId || !activeIntent || !activePlaylist) return;
+
+    // If this playlist is currently playing, clear the current playlist first
+    if (currentPlaylistId === activePlaylistId) {
+      setCurrentPlaylist(null);
+    }
+
+    if (isCustomIntent) {
+      // Custom intent: remove from custom intents store and delete playlist
+      const customIntent = customIntents.find(
+        (ci) => ci.playlistId === activePlaylistId
+      );
+      if (customIntent) {
+        removeCustomIntent(customIntent.id);
+      }
+      deletePlaylist(activePlaylistId);
+    } else {
+      // Built-in intent: hide it and delete the playlist
+      hideBuiltInIntent(activePlaylist.name);
+      deletePlaylist(activePlaylistId);
+    }
+
+    // Navigate back to grid view
+    setView("grid");
+  }, [
+    activePlaylistId,
+    activeIntent,
+    activePlaylist,
+    isCustomIntent,
+    customIntents,
+    currentPlaylistId,
+    setCurrentPlaylist,
+    removeCustomIntent,
+    hideBuiltInIntent,
+    deletePlaylist,
+    setView,
+  ]);
+
+  const handleSwitchGradient = React.useCallback(() => {
+    if (!activePlaylistId || !activeIntent) return;
+
+    // Get current gradient (from override or intent default)
+    const currentGradient =
+      gradientOverrides[activePlaylistId] ?? activeIntent.gradientClassName;
+
+    // Get a new random gradient (excluding current one)
+    let newGradient = getRandomGradient(false); // Allow all gradients
+    // Ensure we get a different gradient
+    let attempts = 0;
+    while (newGradient === currentGradient && attempts < 10) {
+      newGradient = getRandomGradient(false);
+      attempts++;
+    }
+
+    if (isCustomIntent) {
+      // For custom intents, update the custom intent directly
+      const customIntent = customIntents.find(
+        (ci) => ci.playlistId === activePlaylistId
+      );
+      if (customIntent) {
+        updateCustomIntent(customIntent.id, { gradientClassName: newGradient });
+      }
+    } else {
+      // For built-in intents, store as gradient override
+      setGradientOverride(activePlaylistId, newGradient);
+    }
+  }, [
+    activePlaylistId,
+    activeIntent,
+    isCustomIntent,
+    customIntents,
+    gradientOverrides,
+    updateCustomIntent,
+    setGradientOverride,
+  ]);
+
   if (!activePlaylist) return null;
 
   return (
@@ -177,19 +302,41 @@ export function IntentDetailSection() {
             </div>
           </div>
 
-          <Button
-            onClick={handleAddToIntent}
-            disabled={isAdding || !activePlaylistId}
-            variant="ghost"
-            size="icon"
-          >
-            {isAdding ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {/* <span className="text-sm">{isAdding ? "Adding…" : "Add"}</span> */}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={handleAddToIntent}
+              disabled={isAdding || !activePlaylistId}
+              variant="ghost"
+              size="icon"
+            >
+              {isAdding ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleSwitchGradient}>
+                  <Palette />
+                  Random Gradient
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="text-red-400" />
+                  Delete Intent
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="space-y-1 mt-4 mb-2 px-4">
@@ -206,7 +353,10 @@ export function IntentDetailSection() {
               <TrackItemSmall
                 key={`${track.id}-${track.addedAt}`}
                 track={track}
-                isCurrentTrack={currentActualTrackIndex === index}
+                isCurrentTrack={
+                  currentPlaylistId === activePlaylistId &&
+                  currentActualTrackIndex === index
+                }
                 onClick={() => handleTrackClick(index)}
                 // Deliberately unused: no editing/removal in this UX
                 onRemove={() => {}}

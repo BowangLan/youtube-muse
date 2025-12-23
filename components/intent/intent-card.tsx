@@ -6,6 +6,7 @@ import type { IntentDefinition } from "@/lib/intents";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { motion } from "motion/react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
@@ -30,10 +31,17 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
   const currentPlaylistId = usePlaylistStore(
     (state) => state.currentPlaylistId
   );
+  const gradientOverrides = useCustomIntentsStore(
+    (state) => state.gradientOverrides
+  );
 
   const isActive = currentPlaylistId === playlist.id;
 
   const isCurrentlyPlaying = isActive && isPlaying;
+
+  // Get gradient - check for override first, then use intent's default
+  const gradientClassName =
+    gradientOverrides[playlist.id] ?? intent?.gradientClassName;
 
   return (
     <button
@@ -54,10 +62,10 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[radial-gradient(60%_60%_at_20%_10%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_70%)] after:opacity-50",
         isActive ? "intent-card-active" : "intent-card",
-        intent?.gradientClassName &&
+        gradientClassName &&
           (isActive
-            ? `${intent.gradientClassName}-active`
-            : intent.gradientClassName)
+            ? `${gradientClassName}-active`
+            : gradientClassName)
       )}
     >
       {/* Play State Indicator */}

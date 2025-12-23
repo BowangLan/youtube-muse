@@ -40,17 +40,21 @@ export default function Home() {
   const view = useAppStateStore((state) => state.view);
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
   const customIntents = useCustomIntentsStore((state) => state.customIntents);
+  const hiddenBuiltInIntents = useCustomIntentsStore(
+    (state) => state.hiddenBuiltInIntents
+  );
 
   const intentPlaylists = React.useMemo(() => {
     const intentNames = new Set(INTENTS.map((i) => i.name));
+    const hiddenNames = new Set(hiddenBuiltInIntents);
     return playlists
-      .filter((p) => intentNames.has(p.name))
+      .filter((p) => intentNames.has(p.name) && !hiddenNames.has(p.name))
       .sort(
         (a, b) =>
           INTENTS.findIndex((i) => i.name === a.name) -
           INTENTS.findIndex((i) => i.name === b.name)
       );
-  }, [playlists]);
+  }, [playlists, hiddenBuiltInIntents]);
 
   // Get playlists for custom intents
   const customIntentPlaylists = React.useMemo(() => {
