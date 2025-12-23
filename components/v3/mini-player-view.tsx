@@ -27,7 +27,7 @@ const COLLAPSE_DURATION = 0.5;
 const containerVariants: Variants = {
   collapsed: {
     height: COLLAPSED_HEIGHT,
-    maxWidth: "56rem",
+    maxWidth: "53rem", // 56rem - 1.5rem (px-6) padding
     transition: {
       duration: COLLAPSE_DURATION,
       ease: [0.4, 0, 0.2, 1],
