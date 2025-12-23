@@ -184,15 +184,25 @@ export function IntentDetailSection() {
 
         <div className="space-y-1 mt-4 mb-2 px-4">
           {activePlaylist.tracks.map((track, index) => (
-            <TrackItemSmall
+            <div
               key={`${track.id}-${track.addedAt}`}
-              track={track}
-              isCurrentTrack={currentActualTrackIndex === index}
-              onClick={() => handleTrackClick(index)}
-              // Deliberately unused: no editing/removal in this UX
-              onRemove={() => {}}
-              align="left"
-            />
+              className="motion-preset-blur-down"
+              style={
+                {
+                  "--motion-delay": `${index * 50 + 200}ms`,
+                } as React.CSSProperties
+              }
+            >
+              <TrackItemSmall
+                key={`${track.id}-${track.addedAt}`}
+                track={track}
+                isCurrentTrack={currentActualTrackIndex === index}
+                onClick={() => handleTrackClick(index)}
+                // Deliberately unused: no editing/removal in this UX
+                onRemove={() => {}}
+                align="left"
+              />
+            </div>
           ))}
         </div>
       </div>
