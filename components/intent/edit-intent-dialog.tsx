@@ -210,12 +210,14 @@ export function EditIntentDialog({
 
             {/* Description - hidden on mobile */}
             <div className="space-y-1.5 sm:space-y-2 hidden sm:block">
-              <label
-                htmlFor="intent-description"
-                className="text-xs font-medium text-white/70 sm:text-sm"
-              >
-                Description <span className="text-zinc-500">(optional)</span>
-              </label>
+              <div>
+                <label
+                  htmlFor="intent-description"
+                  className="text-xs font-medium text-white/70 sm:text-sm"
+                >
+                  Description <span className="text-zinc-500">(optional)</span>
+                </label>
+              </div>
               <Textarea
                 id="intent-description"
                 placeholder="Describe the vibe or purpose of this intent..."
