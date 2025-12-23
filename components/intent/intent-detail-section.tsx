@@ -57,6 +57,9 @@ export function IntentDetailSection() {
   const addTrackToPlaylist = usePlaylistStore(
     (state) => state.addTrackToPlaylist
   );
+  const removeTrackFromPlaylist = usePlaylistStore(
+    (state) => state.removeTrackFromPlaylist
+  );
 
   const togglePlay = usePlayerStore((state) => state.togglePlay);
 
@@ -177,6 +180,14 @@ export function IntentDetailSection() {
       setIsAdding(false);
     }
   }, [activePlaylist, activePlaylistId, activeIntent, addTrackToPlaylist]);
+
+  const handleRemoveTrack = React.useCallback(
+    (trackId: string) => {
+      if (!activePlaylistId) return;
+      removeTrackFromPlaylist(activePlaylistId, trackId);
+    },
+    [activePlaylistId, removeTrackFromPlaylist]
+  );
 
   const handleDelete = React.useCallback(() => {
     if (!activePlaylistId || !activeIntent || !activePlaylist) return;
@@ -365,8 +376,7 @@ export function IntentDetailSection() {
                   currentActualTrackIndex === index
                 }
                 onClick={() => handleTrackClick(index)}
-                // Deliberately unused: no editing/removal in this UX
-                onRemove={() => {}}
+                onRemove={() => handleRemoveTrack(track.id)}
                 align="left"
               />
             </div>

@@ -1,8 +1,12 @@
+"use client";
+
 import { usePlayerStore } from "@/lib/store/player-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import { PlayingIndicatorSmall } from "./playing-indicator";
 import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 export function TrackItemSmall({
   track,
@@ -22,7 +26,7 @@ export function TrackItemSmall({
 
   return (
     <motion.div
-      className={cn("group flex items-center gap-3 cursor-pointer py-1.5")}
+      className={cn("group flex items-center gap-3 cursor-pointer h-8")}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}
     >
@@ -59,19 +63,21 @@ export function TrackItemSmall({
         </span>
       </div> */}
 
-      {/* <div className="flex items-center gap-2 justify-end mx-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-neutral-500 opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div> */}
+      <div className="flex items-center gap-2 justify-end ml-2">
+        {onRemove && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-zinc-200 opacity-0 group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
 }
