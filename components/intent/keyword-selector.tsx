@@ -25,6 +25,53 @@ export const SUGGESTED_KEYWORDS = [
   "classical",
   "indie",
   "synthwave",
+  "retro",
+  "groove",
+  "rock",
+  "alternative",
+  "punk",
+  "metal",
+  "folk",
+  "blues",
+  "soul",
+  "funk",
+  "hip hop",
+  "rap",
+  "r&b",
+  "pop",
+  "dance",
+  "house",
+  "techno",
+  "trance",
+  "dubstep",
+  "drum and bass",
+  "experimental",
+  "industrial",
+  "noise",
+  "soundtrack",
+  "cinematic",
+  "orchestral",
+  "world",
+  "latin",
+  "reggae",
+  "ska",
+  "afrobeat",
+  "country",
+  "americana",
+  "bluegrass",
+  "gospel",
+  "ambient pop",
+  "dream pop",
+  "shoegaze",
+  "post-rock",
+  "math rock",
+  "progressive",
+  "psychedelic",
+  "new wave",
+  "darkwave",
+  "chillout",
+  "downtempo",
+  "vaporwave",
   // Activity/Purpose
   "focus",
   "study",
@@ -38,7 +85,6 @@ export const SUGGESTED_KEYWORDS = [
   "dreamy",
   "dark",
   "minimal",
-  "cinematic",
   "nature",
   "night",
   "morning",
@@ -139,7 +185,8 @@ export function KeywordSelector({
                 "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium",
                 "transition-all duration-200",
                 "bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 hover:text-white",
-                keywords.length >= maxKeywords && "opacity-40 cursor-not-allowed"
+                keywords.length >= maxKeywords &&
+                  "opacity-40 cursor-not-allowed"
               )}
             >
               {keyword}
@@ -157,4 +204,3 @@ export function KeywordSelector({
     </div>
   );
 }
-
