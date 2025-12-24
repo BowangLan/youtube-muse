@@ -3,7 +3,13 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Pause, SkipForward, SkipBack, X } from "lucide-react";
+import {
+  X,
+  ChevronDown,
+  ArrowDown,
+  MoreVertical,
+  MoreHorizontal,
+} from "lucide-react";
 import { AnimatePresence, cubicBezier, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -18,6 +24,13 @@ import {
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { BackgroundOverlay } from "./mini-player-view";
+import {
+  IoPlay,
+  IoPlaySkipBack,
+  IoPlaySkipForward,
+  IoPause,
+} from "react-icons/io5";
+import { MiniPlayerMoreMenu } from "./mini-player-more-menu";
 
 // =============================================================================
 // Constants
@@ -29,6 +42,13 @@ const COLLAPSED_HEIGHT = 66;
 const EXPAND_DURATION = 0.5;
 const COLLAPSE_DURATION = 0.5;
 const EASING = cubicBezier(0.165, 0.84, 0.44, 1.0);
+
+const Icons = {
+  Play: IoPlay,
+  SkipBack: IoPlaySkipBack,
+  SkipForward: IoPlaySkipForward,
+  Pause: IoPause,
+} as const;
 
 const containerVariants: Variants = {
   collapsed: {
@@ -61,8 +81,6 @@ interface GlowLayerProps {
 
 interface TrackCoverProps {
   track: Track;
-  isPlaying: boolean;
-  glowStyle: React.CSSProperties;
 }
 
 interface TrackInfoProps {
@@ -110,43 +128,189 @@ const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
   );
 };
 
+const InternalGlassGlow = ({
+  isPlaying,
+  glowStyle,
+  variant,
+}: {
+  isPlaying: boolean;
+  glowStyle: React.CSSProperties;
+  variant: "collapsed" | "expanded";
+}) => {
+  if (!isPlaying) return null;
+
+  if (variant === "collapsed") return null;
+
+  const parseColorVar = (varName: string) => {
+    const colorValue = glowStyle[varName as keyof React.CSSProperties] as
+      | string
+      | undefined;
+    return colorValue || "rgba(255, 255, 255, 0.3)";
+  };
+
+  const color1 = parseColorVar("--glow-color-1");
+  const color2 = parseColorVar("--glow-color-2");
+  const color3 = parseColorVar("--glow-color-3");
+
+  const isExpanded = variant === "expanded";
+  const ambientOpacity = isExpanded ? 0.55 : 0.3;
+  const glowBlendMode = isExpanded ? "screen" : "normal";
+
+  return (
+    <motion.div
+      initial={false}
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      style={{
+        zIndex: 1,
+        borderRadius: isExpanded ? "0" : "0.75rem",
+      }}
+    >
+      {/* Ambient wash */}
+      <div
+        className="absolute inset-0 animate-internal-glow-2"
+        style={{
+          background: `radial-gradient(120% 120% at 50% 15%, ${color1} 0%, transparent 62%),
+            radial-gradient(120% 120% at 15% 85%, ${color2} 0%, transparent 58%),
+            radial-gradient(120% 120% at 85% 85%, ${color3} 0%, transparent 60%)`,
+          opacity: ambientOpacity,
+          mixBlendMode: glowBlendMode,
+          filter: "blur(40px)",
+        }}
+      />
+
+      {/* Top glow */}
+      <div
+        className="absolute animate-internal-glow-1"
+        style={{
+          top: isExpanded ? "-35%" : "-25%",
+          left: "50%",
+          width: isExpanded ? "85%" : "60%",
+          height: isExpanded ? "360px" : "150px",
+          background: `radial-gradient(ellipse, ${color1} 0%, transparent 70%)`,
+          transform: "translateX(-50%)",
+          filter: "blur(50px)",
+          mixBlendMode: glowBlendMode,
+        }}
+      />
+
+      {/* Right glow */}
+      <div
+        className="absolute animate-internal-glow-2"
+        style={{
+          top: "50%",
+          right: isExpanded ? "-25%" : "-20%",
+          width: isExpanded ? "360px" : "150px",
+          height: isExpanded ? "80%" : "50%",
+          background: `radial-gradient(ellipse, ${color2} 0%, transparent 70%)`,
+          transform: "translateY(-50%)",
+          filter: "blur(50px)",
+          mixBlendMode: glowBlendMode,
+        }}
+      />
+
+      {/* Bottom glow */}
+      <div
+        className="absolute animate-internal-glow-3"
+        style={{
+          bottom: isExpanded ? "-35%" : "-25%",
+          left: "50%",
+          width: isExpanded ? "85%" : "60%",
+          height: isExpanded ? "360px" : "150px",
+          background: `radial-gradient(ellipse, ${color1} 0%, transparent 70%)`,
+          transform: "translateX(-50%)",
+          filter: "blur(50px)",
+          mixBlendMode: glowBlendMode,
+        }}
+      />
+
+      {/* Left glow */}
+      <div
+        className="absolute animate-internal-glow-1"
+        style={{
+          top: "50%",
+          left: isExpanded ? "-25%" : "-20%",
+          width: isExpanded ? "360px" : "150px",
+          height: isExpanded ? "80%" : "50%",
+          background: `radial-gradient(ellipse, ${color3} 0%, transparent 70%)`,
+          transform: "translateY(-50%)",
+          filter: "blur(50px)",
+          mixBlendMode: glowBlendMode,
+        }}
+      />
+    </motion.div>
+  );
+};
+
 const TrackCoverCollapsed = ({
   track,
   isPlaying,
   glowStyle,
-}: TrackCoverProps) => (
-  <motion.div
-    layoutId="track-cover-mobile"
-    layout
-    className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
-    transition={{ duration: COLLAPSE_DURATION, ease: EASING }}
-  >
-    <div className="relative w-full h-full overflow-hidden rounded-md">
-      <Image
-        src={track.thumbnailUrl}
-        alt={track.title}
-        fill
-        sizes="40px"
-        className="object-cover"
-      />
+}: {
+  track: Track;
+  isPlaying: boolean;
+  glowStyle: React.CSSProperties;
+}) => {
+  return (
+    <div
+      // layoutId="track-cover-mobile"
+      // layout
+      className="relative size-10 shrink-0 overflow-visible"
+      // transition={{ duration: COLLAPSE_DURATION, ease: EASING }}
+    >
+      <div className="relative w-full h-full overflow-hidden rounded-md flex-none">
+        <Image
+          src={track.thumbnailUrl}
+          alt={track.title}
+          fill
+          sizes="40px"
+          className="object-cover"
+        />
+        <GlowLayer
+          isPlaying={isPlaying}
+          glowStyle={glowStyle}
+          variant="collapsed"
+        />
+      </div>
     </div>
-    <GlowLayer
-      isPlaying={isPlaying}
-      glowStyle={glowStyle}
-      variant="collapsed"
-    />
-  </motion.div>
-);
+  );
+  // return (
+  //   <motion.div
+  //     layoutId="track-cover-mobile"
+  //     layout
+  //     className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
+  //     transition={{ duration: COLLAPSE_DURATION, ease: EASING }}
+  //   >
+  //     <div className="relative w-full h-full overflow-hidden rounded-md">
+  //       <Image
+  //         src={track.thumbnailUrl}
+  //         alt={track.title}
+  //         fill
+  //         sizes="40px"
+  //         className="object-cover"
+  //       />
+  //     </div>
+  //     {/* <GlowLayer
+  //     isPlaying={isPlaying}
+  //     glowStyle={glowStyle}
+  //     variant="collapsed"
+  //   /> */}
+  //   </motion.div>
+  // );
+};
 
 const TrackCoverExpanded = ({
   track,
   isPlaying,
   glowStyle,
-}: TrackCoverProps) => {
+}: {
+  track: Track;
+  isPlaying: boolean;
+  glowStyle: React.CSSProperties;
+}) => {
   return (
     <motion.div
       layoutId="track-cover-mobile"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none w-[60vw] sm:w-[50vw] aspect-square"
+      className="relative shrink-0 overflow-visible rounded-lg flex-none w-[74vw] sm:w-[50vw] aspect-square"
       transition={{ duration: EXPAND_DURATION, ease: EASING }}
     >
       <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
@@ -154,7 +318,7 @@ const TrackCoverExpanded = ({
           src={track.thumbnailUrl}
           alt={track.title}
           fill
-          sizes="64vw"
+          sizes="74vw"
           className="object-cover"
         />
       </div>
@@ -210,6 +374,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           className="hover:underline w-fit flex"
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault(); // disable default link behavior
           }}
         >
           <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
@@ -280,33 +445,45 @@ const PlayerControls = ({
     <div className="flex items-center text-foreground justify-center gap-4 mt-2">
       <button
         type="button"
-        onClick={onSkipBackward}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onSkipBackward();
+        }}
         disabled={!apiReady}
         className={controlButtonClass}
       >
-        <SkipBack className="h-8 w-8" fill="currentColor" />
+        <Icons.SkipBack className="h-8 w-8" />
       </button>
       <button
         type="button"
-        onClick={onTogglePlay}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onTogglePlay();
+        }}
         disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
         className={playButtonClass}
       >
         {!apiReady || isLoadingNewVideo ? (
           <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         ) : isPlaying || pendingPlayState !== null ? (
-          <Pause className="h-8 w-8" fill="currentColor" />
+          <Icons.Pause className="h-8 w-8" />
         ) : (
-          <Play className="h-8 w-8" fill="currentColor" />
+          <Icons.Play className="h-8 w-8 translate-x-[1px]" />
         )}
       </button>
       <button
         type="button"
-        onClick={onPlayNext}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onPlayNext();
+        }}
         disabled={!canPlayNext}
         className={controlButtonClass}
       >
-        <SkipForward className="h-8 w-8" fill="currentColor" />
+        <Icons.SkipForward className="h-8 w-8" />
       </button>
     </div>
   );
@@ -335,7 +512,7 @@ export const NextButton = () => {
       disabled={!canPlayNext}
       className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
     >
-      <SkipForward className="h-5 w-5" fill="currentColor" />
+      <Icons.SkipForward className="h-5 w-5" />
     </button>
   );
 };
@@ -416,7 +593,7 @@ const CollapsedStateView = ({
       opacity: isHovered ? 0 : 1,
       pointerEvents: isHovered ? "none" : "auto",
     }}
-    transition={{ duration: 0.2, ease: EASING }}
+    transition={{ duration: 0.3, ease: EASING }}
   >
     <div className="flex items-center gap-3 min-w-0 flex-1">
       {/* Left */}
@@ -438,15 +615,32 @@ const CollapsedStateView = ({
   </motion.div>
 );
 
-const ExpandedViewCloseButton = () => {
+const ExpandedViewCloseButton = ({ onClose }: { onClose: () => void }) => {
   return (
     <button
-      // type="button"
-      onClick={() => {}}
-      className="absolute top-8 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClose();
+      }}
+      className="absolute top-6 left-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
     >
-      <X className="h-6 w-6" fill="currentColor" />
+      <ChevronDown className="h-6 w-6" />
     </button>
+  );
+};
+
+export const MoreButton = ({ track }: { track: Track }) => {
+  return (
+    <MiniPlayerMoreMenu track={track}>
+      <button
+        type="button"
+        className="absolute top-6 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
+      >
+        <MoreHorizontal className="h-6 w-6" />
+      </button>
+    </MiniPlayerMoreMenu>
   );
 };
 
@@ -466,6 +660,7 @@ const ExpandedStateView = ({
   onTogglePlay,
   onSkipBackward,
   onPlayNext,
+  onClose,
 }: {
   track: Track;
   isPlaying: boolean;
@@ -478,29 +673,35 @@ const ExpandedStateView = ({
   onTogglePlay: () => void;
   onSkipBackward: () => void;
   onPlayNext: () => void;
+  onClose: () => void;
 }) => (
   <motion.div
-    className="absolute inset-0 z-99 flex flex-col items-center justify-center px-4"
+    className="absolute inset-0 z-99 flex flex-col items-center px-6"
     initial={false}
     animate={{
       opacity: isHovered ? 1 : 0,
       pointerEvents: isHovered ? "auto" : "none",
     }}
     transition={{
-      duration: 0.2,
+      duration: 0.3,
       ease: EASING,
       delay: isHovered ? 0.1 : 0,
     }}
   >
-    <ExpandedViewCloseButton />
+    <ExpandedViewCloseButton onClose={onClose} />
+    <MoreButton track={track} />
 
-    <TrackCoverExpanded
-      track={track}
-      isPlaying={isPlaying}
-      glowStyle={glowStyle}
-    />
+    {/* TopNav Spacer  */}
+    <div className="h-14 flex-none"></div>
+    <div className="py-12 flex-none">
+      <TrackCoverExpanded
+        track={track}
+        isPlaying={isPlaying}
+        glowStyle={glowStyle}
+      />
+    </div>
 
-    <div className="flex flex-col w-full gap-3 mt-14">
+    <div className="flex flex-col w-full gap-3">
       <TrackInfo track={track} variant="expanded" />
       <ProgressSection isHovered={isHovered} />
       <AnimatedControlsWrapper isHovered={isHovered}>
@@ -549,9 +750,11 @@ export function MiniPlayerViewMobile() {
     : undefined;
   const colors = useImageColors(thumbnailUrl);
   const glowStyle = useGlowStyle(colors);
+  // const glowStyle = {};
 
   // Get beat-synced animation timing
-  const { style: beatStyle, isListening, startListening } = useBeatSyncStyles();
+  const { style: beatStyle } = useBeatSyncStyles();
+  // const beatStyle = {};
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =
@@ -572,6 +775,8 @@ export function MiniPlayerViewMobile() {
     );
   }
 
+  const _isPlaying = isPlaying || pendingPlayState !== null;
+
   return (
     <div
       className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-60 trans"
@@ -584,21 +789,51 @@ export function MiniPlayerViewMobile() {
     >
       <motion.div
         onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          setIsOpen(!isOpen);
+          // Only toggle if not currently expanded (to allow drag when expanded)
+          if (!isOpen) {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsOpen(true);
+          }
+        }}
+        whileTap={{ scale: isOpen ? 1 : 0.95 }}
+        drag={isOpen ? "y" : false}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={{ top: 0, bottom: 1 }}
+        dragTransition={{ bounceStiffness: 300, bounceDamping: 20 }}
+        onDragEnd={(_, info) => {
+          const DRAG_THRESHOLD = 80;
+          const VELOCITY_THRESHOLD = 200;
+          if (isOpen) {
+            // Close if dragged down more than 150px or velocity is high enough
+            const shouldClose =
+              info.offset.y > DRAG_THRESHOLD ||
+              info.velocity.y > VELOCITY_THRESHOLD;
+            if (shouldClose) {
+              setIsOpen(false);
+            }
+          }
         }}
         className={cn(
-          "relative trans rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
-          isOpen ? "border-zinc-900/50" : "border-zinc-500/10",
-          isPlaying && "animate-container-glow"
+          "relative mx-auto w-full max-w-4xl overflow-hidden bg-zinc-500/10 text-white backdrop-blur-xl",
+          isOpen
+            ? "border-zinc-900/50 rounded-t-2xl"
+            : "border-zinc-500/10 border rounded-xl trans",
+          _isPlaying && "animate-container-glow"
         )}
-        style={{ ...glowStyle, ...beatStyle }}
+        style={isOpen ? {} : { ...glowStyle, ...beatStyle }}
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}
       >
         <BackgroundOverlay />
+
+        {/* Too heavy */}
+        {/* <InternalGlassGlow
+          isPlaying={_isPlaying}
+          glowStyle={glowStyle}
+          variant={isOpen ? "expanded" : "collapsed"}
+        /> */}
 
         <CollapsedStateView
           track={track}
@@ -619,6 +854,7 @@ export function MiniPlayerViewMobile() {
           onTogglePlay={togglePlay}
           onSkipBackward={skipBackward}
           onPlayNext={playNext}
+          onClose={() => setIsOpen(false)}
         />
       </motion.div>
     </div>
