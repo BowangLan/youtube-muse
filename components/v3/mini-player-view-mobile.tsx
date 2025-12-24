@@ -424,7 +424,7 @@ const PlayerControls = ({
   onPlayNext,
 }: PlayerControlsProps) => {
   const controlButtonClass =
-    "flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150";
+    "flex h-14 w-14 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150";
 
   const playButtonClass =
     "flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150";
@@ -441,7 +441,7 @@ const PlayerControls = ({
         disabled={!apiReady}
         className={controlButtonClass}
       >
-        <Icons.SkipBack className="h-8 w-8" />
+        <Icons.SkipBack className="h-7 w-7" />
       </button>
       <button
         type="button"
@@ -471,7 +471,7 @@ const PlayerControls = ({
         disabled={!canPlayNext}
         className={controlButtonClass}
       >
-        <Icons.SkipForward className="h-8 w-8" />
+        <Icons.SkipForward className="h-7 w-7" />
       </button>
     </div>
   );
