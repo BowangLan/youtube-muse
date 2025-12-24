@@ -443,7 +443,7 @@ const ExpandedViewCloseButton = () => {
     <button
       // type="button"
       onClick={() => {}}
-      className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
+      className="absolute top-8 right-4 flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
     >
       <X className="h-6 w-6" fill="currentColor" />
     </button>
