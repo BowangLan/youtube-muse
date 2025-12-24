@@ -24,13 +24,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { BackgroundOverlay } from "./mini-player-view";
-import {
-  IoPlay,
-  IoPlaySkipBack,
-  IoPlaySkipForward,
-  IoPause,
-} from "react-icons/io5";
 import { MiniPlayerMoreMenu } from "./mini-player-more-menu";
+import { Icons } from "@/components/icons";
 
 // =============================================================================
 // Constants
@@ -42,13 +37,6 @@ const COLLAPSED_HEIGHT = 66;
 const EXPAND_DURATION = 0.5;
 const COLLAPSE_DURATION = 0.5;
 const EASING = cubicBezier(0.165, 0.84, 0.44, 1.0);
-
-const Icons = {
-  Play: IoPlay,
-  SkipBack: IoPlaySkipBack,
-  SkipForward: IoPlaySkipForward,
-  Pause: IoPause,
-} as const;
 
 const containerVariants: Variants = {
   collapsed: {

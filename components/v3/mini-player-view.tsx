@@ -3,7 +3,6 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
 import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -14,6 +13,7 @@ import { ProgressBar, TimeDisplay } from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
+import { Icons } from "@/components/icons";
 
 // =============================================================================
 // Constants
@@ -285,7 +285,7 @@ const PlayerControls = ({
         disabled={!apiReady}
         className={controlButtonClass}
       >
-        <SkipBack className="h-5 w-5" fill="currentColor" />
+        <Icons.SkipBack className="h-5 w-5" />
       </button>
       <button
         type="button"
@@ -296,9 +296,9 @@ const PlayerControls = ({
         {!apiReady || isLoadingNewVideo ? (
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         ) : isPlaying || pendingPlayState !== null ? (
-          <Pause className="h-6 w-6" fill="currentColor" />
+          <Icons.Pause className="h-6 w-6" />
         ) : (
-          <Play className="h-6 w-6" fill="currentColor" />
+          <Icons.Play className="h-6 w-6" />
         )}
       </button>
       <button
@@ -307,7 +307,7 @@ const PlayerControls = ({
         disabled={!canPlayNext}
         className={controlButtonClass}
       >
-        <SkipForward className="h-5 w-5" fill="currentColor" />
+        <Icons.SkipForward className="h-5 w-5" />
       </button>
     </div>
   );
@@ -539,6 +539,8 @@ export function MiniPlayerViewDesktop() {
     );
   }
 
+  const _isPlaying = isPlaying || pendingPlayState !== null;
+
   return (
     <div
       className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40"
@@ -551,7 +553,7 @@ export function MiniPlayerViewDesktop() {
         className={cn(
           "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
           isHovered ? "border-zinc-500/20" : "border-zinc-500/20",
-          isPlaying && "animate-container-glow"
+          _isPlaying && "animate-container-glow"
         )}
         style={{ ...glowStyle, ...beatStyle }}
         variants={containerVariants}
@@ -562,14 +564,14 @@ export function MiniPlayerViewDesktop() {
 
         <CollapsedStateView
           track={track}
-          isPlaying={isPlaying}
+          isPlaying={_isPlaying}
           glowStyle={glowStyle}
           isHovered={isHovered}
         />
 
         <ExpandedStateView
           track={track}
-          isPlaying={isPlaying}
+          isPlaying={_isPlaying}
           glowStyle={glowStyle}
           isHovered={isHovered}
           isLoadingNewVideo={isLoadingNewVideo}
