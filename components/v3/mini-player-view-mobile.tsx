@@ -784,7 +784,7 @@ export function MiniPlayerViewMobile() {
             setIsOpen(true);
           }
         }}
-        whileTap={{ scale: isOpen ? 1 : 0.95 }}
+        // whileTap={{ scale: isOpen ? 1 : 0.95 }}
         drag={isOpen ? "y" : false}
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 1 }}
