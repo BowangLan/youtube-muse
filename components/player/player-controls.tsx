@@ -17,6 +17,7 @@ import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { motion } from "motion/react";
+import { Icons } from "@/components/icons";
 
 type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
@@ -304,7 +305,7 @@ export const PlayPauseButton = React.memo(
         disabled={isLoadingNewVideo || !apiReady}
       >
         {isPlaying || pendingPlayState !== null ? (
-          <Pause
+          <Icons.Pause
             className={cn(
               "h-6 w-6 text-black trans",
               variant === "ghost" && "text-white",
@@ -313,7 +314,7 @@ export const PlayPauseButton = React.memo(
             fill={variant === "ghost" ? "white" : "black"}
           />
         ) : (
-          <Play
+          <Icons.Play
             className={cn(
               "h-6 w-6 translate-x-[1px] text-black trans",
               variant === "ghost" && "text-white",
