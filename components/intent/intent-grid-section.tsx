@@ -3,7 +3,10 @@
 import * as React from "react";
 import type { Playlist } from "@/lib/types/playlist";
 import { getIntentByName } from "@/lib/intents";
-import { useCustomIntentsStore, type CustomIntent } from "@/lib/store/custom-intents-store";
+import {
+  useCustomIntentsStore,
+  type CustomIntent,
+} from "@/lib/store/custom-intents-store";
 import { IntentCard } from "./intent-card";
 import { CreateIntentDialog } from "./create-intent-dialog";
 import { cn } from "@/lib/utils";
@@ -36,7 +39,8 @@ export function IntentGridSection({
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4")}>
         {allPlaylists.map((playlist, index) => {
           // First try built-in intent, then custom intent
-          const intent = getIntentByName(playlist.name) ?? getCustomIntent(playlist);
+          const intent =
+            getIntentByName(playlist.name) ?? getCustomIntent(playlist);
 
           return (
             <motion.div

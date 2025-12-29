@@ -1,6 +1,6 @@
 import { create } from "zustand"
 
-export type ViewMode = "grid" | "intent"
+export type ViewMode = "grid" | "intent" | "stream"
 
 export type AppState = {
   isFocused: boolean
@@ -13,6 +13,7 @@ export type AppStateActions = {
   setView: (view: ViewMode) => void
   setActivePlaylist: (id: string | null) => void
   openIntent: (playlistId: string) => void
+  openStream: (playlistId: string) => void
   closeIntent: () => void
 }
 
@@ -24,5 +25,6 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
   setView: (view) => set({ view }),
   setActivePlaylist: (id) => set({ activePlaylistId: id }),
   openIntent: (playlistId) => set({ activePlaylistId: playlistId, view: "intent" }),
+  openStream: (playlistId) => set({ activePlaylistId: playlistId, view: "stream" }),
   closeIntent: () => set({ view: "grid" }),
 }))
