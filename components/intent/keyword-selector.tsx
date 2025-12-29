@@ -234,6 +234,9 @@ export function KeywordSelector({
   onError,
 }: KeywordSelectorProps) {
   const [activeCategory, setActiveCategory] = React.useState<string>("mood");
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
+  const [showSearchResults, setShowSearchResults] =
+    React.useState<boolean>(false);
 
   const handleToggleKeyword = (keyword: string) => {
     if (keywords.includes(keyword)) {
@@ -270,7 +273,37 @@ export function KeywordSelector({
       onChange([...keywords, value]);
       onError?.(null);
       input.value = "";
+      setSearchTerm("");
+      setShowSearchResults(false);
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setShowSearchResults(value.length > 0);
+  };
+
+  // Filter built-in keywords based on search term
+  const filteredKeywords = React.useMemo(() => {
+    if (!searchTerm.trim()) return [];
+
+    const term = searchTerm.toLowerCase();
+    return SUGGESTED_KEYWORDS.filter(
+      (keyword) =>
+        keyword.toLowerCase().includes(term) && !keywords.includes(keyword)
+    );
+  }, [searchTerm, keywords]);
+
+  const handleSelectSearchResult = (keyword: string) => {
+    if (keywords.length >= maxKeywords) {
+      onError?.(`Maximum ${maxKeywords} keywords allowed`);
+      return;
+    }
+    onChange([...keywords, keyword]);
+    onError?.(null);
+    setSearchTerm("");
+    setShowSearchResults(false);
   };
 
   return (
@@ -295,6 +328,65 @@ export function KeywordSelector({
           ))}
         </div>
       )}
+
+      {/* Search Input Section */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Input
+            placeholder="Search keywords or enter custom..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onKeyDown={handleAddCustomKeyword}
+            className="h-10 text-sm rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
+            disabled={disabled || keywords.length >= maxKeywords}
+          />
+
+          {/* Search Results Dropdown */}
+          {showSearchResults && (
+            <div className="absolute top-full mt-1 w-full max-w-xs bg-black/90 border border-white/20 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+              {filteredKeywords.length > 0 ? (
+                <div className="p-2 space-y-1">
+                  {filteredKeywords.slice(0, 8).map((keyword) => {
+                    const category = KEYWORD_CATEGORIES.find((cat) =>
+                      cat.keywords.includes(keyword)
+                    );
+                    return (
+                      <button
+                        key={keyword}
+                        type="button"
+                        onClick={() => handleSelectSearchResult(keyword)}
+                        disabled={disabled || keywords.length >= maxKeywords}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
+                          category?.pillClass ||
+                            "bg-white/10 text-white hover:bg-white/20",
+                          "flex items-center justify-between"
+                        )}
+                      >
+                        <span>{keyword}</span>
+                        <span className="text-xs opacity-60">
+                          {category?.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                searchTerm.trim() && (
+                  <div className="p-3 text-center">
+                    <div className="text-sm text-zinc-400 mb-1">
+                      No matching keywords found
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      Press Enter to create "{searchTerm.trim()}"
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Keyword Selector - Desktop */}
       <div className="hidden sm:flex rounded-lg border border-white/10 bg-white/2 overflow-hidden h-56">
@@ -419,13 +511,6 @@ export function KeywordSelector({
           })}
         </div>
       </div>
-
-      <Input
-        placeholder="Or enter a custom keyword..."
-        onKeyDown={handleAddCustomKeyword}
-        className="h-10 text-sm rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
-        disabled={disabled || keywords.length >= maxKeywords}
-      />
     </div>
   );
 }
