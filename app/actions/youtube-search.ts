@@ -15,15 +15,23 @@ export type SearchResult = {
 };
 
 export async function searchYouTubeVideos(
-  query: string
+  query: string,
+  type: "video" | "channel" | "playlist" | "movie" = "video"
 ): Promise<{ results: SearchResult[]; error?: string }> {
   try {
     if (!query.trim()) {
       return { results: [] };
     }
 
-    const result = await YoutubeSearchApi.GetListByKeyword(query, false, 10);
-    const videos = result.items.filter((item: any) => item.type === "video");
+    const result = await YoutubeSearchApi.GetListByKeyword(query, false, 10, [{ type }]);
+    // Filter for videos only and exclude YouTube Shorts
+    const videos = result.items.filter((item: any) => {
+      // Only include regular videos, exclude shorts
+      if (item.type !== "video") return false;
+      // Exclude items marked as shorts
+      if (item.isShort === true) return false;
+      return true;
+    });
 
     const formattedResults: SearchResult[] = videos.map((item: any) => ({
       id: item.id,

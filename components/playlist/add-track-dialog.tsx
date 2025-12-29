@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2, Plus } from "lucide-react";
-import { extractVideoId } from "@/lib/utils/youtube";
+import { extractVideoId, isYouTubeShort } from "@/lib/utils/youtube";
 import { cn } from "@/lib/utils";
 import { RichButton } from "../ui/rich-button";
 import {
@@ -130,6 +130,13 @@ export function AddTrackDialogContent({
 
     setIsLoading(true);
     setError(null);
+
+    // Check if it's a YouTube Short
+    if (isYouTubeShort(targetUrl)) {
+      setError("YouTube Shorts are not supported. Please add regular YouTube videos.");
+      setIsLoading(false);
+      return;
+    }
 
     const videoId = extractVideoId(targetUrl);
     if (!videoId) {

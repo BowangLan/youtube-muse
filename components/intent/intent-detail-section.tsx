@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { parseDuration } from "@/lib/utils/youtube";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
 import {
   ArrowLeft,
@@ -173,7 +174,9 @@ export function IntentDetailSection() {
         authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
           next.channelTitle
         )}`,
-        duration: 0,
+        duration: next.length?.simpleText
+          ? parseDuration(next.length.simpleText)
+          : 0,
         thumbnailUrl: thumb,
       });
     } finally {

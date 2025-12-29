@@ -3,8 +3,9 @@
 import { usePlayerStore } from "@/lib/store/player-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/lib/utils/youtube";
 import { PlayingIndicatorSmall } from "./playing-indicator";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
@@ -36,16 +37,22 @@ export function TrackItemSmall({
           justifyContent: align === "right" ? "flex-end" : "flex-start",
         }}
       >
-        {isCurrentTrack && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <PlayingIndicatorSmall isPlaying={_isPlaying} />
-          </motion.div>
-        )}
+        <span className="text-xs text-white/60 hidden flex-none sm:inline-block w-10">
+          {formatTime(track.duration)}
+        </span>
+        <AnimatePresence>
+          {isCurrentTrack && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+              className="flex-none"
+            >
+              <PlayingIndicatorSmall isPlaying={_isPlaying} />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <motion.div
           layout
           className={cn(
