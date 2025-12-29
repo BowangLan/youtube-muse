@@ -96,7 +96,7 @@ export function getIntentByName(name: string | null | undefined) {
  * Build a query from custom keywords (for custom intents)
  */
 export function buildCustomIntentQuery(keywords: string[]): string {
-  return `${keywords.join(" ")} music`
+  return `${keywords.join(" ")}`
 }
 
 /**

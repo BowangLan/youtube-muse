@@ -31,7 +31,7 @@ export function CreateIntentDialog({
 }: CreateIntentDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState("");
-  const [keywords, setKeywords] = React.useState<string[]>([]);
+  const [keywords, setKeywords] = React.useState<string[]>(["music"]);
   const [description, setDescription] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -85,7 +85,7 @@ export function CreateIntentDialog({
 
   const resetForm = () => {
     setName("");
-    setKeywords([]);
+    setKeywords(["music"]);
     setDescription("");
     setError(null);
     setLoadingStatus("");

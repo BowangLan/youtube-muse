@@ -156,10 +156,7 @@ export function IntentDetailSection() {
     setIsAdding(true);
     try {
       // Build query based on intent type (built-in or custom)
-      const builtInIntent = INTENTS.find((i) => i.name === activePlaylist.name);
-      const query = builtInIntent
-        ? buildIntentQuery(builtInIntent)
-        : buildCustomIntentQuery([...activeIntent.keywords]);
+      const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
       const { results } = await searchYouTubeVideos(query);
       const existing = new Set(activePlaylist.tracks.map((t) => t.id));
