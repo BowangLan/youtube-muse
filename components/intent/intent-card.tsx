@@ -200,9 +200,6 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
       </div>
       <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-white/60">
         <span>{trackCount} tracks</span>
-        <span className="opacity-70 sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 text-white/50 trans select-none">
-          tap to enter
-        </span>
       </div>
     </div>
   );
