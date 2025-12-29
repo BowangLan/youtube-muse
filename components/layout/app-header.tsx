@@ -11,6 +11,8 @@ export function AppHeader() {
         </h1>
         {/* <span className="text-xs text-neutral-500">curate & play & focus</span> */}
       </div>
+
+      <div className="flex-1"></div>
     </div>
   );
 }

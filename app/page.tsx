@@ -4,7 +4,11 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
-import { AppFooter } from "@/components/layout/app-footer";
+import {
+  AppFooter,
+  AppFooterMobileBottom,
+  AppFooterFixed,
+} from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useAppStateStore } from "@/lib/store/app-state-store";
@@ -94,9 +98,10 @@ export default function Home() {
             <IntentDetailSection key="detail" />
           )}
         </AnimatePresence>
-      </div>
 
-      <AppFooter />
+        {isMobile ? <AppFooterMobileBottom /> : <AppFooterFixed />}
+        <div className="h-3 w-full"></div>
+      </div>
     </main>
   );
 }

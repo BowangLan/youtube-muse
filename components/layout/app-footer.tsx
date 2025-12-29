@@ -38,3 +38,13 @@ export const AppFooterFixed = () => {
     </footer>
   );
 };
+
+export const AppFooterMobileBottom = () => {
+  return (
+    <footer className="relative z-10">
+      <div className="mx-auto w-full max-w-4xl py-4">
+        <AppFooterInner />
+      </div>
+    </footer>
+  );
+};
