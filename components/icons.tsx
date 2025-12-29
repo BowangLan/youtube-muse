@@ -3,6 +3,7 @@ import {
   IoPlaySkipBack,
   IoPlaySkipForward,
   IoPause,
+  IoChevronUp,
 } from "react-icons/io5";
 
 export const Icons = {
@@ -10,4 +11,5 @@ export const Icons = {
   SkipBack: IoPlaySkipBack,
   SkipForward: IoPlaySkipForward,
   Pause: IoPause,
+  ChevronUp: IoChevronUp,
 } as const;

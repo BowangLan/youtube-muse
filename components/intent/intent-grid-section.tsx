@@ -7,7 +7,7 @@ import { useCustomIntentsStore, type CustomIntent } from "@/lib/store/custom-int
 import { IntentCard } from "./intent-card";
 import { CreateIntentDialog } from "./create-intent-dialog";
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 export function IntentGridSection({
@@ -17,6 +17,7 @@ export function IntentGridSection({
   intentPlaylists: Playlist[];
   customIntentPlaylists?: Playlist[];
 }) {
+  const reduceMotion = useReducedMotion();
   const customIntents = useCustomIntentsStore((state) => state.customIntents);
 
   // Get custom intent definition for a playlist
@@ -53,8 +54,8 @@ export function IntentGridSection({
               layout
               layoutId={`intent-detail-section-${playlist.id}`}
               transition={{
-                duration: EASING_DURATION_CARD,
-                ease: EASING_EASE_OUT,
+                duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+                ease: reduceMotion ? "linear" : EASING_EASE_OUT,
               }}
             >
               <IntentCard playlist={playlist} intent={intent} />
@@ -72,8 +73,8 @@ export function IntentGridSection({
           }
           layout
           transition={{
-            duration: EASING_DURATION_CARD,
-            ease: EASING_EASE_OUT,
+            duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+            ease: reduceMotion ? "linear" : EASING_EASE_OUT,
           }}
         >
           <CreateIntentDialog />

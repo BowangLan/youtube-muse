@@ -10,7 +10,13 @@ import {
   MoreVertical,
   MoreHorizontal,
 } from "lucide-react";
-import { AnimatePresence, cubicBezier, motion, Variants } from "motion/react";
+import {
+  AnimatePresence,
+  cubicBezier,
+  motion,
+  Variants,
+  useReducedMotion,
+} from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
@@ -38,12 +44,12 @@ const EXPAND_DURATION = 0.5;
 const COLLAPSE_DURATION = 0.5;
 const EASING = cubicBezier(0.165, 0.84, 0.44, 1.0);
 
-const containerVariants: Variants = {
+const getContainerVariants = (reduceMotion: boolean): Variants => ({
   collapsed: {
     height: COLLAPSED_HEIGHT,
     maxWidth: "56rem",
     transition: {
-      duration: COLLAPSE_DURATION,
+      duration: reduceMotion ? 0 : COLLAPSE_DURATION,
       ease: EASING,
     },
   },
@@ -51,11 +57,11 @@ const containerVariants: Variants = {
     height: EXPANDED_HEIGHT,
     maxWidth: "64rem",
     transition: {
-      duration: EXPAND_DURATION,
+      duration: reduceMotion ? 0 : EXPAND_DURATION,
       ease: EASING,
     },
   },
-};
+});
 
 // =============================================================================
 // Shared Component Props
@@ -92,6 +98,7 @@ interface PlayerControlsProps {
 // =============================================================================
 
 const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
+  const reduceMotion = useReducedMotion();
   const borderRadius = variant === "collapsed" ? "rounded-md" : "rounded-lg";
 
   return (
@@ -101,9 +108,9 @@ const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: EASING }}
+          transition={{ duration: reduceMotion ? 0 : 0.4, ease: EASING }}
           className={cn(
-            "absolute inset-0 pointer-events-none animate-glow-pulse",
+            "absolute inset-0 pointer-events-none animate-glow-pulse motion-reduce:animate-none",
             borderRadius
           )}
           style={{
@@ -713,6 +720,7 @@ const ExpandedStateView = ({
 // =============================================================================
 
 export function MiniPlayerViewMobile() {
+  const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
   const {
     togglePlay,
@@ -742,6 +750,10 @@ export function MiniPlayerViewMobile() {
 
   // Get beat-synced animation timing
   const { style: beatStyle } = useBeatSyncStyles();
+  const containerVariants = React.useMemo(
+    () => getContainerVariants(reduceMotion ?? false),
+    [reduceMotion]
+  );
   // const beatStyle = {};
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
@@ -790,7 +802,7 @@ export function MiniPlayerViewMobile() {
         dragElastic={{ top: 0, bottom: 1 }}
         dragTransition={{ bounceStiffness: 300, bounceDamping: 20 }}
         onDragEnd={(_, info) => {
-          const DRAG_THRESHOLD = 80;
+          const DRAG_THRESHOLD = 120;
           const VELOCITY_THRESHOLD = 200;
           if (isOpen) {
             // Close if dragged down more than 150px or velocity is high enough
@@ -805,11 +817,11 @@ export function MiniPlayerViewMobile() {
         className={cn(
           "relative mx-auto w-full max-w-4xl overflow-hidden bg-zinc-500/10 text-white backdrop-blur-xl",
           isOpen
-            ? "border-zinc-900/50 rounded-t-2xl"
+            ? "border-zinc-900/50"
             : "border-zinc-500/10 border rounded-xl trans",
           _isPlaying && "animate-container-glow"
         )}
-        style={isOpen ? {} : { ...glowStyle, ...beatStyle }}
+        style={isOpen ? {} : { ...glowStyle, ...(reduceMotion ? {} : beatStyle) }}
         variants={containerVariants}
         initial="collapsed"
         animate={isOpen ? "expanded" : "collapsed"}

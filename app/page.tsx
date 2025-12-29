@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
-import { AppFooterFixed } from "@/components/layout/app-footer";
+import { AppFooter } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useAppStateStore } from "@/lib/store/app-state-store";
@@ -96,7 +96,7 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      <AppFooterFixed />
+      <AppFooter />
     </main>
   );
 }
