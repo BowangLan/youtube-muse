@@ -18,7 +18,7 @@ import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { buildCustomIntentQuery } from "@/lib/intents";
 import { KeywordSelector } from "./keyword-selector";
-import { parseDuration } from "@/lib/utils/youtube";
+import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
 
 interface CreateIntentDialogProps {
   trigger?: React.ReactNode;
@@ -165,20 +165,15 @@ export function CreateIntentDialog({
         setLoadingStatus("Adding tracks...");
 
         const existingIds = new Set<string>();
-        const toAdd = results
-          .filter((r) => {
-            if (!r?.id) return false;
-            if (existingIds.has(r.id)) return false;
-            existingIds.add(r.id);
-            return true;
-          })
-          .slice(0, 5);
+        const toAdd = results.filter((r) => {
+          if (!r?.id) return false;
+          if (existingIds.has(r.id)) return false;
+          existingIds.add(r.id);
+          return true;
+        });
 
         for (const result of toAdd) {
-          const thumb =
-            result.thumbnail?.thumbnails?.[
-              result.thumbnail.thumbnails.length - 1
-            ]?.url ?? `https://i.ytimg.com/vi/${result.id}/hqdefault.jpg`;
+          const thumb = getThumbnailUrl(result.id, "hqdefault");
 
           addTrackToPlaylist(newPlaylist.id, {
             id: result.id,
