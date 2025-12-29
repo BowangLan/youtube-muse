@@ -38,16 +38,21 @@ export function formatTime(seconds: number): string {
 }
 
 /**
- * Parse YouTube duration string (MM:SS) to seconds
+ * Parse YouTube duration string (MM:SS) or (HH:MM:SS) to seconds
  */
 export function parseDuration(durationString: string): number {
   const parts = durationString.split(':')
-  if (parts.length !== 2) return 0
-
-  const minutes = parseInt(parts[0], 10) || 0
-  const seconds = parseInt(parts[1], 10) || 0
-
-  return minutes * 60 + seconds
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0], 10) || 0
+    const seconds = parseInt(parts[1], 10) || 0
+    return minutes * 60 + seconds
+  } else if (parts.length === 3) {
+    const hours = parseInt(parts[0], 10) || 0
+    const minutes = parseInt(parts[1], 10) || 0
+    const seconds = parseInt(parts[2], 10) || 0
+    return hours * 3600 + minutes * 60 + seconds
+  }
+  return 0
 }
 
 /**

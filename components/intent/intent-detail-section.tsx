@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { parseDuration } from "@/lib/utils/youtube";
+import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
 import {
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   Palette,
   Pencil,
   Plus,
+  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { EditIntentDialog } from "@/components/intent/edit-intent-dialog";
@@ -82,8 +83,10 @@ export function IntentDetailSection() {
   );
 
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
+  const updatePlaylist = usePlaylistStore((state) => state.updatePlaylist);
 
   const [isAdding, setIsAdding] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   // Derive active playlist from stores
@@ -163,9 +166,7 @@ export function IntentDetailSection() {
       const next = results.find((r) => r?.id && !existing.has(r.id));
       if (!next) return;
 
-      const thumb =
-        next.thumbnail?.thumbnails?.[next.thumbnail.thumbnails.length - 1]
-          ?.url ?? `https://i.ytimg.com/vi/${next.id}/hqdefault.jpg`;
+      const thumb = getThumbnailUrl(next.id, "hqdefault");
 
       addTrackToPlaylist(activePlaylistId, {
         id: next.id,
@@ -183,6 +184,63 @@ export function IntentDetailSection() {
       setIsAdding(false);
     }
   }, [activePlaylist, activePlaylistId, activeIntent, addTrackToPlaylist]);
+
+  const handleRefreshTracks = React.useCallback(async () => {
+    if (!activePlaylistId || !activePlaylist || !activeIntent) return;
+
+    setIsRefreshing(true);
+    try {
+      // Build query based on intent type (built-in or custom)
+      const builtInIntent = INTENTS.find((i) => i.name === activePlaylist.name);
+      const query = builtInIntent
+        ? buildIntentQuery(builtInIntent)
+        : buildCustomIntentQuery([...activeIntent.keywords]);
+
+      const { results } = await searchYouTubeVideos(query);
+
+      // Convert search results to tracks
+      const newTracks = results
+        .filter((r) => r?.id && r.title)
+        .map((result) => {
+          const thumb = getThumbnailUrl(result.id, "hqdefault");
+
+          return {
+            id: result.id,
+            title: result.title,
+            author: result.channelTitle,
+            authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
+              result.channelTitle
+            )}`,
+            duration: result.length?.simpleText
+              ? parseDuration(result.length.simpleText)
+              : 0,
+            thumbnailUrl: thumb,
+            addedAt: Date.now(),
+          };
+        });
+
+      // Remove all existing tracks and add new ones
+      if (newTracks.length > 0) {
+        // Remove all existing tracks
+        activePlaylist.tracks.forEach((track) => {
+          removeTrackFromPlaylist(activePlaylistId, track.id);
+        });
+
+        // Add all new tracks
+        newTracks.forEach((track) => {
+          addTrackToPlaylist(activePlaylistId, track);
+        });
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [
+    activePlaylist,
+    activePlaylistId,
+    activeIntent,
+    removeTrackFromPlaylist,
+    addTrackToPlaylist,
+  ]);
 
   const handleRemoveTrack = React.useCallback(
     (trackId: string) => {
@@ -330,6 +388,19 @@ export function IntentDetailSection() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Plus className="h-4 w-4" />
+              )}
+            </Button>
+
+            <Button
+              onClick={handleRefreshTracks}
+              disabled={isRefreshing || !activePlaylistId}
+              variant="ghost"
+              size="icon"
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
               )}
             </Button>
 
