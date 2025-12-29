@@ -51,6 +51,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
     <div
       className={cn(
         "relative group trans w-full flex min-h-32 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
+        "hover:scale-[102%]",
         "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[radial-gradient(60%_60%_at_20%_10%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_70%)] after:opacity-50",
@@ -199,7 +200,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
       </div>
       <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-white/60">
         <span>{trackCount} tracks</span>
-        <span className="opacity-70 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 text-white/50 trans select-none">
+        <span className="opacity-70 sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 text-white/50 trans select-none">
           tap to enter
         </span>
       </div>

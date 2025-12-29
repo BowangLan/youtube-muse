@@ -56,7 +56,7 @@ export function TrackItemSmall({
         <motion.div
           layout
           className={cn(
-            "truncate text-sm text-white text-left md:text-right",
+            "truncate text-sm text-white text-left md:text-right group-hover:translate-x-1 trans",
             !isCurrentTrack && "text-white/60 hover:text-white"
           )}
         >
