@@ -18,6 +18,7 @@ import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { buildCustomIntentQuery } from "@/lib/intents";
 import { KeywordSelector } from "./keyword-selector";
+import { parseDuration } from "@/lib/utils/youtube";
 
 interface CreateIntentDialogProps {
   trigger?: React.ReactNode;
@@ -186,7 +187,9 @@ export function CreateIntentDialog({
             authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
               result.channelTitle
             )}`,
-            duration: 0,
+            duration: result.length?.simpleText
+              ? parseDuration(result.length.simpleText)
+              : 0,
             thumbnailUrl: thumb,
           });
         }
