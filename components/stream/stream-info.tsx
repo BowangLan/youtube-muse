@@ -63,7 +63,7 @@ export function StreamInfo({ stream, playlist }: StreamInfoProps) {
             href={getChannelUrl(channel.customUrl, channel.id)}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/80 transition hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pl-1 pr-3 py-1 text-white/80 transition hover:bg-white/10 hover:text-white"
           >
             <img
               src={channel.thumbnailUrl}
@@ -78,9 +78,6 @@ export function StreamInfo({ stream, playlist }: StreamInfoProps) {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-white/70 sm:text-sm">
-        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-          {playlist.tracks.length} tracks
-        </span>
         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
           Limit {stream.trackLimit}
         </span>
