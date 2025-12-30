@@ -171,16 +171,18 @@ export default function Home() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="intents">
-                <div className="mt-4 space-y-4">
+                <div className="mt-2 space-y-4">
                   <Accordion
                     type="single"
                     collapsible
                     className="rounded-2xl px-4 border border-white/5 bg-white/3"
                   >
                     <AccordionItem value="intents" className="border-white/10">
-                      <AccordionTrigger className="flex items-center gap-2 text-xs uppercase tracking-[0.32em] text-white/60 hover:no-underline">
+                      <AccordionTrigger className="cursor-pointer flex items-center justify-start gap-3 text-xs uppercase tracking-[0.32em] text-white/60 hover:no-underline">
                         <CircleHelp className="size-4 text-white/60" />
-                        <span>How intents work</span>
+                        <span className="flex-1 inline-block">
+                          How intents work
+                        </span>
                       </AccordionTrigger>
                       <AccordionContent className="pt-2">
                         <div className="grid gap-3 pb-2 sm:grid-cols-3">
@@ -218,16 +220,18 @@ export default function Home() {
                 </div>
               </TabsContent>
               <TabsContent value="streams">
-                <div className="mt-4 space-y-4">
+                <div className="mt-2 space-y-4">
                   <Accordion
                     type="single"
                     collapsible
                     className="rounded-2xl px-4 border border-white/5 bg-white/3"
                   >
                     <AccordionItem value="streams" className="border-white/10">
-                      <AccordionTrigger className="flex items-center gap-2 text-xs uppercase tracking-[0.32em] text-white/60 hover:no-underline">
+                      <AccordionTrigger className="cursor-pointer flex items-center justify-start gap-3 text-xs uppercase tracking-[0.32em] text-white/60 hover:no-underline">
                         <CircleHelp className="size-4 text-white/60" />
-                        <span>How streams work</span>
+                        <span className="flex-1 inline-block">
+                          How streams work
+                        </span>
                       </AccordionTrigger>
                       <AccordionContent className="pt-2">
                         <div className="grid gap-3 pb-2 sm:grid-cols-3">
