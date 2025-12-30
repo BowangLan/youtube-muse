@@ -337,6 +337,10 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
               // If current index is out of bounds
               newTrackIndex = Math.max(0, newTracks.length - 1)
             }
+
+            if (newTracks.length === 0) {
+              newTrackIndex = 0
+            }
           }
 
           return {
@@ -442,7 +446,30 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
 
       // Playback control
       setCurrentPlaylist: (playlistId) => {
-        set({ currentPlaylistId: playlistId, currentTrackIndex: 0 })
+        const state = get()
+        let shuffleOrder: number[] = []
+
+        if (playlistId && state.isShuffleEnabled) {
+          const playlist = state.playlists.find((p) => p.id === playlistId)
+
+          if (playlist && playlist.tracks.length > 0) {
+            const indices = Array.from({ length: playlist.tracks.length }, (_, i) => i)
+              .filter((i) => i !== 0)
+
+            for (let i = indices.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1))
+                ;[indices[i], indices[j]] = [indices[j], indices[i]]
+            }
+
+            shuffleOrder = [0, ...indices]
+          }
+        }
+
+        set({
+          currentPlaylistId: playlistId,
+          currentTrackIndex: 0,
+          shuffleOrder,
+        })
       },
 
       setCurrentTrackIndex: (index) => {
