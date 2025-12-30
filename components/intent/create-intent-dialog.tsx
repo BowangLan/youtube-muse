@@ -33,6 +33,7 @@ export function CreateIntentDialog({
   const [name, setName] = React.useState("");
   const [keywords, setKeywords] = React.useState<string[]>(["music"]);
   const [description, setDescription] = React.useState("");
+  const [minDuration, setMinDuration] = React.useState<number>(20);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = React.useState<string>("");
@@ -87,6 +88,7 @@ export function CreateIntentDialog({
     setName("");
     setKeywords(["music"]);
     setDescription("");
+    setMinDuration(20);
     setError(null);
     setLoadingStatus("");
     setNameOverwritten(false);
@@ -148,13 +150,17 @@ export function CreateIntentDialog({
         description: description.trim() || undefined,
         keywords: keywordList,
         playlistId: newPlaylist.id,
+        minDuration,
       });
 
       setLoadingStatus("Searching for tracks...");
 
       // Search for tracks using the keywords
       const query = buildCustomIntentQuery(keywordList);
-      const { results, error: searchError } = await searchYouTubeVideos(query);
+      const { results, error: searchError } = await searchYouTubeVideos(query, "video", {
+        minDurationMinutes: minDuration,
+        order: "relevance",
+      });
 
       if (searchError) {
         console.warn("Search error:", searchError);
@@ -179,13 +185,14 @@ export function CreateIntentDialog({
             id: result.id,
             title: result.title,
             author: result.channelTitle,
-            authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
-              result.channelTitle
-            )}`,
+            authorUrl: `https://www.youtube.com/channel/${result.channelId || ""}`,
+            authorThumbnail: result.channelThumbnail,
             duration: result.length?.simpleText
               ? parseDuration(result.length.simpleText)
               : 0,
             thumbnailUrl: thumb,
+            publishedAt: result.publishedAt,
+            publishedTimeText: result.publishedTimeText,
           });
         }
       }
@@ -287,6 +294,37 @@ export function CreateIntentDialog({
               <p className="text-[11px] text-zinc-500 sm:text-xs">
                 These keywords will be used to search for music that matches
                 your intent.
+              </p>
+            </div>
+
+            {/* Minimum Duration */}
+            <div className="space-y-1.5 sm:space-y-2">
+              <div>
+                <label
+                  htmlFor="intent-min-duration"
+                  className="text-xs font-medium text-white/70 sm:text-sm"
+                >
+                  Minimum Duration (minutes)
+                </label>
+              </div>
+              <Input
+                id="intent-min-duration"
+                type="number"
+                min="1"
+                max="240"
+                placeholder="20"
+                value={minDuration}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10);
+                  if (!isNaN(value) && value >= 1 && value <= 240) {
+                    setMinDuration(value);
+                  }
+                }}
+                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:max-w-xs sm:text-base"
+                disabled={isLoading}
+              />
+              <p className="text-[11px] text-zinc-500 sm:text-xs">
+                Only fetch videos at least this long
               </p>
             </div>
 

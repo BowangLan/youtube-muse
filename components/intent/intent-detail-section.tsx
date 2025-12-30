@@ -78,6 +78,9 @@ export function IntentDetailSection() {
   const gradientOverrides = useCustomIntentsStore(
     (state) => state.gradientOverrides
   );
+  const minDurationOverrides = useCustomIntentsStore(
+    (state) => state.minDurationOverrides
+  );
   const hideBuiltInIntent = useCustomIntentsStore(
     (state) => state.hideBuiltInIntent
   );
@@ -125,6 +128,17 @@ export function IntentDetailSection() {
     ? gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
     : activeIntent?.gradientClassName;
 
+  // Get minimum duration - check for custom intent, override, or default to 20
+  const minDuration = React.useMemo((): number => {
+    if (isCustomIntent && activeIntent && "minDuration" in activeIntent) {
+      return (activeIntent as any).minDuration ?? 20;
+    }
+    if (activePlaylistId) {
+      return minDurationOverrides[activePlaylistId] ?? 20;
+    }
+    return 20;
+  }, [isCustomIntent, activeIntent, activePlaylistId, minDurationOverrides]);
+
   const handleTrackClick = React.useCallback(
     (index: number) => {
       if (!activePlaylistId) return;
@@ -158,7 +172,10 @@ export function IntentDetailSection() {
       // Build query based on intent type (built-in or custom)
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      const { results } = await searchYouTubeVideos(query);
+      const { results } = await searchYouTubeVideos(query, "video", {
+        minDurationMinutes: minDuration,
+        order: "relevance",
+      });
       const existing = new Set(activePlaylist.tracks.map((t) => t.id));
       const next = results.find((r) => r?.id && !existing.has(r.id));
       if (!next) return;
@@ -169,13 +186,14 @@ export function IntentDetailSection() {
         id: next.id,
         title: next.title,
         author: next.channelTitle,
-        authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
-          next.channelTitle
-        )}`,
+        authorUrl: `https://www.youtube.com/channel/${next.channelId || ""}`,
+        authorThumbnail: next.channelThumbnail,
         duration: next.length?.simpleText
           ? parseDuration(next.length.simpleText)
           : 0,
         thumbnailUrl: thumb,
+        publishedAt: next.publishedAt,
+        publishedTimeText: next.publishedTimeText,
       });
     } finally {
       setIsAdding(false);
@@ -193,7 +211,10 @@ export function IntentDetailSection() {
         ? buildIntentQuery(builtInIntent)
         : buildCustomIntentQuery([...activeIntent.keywords]);
 
-      const { results } = await searchYouTubeVideos(query);
+      const { results } = await searchYouTubeVideos(query, "video", {
+        minDurationMinutes: minDuration,
+        order: "relevance",
+      });
 
       // Convert search results to tracks
       const newTracks = results
@@ -205,14 +226,15 @@ export function IntentDetailSection() {
             id: result.id,
             title: result.title,
             author: result.channelTitle,
-            authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
-              result.channelTitle
-            )}`,
+            authorUrl: `https://www.youtube.com/channel/${result.channelId || ""}`,
+            authorThumbnail: result.channelThumbnail,
             duration: result.length?.simpleText
               ? parseDuration(result.length.simpleText)
               : 0,
             thumbnailUrl: thumb,
             addedAt: Date.now(),
+            publishedAt: result.publishedAt,
+            publishedTimeText: result.publishedTimeText,
           };
         });
 

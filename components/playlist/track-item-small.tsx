@@ -27,32 +27,52 @@ export function TrackItemSmall({
 
   return (
     <motion.div
-      className={cn("group flex items-center gap-3 cursor-pointer h-8")}
+      className={cn("group flex items-center gap-2 cursor-pointer h-9")}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}
     >
+      {/* Thumbnail */}
+      <div className="relative shrink-0">
+        <img
+          src={track.thumbnailUrl}
+          alt={track.title}
+          className="w-12 aspect-video rounded object-cover shrink-0"
+          loading="lazy"
+        />
+        <AnimatePresence>
+          {isCurrentTrack && (
+            <>
+              {/* Overlay */}
+              <motion.div
+                className="absolute inset-0 bg-black/70 rounded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              ></motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-1/2 -translate-y-1/2 right-1/2 z-20 translate-x-1/2"
+              >
+                <PlayingIndicatorSmall isPlaying={_isPlaying} />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
       <div
         className="min-w-0 flex-1 flex items-center gap-2"
         style={{
           justifyContent: align === "right" ? "flex-end" : "flex-start",
         }}
       >
-        <span className="text-xs text-white/60 hidden flex-none sm:inline-block w-10">
+        <span className="text-xs text-white/60 text-center hidden flex-none sm:inline-block w-10">
           {formatTime(track.duration)}
         </span>
-        <AnimatePresence>
-          {isCurrentTrack && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-              className="flex-none"
-            >
-              <PlayingIndicatorSmall isPlaying={_isPlaying} />
-            </motion.div>
-          )}
-        </AnimatePresence>
         <motion.div
           layout
           className={cn(
@@ -63,12 +83,6 @@ export function TrackItemSmall({
           {track.title}
         </motion.div>
       </div>
-
-      {/* <div className="flex items-center flex-none gap-2 justify-end overflow-hidden w-0 group-hover:w-12 transition-all duration-100">
-        <span className="text-xs text-white/60 hover:text-white">
-          {formatTime(track.duration)}
-        </span>
-      </div> */}
 
       <div className="flex items-center gap-2 justify-end ml-2">
         {onRemove && (

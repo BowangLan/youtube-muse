@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -29,6 +30,7 @@ export function EditIntentDialog({
 }: EditIntentDialogProps) {
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [description, setDescription] = React.useState("");
+  const [minDuration, setMinDuration] = React.useState<number>(20);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -45,11 +47,17 @@ export function EditIntentDialog({
   const descriptionOverrides = useCustomIntentsStore(
     (state) => state.descriptionOverrides
   );
+  const minDurationOverrides = useCustomIntentsStore(
+    (state) => state.minDurationOverrides
+  );
   const setKeywordOverride = useCustomIntentsStore(
     (state) => state.setKeywordOverride
   );
   const setDescriptionOverride = useCustomIntentsStore(
     (state) => state.setDescriptionOverride
+  );
+  const setMinDurationOverride = useCustomIntentsStore(
+    (state) => state.setMinDurationOverride
   );
 
   // Find the playlist and custom intent
@@ -110,14 +118,32 @@ export function EditIntentDialog({
     builtInIntent,
   ]);
 
+  // Get the current minimum duration
+  const currentMinDuration = React.useMemo(() => {
+    if (isCustomIntent && customIntent) {
+      return customIntent.minDuration ?? 20;
+    }
+    if (isBuiltInIntent) {
+      return minDurationOverrides[playlistId] ?? 20;
+    }
+    return 20;
+  }, [
+    isCustomIntent,
+    customIntent,
+    isBuiltInIntent,
+    minDurationOverrides,
+    playlistId,
+  ]);
+
   // Initialize form when dialog opens or intent changes
   React.useEffect(() => {
     if (isOpen) {
       setKeywords([...currentKeywords]);
       setDescription(currentDescription);
+      setMinDuration(currentMinDuration);
       setError(null);
     }
-  }, [isOpen, currentKeywords, currentDescription]);
+  }, [isOpen, currentKeywords, currentDescription, currentMinDuration]);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -145,10 +171,11 @@ export function EditIntentDialog({
         | [string, string, string];
 
       if (isCustomIntent && customIntent) {
-        // Update the custom intent in the store (both keywords and description)
+        // Update the custom intent in the store (keywords, description, and minDuration)
         updateCustomIntent(customIntent.id, {
           keywords: keywordsTyped,
           description: description || undefined,
+          minDuration,
         });
       } else if (isBuiltInIntent) {
         // For built-in intents, store as overrides
@@ -156,6 +183,7 @@ export function EditIntentDialog({
         if (description) {
           setDescriptionOverride(playlistId, description);
         }
+        setMinDurationOverride(playlistId, minDuration);
       }
 
       // Update the playlist description if changed
@@ -206,6 +234,37 @@ export function EditIntentDialog({
                 disabled={isSaving}
                 onError={setError}
               />
+            </div>
+
+            {/* Minimum Duration */}
+            <div className="space-y-1.5 sm:space-y-2">
+              <div>
+                <label
+                  htmlFor="intent-min-duration"
+                  className="text-xs font-medium text-white/70 sm:text-sm"
+                >
+                  Minimum Duration (minutes)
+                </label>
+              </div>
+              <Input
+                id="intent-min-duration"
+                type="number"
+                min="1"
+                max="240"
+                placeholder="20"
+                value={minDuration}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10);
+                  if (!isNaN(value) && value >= 1 && value <= 240) {
+                    setMinDuration(value);
+                  }
+                }}
+                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:max-w-xs sm:text-base"
+                disabled={isSaving}
+              />
+              <p className="text-[11px] text-zinc-500 sm:text-xs">
+                Only fetch videos at least this long
+              </p>
             </div>
 
             {/* Description - hidden on mobile */}

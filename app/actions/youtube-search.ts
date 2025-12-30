@@ -14,6 +14,8 @@ export type SearchResult = {
     thumbnails: Array<{ url: string; width: number; height: number }>;
   };
   channelTitle: string;
+  channelId?: string;
+  channelThumbnail?: string;
   publishedTimeText?: string;
   publishedAt?: string;
   length?: {
@@ -65,7 +67,12 @@ const formatRelativeTime = (publishedAt: string | null | undefined): string => {
  */
 export async function searchYouTubeVideos(
   query: string,
-  type: "video" | "channel" | "playlist" | "movie" = "video"
+  type: "video" | "channel" | "playlist" | "movie" = "video",
+  options?: {
+    minDurationMinutes?: number; // Minimum duration in minutes
+    order?: "date" | "rating" | "relevance" | "title" | "videoCount" | "viewCount"; // Sort order
+    maxResults?: number; // Maximum number of results (default 10)
+  }
 ): Promise<{ results: SearchResult[]; error?: string }> {
   const validation = validateApiKey();
   if (!validation.valid) {
@@ -77,13 +84,17 @@ export async function searchYouTubeVideos(
       return { results: [] };
     }
 
+    const maxResults = options?.maxResults ?? 10;
+    const order = options?.order ?? "relevance";
+
     // Search for videos
     const searchResponse = await youtube.search.list({
       part: ["snippet"],
       q: query,
       type: [type],
-      maxResults: 10,
-      videoDuration: type === "video" ? "medium" : undefined, // Exclude shorts (short videos)
+      maxResults: options?.minDurationMinutes ? 50 : maxResults, // Fetch more if filtering by duration
+      videoDuration: type === "video" ? "long" : undefined, // 'long' = >20 minutes
+      order,
     });
 
     if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
@@ -101,6 +112,50 @@ export async function searchYouTubeVideos(
         part: ["contentDetails", "snippet"],
         id: videoIds,
       });
+
+      // Get unique channel IDs to fetch channel thumbnails
+      const channelIds = Array.from(
+        new Set(
+          (videosResponse.data.items || [])
+            .map((item) => item.snippet?.channelId)
+            .filter((id): id is string => !!id)
+        )
+      );
+
+      // Fetch channel details to get channel thumbnails
+      const channelsResponse = await youtube.channels.list({
+        part: ["snippet"],
+        id: channelIds,
+      });
+
+      // Create a map of channelId -> channelThumbnail
+      const channelThumbnailMap = new Map<string, string>();
+      (channelsResponse.data.items || []).forEach((channel) => {
+        if (channel.id && channel.snippet?.thumbnails) {
+          const thumbnails = channel.snippet.thumbnails;
+          const thumbnailUrl =
+            thumbnails.high?.url ||
+            thumbnails.medium?.url ||
+            thumbnails.default?.url ||
+            "";
+          channelThumbnailMap.set(channel.id, thumbnailUrl);
+        }
+      });
+
+      // Helper to parse ISO 8601 duration to seconds
+      const parseDurationToSeconds = (isoDuration: string | null | undefined): number => {
+        if (!isoDuration) return 0;
+
+        // Parse ISO 8601 duration (e.g., "PT3M45S")
+        const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        if (!match) return 0;
+
+        const hours = parseInt(match[1] || "0", 10);
+        const minutes = parseInt(match[2] || "0", 10);
+        const seconds = parseInt(match[3] || "0", 10);
+
+        return hours * 3600 + minutes * 60 + seconds;
+      };
 
       // Helper to format ISO 8601 duration to simple text (e.g., "3:45")
       const formatDuration = (isoDuration: string | null | undefined): string => {
@@ -120,7 +175,15 @@ export async function searchYouTubeVideos(
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
       };
 
-      const formattedResults: SearchResult[] = (videosResponse.data.items || []).map((item) => {
+      // Filter by minimum duration if specified
+      const minDurationSeconds = options?.minDurationMinutes ? options.minDurationMinutes * 60 : 0;
+      const filteredVideos = (videosResponse.data.items || []).filter((item) => {
+        if (!minDurationSeconds) return true;
+        const durationInSeconds = parseDurationToSeconds(item.contentDetails?.duration);
+        return durationInSeconds >= minDurationSeconds;
+      });
+
+      const formattedResults: SearchResult[] = filteredVideos.slice(0, maxResults).map((item) => {
         const snippet = item.snippet;
         const thumbnails = snippet?.thumbnails;
         const thumbnailUrl =
@@ -130,6 +193,7 @@ export async function searchYouTubeVideos(
           "";
 
         const duration = formatDuration(item.contentDetails?.duration);
+        const channelId = snippet?.channelId || undefined;
 
         return {
           id: item.id!,
@@ -144,6 +208,8 @@ export async function searchYouTubeVideos(
             ],
           },
           channelTitle: snippet?.channelTitle || "",
+          channelId,
+          channelThumbnail: channelId ? channelThumbnailMap.get(channelId) : undefined,
           publishedTimeText: formatRelativeTime(snippet?.publishedAt),
           publishedAt: snippet?.publishedAt || undefined,
           length: {

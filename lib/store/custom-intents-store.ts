@@ -9,6 +9,7 @@ export interface CustomIntent extends IntentDefinition {
   id: string
   isCustom: true
   playlistId: string // Links to the playlist with this intent
+  minDuration?: number // Minimum video duration in minutes (default: 20)
 }
 
 // Keyword override type for built-in intents
@@ -22,6 +23,8 @@ interface CustomIntentsState {
   keywordOverrides: Record<string, KeywordsOverride>
   // Description overrides for built-in intents - keyed by playlist ID
   descriptionOverrides: Record<string, string>
+  // Minimum duration overrides for built-in intents - keyed by playlist ID
+  minDurationOverrides: Record<string, number>
   // Set of built-in intent names that have been hidden/deleted by user
   hiddenBuiltInIntents: string[]
 }
@@ -29,7 +32,7 @@ interface CustomIntentsState {
 interface CustomIntentsActions {
   addCustomIntent: (intent: Omit<CustomIntent, "id" | "gradientClassName" | "isCustom">) => CustomIntent
   removeCustomIntent: (id: string) => void
-  updateCustomIntent: (id: string, updates: Partial<Pick<CustomIntent, "name" | "gradientClassName" | "keywords" | "description">>) => void
+  updateCustomIntent: (id: string, updates: Partial<Pick<CustomIntent, "name" | "gradientClassName" | "keywords" | "description" | "minDuration">>) => void
   getCustomIntent: (id: string) => CustomIntent | undefined
   getCustomIntentByPlaylistId: (playlistId: string) => CustomIntent | undefined
   getCustomIntentByName: (name: string) => CustomIntent | undefined
@@ -45,6 +48,10 @@ interface CustomIntentsActions {
   setDescriptionOverride: (playlistId: string, description: string) => void
   getDescriptionOverride: (playlistId: string) => string | undefined
   clearDescriptionOverride: (playlistId: string) => void
+  // Minimum duration override methods (for built-in intents)
+  setMinDurationOverride: (playlistId: string, minDuration: number) => void
+  getMinDurationOverride: (playlistId: string) => number | undefined
+  clearMinDurationOverride: (playlistId: string) => void
   // Hidden built-in intents methods
   hideBuiltInIntent: (intentName: string) => void
   unhideBuiltInIntent: (intentName: string) => void
@@ -62,6 +69,7 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
       gradientOverrides: {},
       keywordOverrides: {},
       descriptionOverrides: {},
+      minDurationOverrides: {},
       hiddenBuiltInIntents: [],
 
       addCustomIntent: (intent) => {
@@ -167,6 +175,27 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
         set((state) => {
           const { [playlistId]: _, ...rest } = state.descriptionOverrides
           return { descriptionOverrides: rest }
+        })
+      },
+
+      // Minimum duration override methods (for built-in intents)
+      setMinDurationOverride: (playlistId, minDuration) => {
+        set((state) => ({
+          minDurationOverrides: {
+            ...state.minDurationOverrides,
+            [playlistId]: minDuration,
+          },
+        }))
+      },
+
+      getMinDurationOverride: (playlistId) => {
+        return get().minDurationOverrides[playlistId]
+      },
+
+      clearMinDurationOverride: (playlistId) => {
+        set((state) => {
+          const { [playlistId]: _, ...rest } = state.minDurationOverrides
+          return { minDurationOverrides: rest }
         })
       },
 
