@@ -37,7 +37,7 @@ export async function searchYouTubeChannels(
       return { results: [] }
     }
 
-    const result = await YoutubeSearchApi.GetListByKeyword(query, false, 10, [
+    const result = await YoutubeSearchApi.GetListByKeyword(query, false, 20, [
       { type: "channel" },
     ])
 

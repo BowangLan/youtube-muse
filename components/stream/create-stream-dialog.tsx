@@ -47,6 +47,8 @@ export function CreateStreamDialog({
   const [loadingStatus, setLoadingStatus] = React.useState<string>("");
   const [nameOverwritten, setNameOverwritten] = React.useState(false);
   const [showSearchResults, setShowSearchResults] = React.useState(false);
+  const lastSearchTimeRef = React.useRef<number>(0);
+  const searchAbortControllerRef = React.useRef<AbortController | null>(null);
 
   const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
   const setCurrentPlaylist = usePlaylistStore(
@@ -77,27 +79,58 @@ export function CreateStreamDialog({
     }
   }, [channels, nameOverwritten, generateNameFromChannels, name]);
 
-  // Debounced channel search
+  // Debounced and throttled channel search
   React.useEffect(() => {
     const timer = setTimeout(async () => {
       if (channelInput.trim() && !isChannelUrl(channelInput)) {
+        const now = Date.now();
+        const timeSinceLastSearch = now - lastSearchTimeRef.current;
+        const throttleDelay = 500; // Minimum 500ms between searches
+
+        // If we searched recently, wait a bit longer
+        if (timeSinceLastSearch < throttleDelay) {
+          const additionalDelay = throttleDelay - timeSinceLastSearch;
+          await new Promise((resolve) => setTimeout(resolve, additionalDelay));
+        }
+
+        // Create new abort controller for this search
+        const abortController = new AbortController();
+        searchAbortControllerRef.current = abortController;
+
         setIsSearching(true);
+        lastSearchTimeRef.current = Date.now();
+
         try {
           const { results } = await searchYouTubeChannels(channelInput);
-          setSearchResults(results);
-          setShowSearchResults(true);
+
+          // Only update if this search wasn't aborted
+          if (!abortController.signal.aborted) {
+            setSearchResults(results);
+            setShowSearchResults(true);
+            setIsSearching(false);
+          }
         } catch (err) {
-          console.error("Channel search error:", err);
-        } finally {
-          setIsSearching(false);
+          if (!abortController.signal.aborted) {
+            console.error("Channel search error:", err);
+            setIsSearching(false);
+          }
         }
       } else {
         setSearchResults([]);
         setShowSearchResults(false);
+        setIsSearching(false);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Cancel ongoing search when input changes
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+        searchAbortControllerRef.current = null;
+      }
+      setIsSearching(false);
+    };
   }, [channelInput]);
 
   const resetForm = () => {
@@ -111,6 +144,11 @@ export function CreateStreamDialog({
     setLoadingStatus("");
     setNameOverwritten(false);
     setShowSearchResults(false);
+    lastSearchTimeRef.current = 0;
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+      searchAbortControllerRef.current = null;
+    }
   };
 
   const handleClose = () => {
@@ -294,7 +332,7 @@ export function CreateStreamDialog({
                   }}
                   onBlur={handleChannelInputBlur}
                   className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:text-base"
-                  disabled={isLoading || isSearching}
+                  disabled={isLoading}
                 />
                 {isSearching && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-white/40" />
@@ -302,8 +340,8 @@ export function CreateStreamDialog({
 
                 {/* Search Results Dropdown */}
                 {showSearchResults && searchResults.length > 0 && (
-                  <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/10 bg-[#0a0a0a] shadow-lg overflow-hidden">
-                    {searchResults.slice(0, 5).map((result) => (
+                  <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/10 bg-[#0a0a0a] shadow-lg overflow-hidden max-h-[400px] overflow-y-auto">
+                    {searchResults.slice(0, 15).map((result) => (
                       <button
                         key={result.id}
                         type="button"

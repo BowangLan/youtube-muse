@@ -79,8 +79,8 @@ export function TrackItemMedium({
           <span className="truncate">{track.author}</span>
           <span className="flex-shrink-0">•</span>
           <span className="flex-shrink-0">{formatTime(track.duration)}</span>
-          <span className="flex-shrink-0">•</span>
-          <span className="flex-shrink-0">{formatDate(track.addedAt)}</span>
+          {/* <span className="flex-shrink-0">•</span>
+          <span className="flex-shrink-0">{formatDate(track.addedAt)}</span> */}
         </div>
       </div>
 

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/utils";
 import { StreamHeaderActions } from "./stream-header-actions";
 import { StreamInfo } from "./stream-info";
