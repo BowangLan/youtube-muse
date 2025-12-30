@@ -32,10 +32,7 @@ export function IntentGridSection({
   const allPlaylists = [...intentPlaylists, ...customIntentPlaylists];
 
   return (
-    <section
-      aria-label="Intent Grid"
-      className="space-y-6 md:space-y-8 motion-preset-slide-up-sm"
-    >
+    <section aria-label="Intent Grid" className="space-y-6 md:space-y-8">
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4")}>
         {allPlaylists.map((playlist, index) => {
           // First try built-in intent, then custom intent
@@ -45,14 +42,13 @@ export function IntentGridSection({
           return (
             <motion.div
               key={playlist.id}
-              className={
-                cn()
-                // "motion-preset-blur-up-lg"
-                // `motion-delay-[${index * 100}ms]`
-              }
+              className={cn(
+                "motion-preset-blur-up-lg",
+                `motion-delay-[${index * 50}ms]`
+              )}
               style={
                 {
-                  "--motion-delay": `${index * 100}ms`,
+                  "--motion-delay": `${index * 50}ms`,
                 } as React.CSSProperties
               }
               layout

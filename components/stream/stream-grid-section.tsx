@@ -28,13 +28,7 @@ export function StreamGridSection({
   }
 
   return (
-    <section
-      aria-label="Stream Grid"
-      className="space-y-4 motion-preset-slide-up-sm"
-    >
-      <h2 className="text-sm uppercase tracking-wider text-white/60">
-        Streams
-      </h2>
+    <section aria-label="Stream Grid" className="space-y-6 md:space-y-8">
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4")}>
         {streamPlaylists.map((playlist, index) => {
           const stream = getStream(playlist);
@@ -43,12 +37,16 @@ export function StreamGridSection({
           return (
             <motion.div
               key={playlist.id}
+              layout
+              className={cn(
+                "motion-preset-blur-up-lg",
+                `motion-delay-[${index * 50}ms]`
+              )}
               style={
                 {
-                  "--motion-delay": `${index * 100}ms`,
+                  "--motion-delay": `${index * 50}ms`,
                 } as React.CSSProperties
               }
-              layout
               transition={{
                 duration: reduceMotion ? 0 : EASING_DURATION_CARD,
                 ease: reduceMotion ? "linear" : EASING_EASE_OUT,
