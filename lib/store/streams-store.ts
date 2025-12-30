@@ -158,7 +158,7 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
 
           // Fetch videos from all channels in parallel
           const allVideosResults = await Promise.all(
-            stream.channels.map((ch) => getChannelLatestVideos(ch.id, ch.title, tracksPerChannel))
+            stream.channels.map((ch) => getChannelLatestVideos(ch.id, ch.title, tracksPerChannel, ch.thumbnailUrl))
           )
 
           // Flatten and filter out errors
@@ -166,35 +166,13 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
             .filter((result) => !result.error)
             .flatMap((result) => result.results)
 
-          // Helper to parse relative time (e.g., "2 days ago") - simplified version
-          const parsePublishDate = (publishedTimeText?: string): number => {
-            if (!publishedTimeText) return 0
-
-            const text = publishedTimeText.toLowerCase()
-            const match = text.match(/(\d+)\s*(second|minute|hour|day|week|month|year)/)
-            if (!match) return 0
-
-            const value = parseInt(match[1], 10)
-            const unit = match[2]
-
-            const multipliers: Record<string, number> = {
-              second: 1,
-              minute: 60,
-              hour: 3600,
-              day: 86400,
-              week: 604800,
-              month: 2592000,
-              year: 31536000,
-            }
-
-            const seconds = value * (multipliers[unit] || 0)
-            // Return negative so newer videos (smaller time ago) get higher priority
-            return -seconds
-          }
-
-          // Sort by date (newest first) and take top N
+          // Sort by published date (newest first) using ISO timestamps
           const sortedVideos = allVideos
-            .sort((a, b) => parsePublishDate(a.publishedTimeText) - parsePublishDate(b.publishedTimeText))
+            .sort((a, b) => {
+              const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
+              const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
+              return dateB - dateA // Newer first (descending order)
+            })
             .slice(0, stream.trackLimit)
 
           // Convert to Track format
@@ -219,9 +197,12 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
               title: video.title,
               author: video.channelTitle,
               authorUrl: `https://www.youtube.com/channel/${video.channelId || ""}`,
+              authorThumbnail: video.channelThumbnail,
               duration: parseDuration(video.length?.simpleText),
               thumbnailUrl: video.thumbnail?.thumbnails?.[0]?.url || `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`,
               addedAt: Date.now(),
+              publishedAt: video.publishedAt,
+              publishedTimeText: video.publishedTimeText,
             }
           }
 

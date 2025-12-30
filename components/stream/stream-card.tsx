@@ -144,11 +144,11 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
         <div className="text-[10px]/[12px] md:text-xs/tight uppercase tracking-[0.32em] text-white/60">
           Stream
         </div>
-        <div className="relative flex items-center gap-2">
+        <div className="relative flex items-start gap-2">
           <AnimatePresence>
             {isActive && (
               <motion.div
-                className="flex items-end gap-[3px] h-3 group-hover:opacity-0 transition-opacity duration-300 opacity-100 pointer-events-none"
+                className="mt-1.5 h-3 flex items-end gap-[3px] group-hover:opacity-0 transition-opacity duration-300 opacity-100 pointer-events-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

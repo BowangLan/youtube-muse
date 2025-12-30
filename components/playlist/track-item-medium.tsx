@@ -7,7 +7,51 @@ import { formatTime, formatDate } from "@/lib/utils/youtube";
 import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, User } from "lucide-react";
+
+/**
+ * Format published date as relative time or absolute date
+ */
+function formatPublishedDate(publishedAt?: string): string {
+  if (!publishedAt) return "";
+
+  const now = new Date();
+  const published = new Date(publishedAt);
+  const diffMs = now.getTime() - published.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+
+  // Less than 1 hour
+  if (diffMinutes < 60) {
+    if (diffMinutes < 1) return "Just now";
+    return `${diffMinutes} ${diffMinutes === 1 ? "minute" : "minutes"} ago`;
+  }
+
+  // Less than 24 hours
+  if (diffHours < 24) {
+    return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+  }
+
+  // Less than 7 days
+  if (diffDays < 7) {
+    return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+  }
+
+  // Less than 4 weeks
+  if (diffWeeks < 4) {
+    return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
+  }
+
+  // Older: show absolute date
+  return published.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export function TrackItemMedium({
   track,
@@ -32,11 +76,11 @@ export function TrackItemMedium({
       layoutId={`track-item-${track.id}`}
     >
       {/* Thumbnail */}
-      <div className="relative flex-shrink-0">
+      <div className="relative shrink-0">
         <img
           src={track.thumbnailUrl}
           alt={track.title}
-          className="w-12 aspect-video rounded-md object-cover"
+          className="w-12 aspect-video rounded-md object-cover shrink-0"
           loading="lazy"
         />
         <AnimatePresence>
@@ -76,11 +120,26 @@ export function TrackItemMedium({
           {track.title}
         </motion.div>
         <div className="flex items-center gap-1.5 text-xs text-white/60">
-          <span className="truncate">{track.author}</span>
-          <span className="flex-shrink-0">•</span>
-          <span className="flex-shrink-0">{formatTime(track.duration)}</span>
-          {/* <span className="flex-shrink-0">•</span>
-          <span className="flex-shrink-0">{formatDate(track.addedAt)}</span> */}
+          <span className="flex items-center gap-1.5 truncate">
+            {track.authorThumbnail ? (
+              <img
+                src={track.authorThumbnail}
+                alt={track.author}
+                className="h-3 w-3 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <User className="h-3 w-3 shrink-0" />
+            )}
+            <span className="truncate">{track.author}</span>
+          </span>
+          <span className="shrink-0">•</span>
+          <span className="shrink-0">{formatTime(track.duration)}</span>
+          {track.publishedAt && (
+            <>
+              <span className="shrink-0">•</span>
+              <span className="shrink-0">{formatPublishedDate(track.publishedAt)}</span>
+            </>
+          )}
         </div>
       </div>
 

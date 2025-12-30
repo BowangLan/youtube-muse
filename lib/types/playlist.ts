@@ -3,9 +3,12 @@ export interface Track {
   title: string
   author: string
   authorUrl: string
+  authorThumbnail?: string // Channel/author thumbnail URL
   duration: number
   thumbnailUrl: string
   addedAt: number
+  publishedAt?: string // ISO 8601 date string from YouTube
+  publishedTimeText?: string // Formatted relative time (e.g., "2 days ago")
 }
 
 export interface Playlist {
