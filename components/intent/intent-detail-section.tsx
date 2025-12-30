@@ -39,7 +39,7 @@ import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 export function IntentDetailSection() {
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
-  const setView = useAppStateStore((state) => state.setView);
+  const returnToGrid = useAppStateStore((state) => state.returnToGrid);
 
   const playlists = usePlaylistStore((state) => state.playlists);
   const currentPlaylistId = usePlaylistStore(
@@ -293,7 +293,7 @@ export function IntentDetailSection() {
     }
 
     // Navigate back to grid view
-    setView("grid");
+    returnToGrid("intents");
   }, [
     activePlaylistId,
     activeIntent,
@@ -305,7 +305,7 @@ export function IntentDetailSection() {
     removeCustomIntent,
     hideBuiltInIntent,
     deletePlaylist,
-    setView,
+    returnToGrid,
   ]);
 
   const handleSwitchGradient = React.useCallback(() => {
@@ -370,7 +370,7 @@ export function IntentDetailSection() {
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              setView("grid");
+              returnToGrid("intents");
             }}
             size="icon"
           >

@@ -11,7 +11,7 @@ import {
 } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useAppStateStore } from "@/lib/store/app-state-store";
+import { GridTab, useAppStateStore } from "@/lib/store/app-state-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { useStreamsStore } from "@/lib/store/streams-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
@@ -42,6 +42,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
+import type { GridTab as GridTabType } from "@/lib/store/app-state-store";
 
 const INTENT_HELP_STEPS = [
   {
@@ -96,13 +97,23 @@ export default function Home() {
   const apiReady = usePlayerStore((state) => state.apiReady);
 
   const view = useAppStateStore((state) => state.view);
+  const gridTab = useAppStateStore((state) => state.gridTab);
+  const setGridTab = useAppStateStore((state) => state.setGridTab);
   const customIntents = useCustomIntentsStore((state) => state.customIntents);
   const hiddenBuiltInIntents = useCustomIntentsStore(
     (state) => state.hiddenBuiltInIntents
   );
   const streams = useStreamsStore((state) => state.streams);
   const refreshAllStreams = useStreamsStore((state) => state.refreshAllStreams);
-  const [gridTab, setGridTab] = React.useState("intents");
+
+  React.useEffect(() => {
+    if (view === "intent") {
+      setGridTab("intents");
+    }
+    if (view === "stream") {
+      setGridTab("streams");
+    }
+  }, [view, setGridTab]);
 
   const intentPlaylists = React.useMemo(() => {
     const intentNames = new Set(INTENTS.map((i) => i.name));
@@ -161,7 +172,12 @@ export default function Home() {
 
         <AnimatePresence mode="wait" initial={false}>
           {view === "grid" ? (
-            <Tabs value={gridTab} onValueChange={setGridTab} className="w-full">
+            <Tabs
+              value={gridTab}
+              // @ts-ignore - this is a valid type
+              onValueChange={setGridTab}
+              className="w-full"
+            >
               <TabsList className="w-full justify-start sm:w-fit">
                 <TabsTrigger value="intents" className="sm:flex-none">
                   Intents

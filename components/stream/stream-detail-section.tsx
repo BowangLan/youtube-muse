@@ -11,7 +11,7 @@ import { StreamTrackList } from "./stream-track-list";
 
 export function StreamDetailSection() {
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
-  const setView = useAppStateStore((state) => state.setView);
+  const returnToGrid = useAppStateStore((state) => state.returnToGrid);
 
   const playlists = usePlaylistStore((state) => state.playlists);
   const currentPlaylistId = usePlaylistStore(
@@ -110,14 +110,14 @@ export function StreamDetailSection() {
     deleteStream(activeStream.id);
 
     // Navigate back to grid view
-    setView("grid");
+    returnToGrid("streams");
   }, [
     activePlaylistId,
     activeStream,
     currentPlaylistId,
     setCurrentPlaylist,
     deleteStream,
-    setView,
+    returnToGrid,
   ]);
 
   const handleSwitchGradient = React.useCallback(() => {
@@ -161,7 +161,7 @@ export function StreamDetailSection() {
         onRefresh={handleRefreshStream}
         onDelete={handleDelete}
         onSwitchGradient={handleSwitchGradient}
-        onBack={() => setView("grid")}
+        onBack={() => returnToGrid("streams")}
         isRefreshing={isRefreshing}
       />
 
