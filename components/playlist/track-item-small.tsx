@@ -32,7 +32,7 @@ export function TrackItemSmall({
       layoutId={`track-item-${track.id}`}
     >
       {/* Thumbnail */}
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 hidden sm:block">
         <img
           src={track.thumbnailUrl}
           alt={track.title}
