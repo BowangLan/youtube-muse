@@ -14,6 +14,7 @@ interface StreamDetailHeaderProps {
   onSwitchGradient: () => void;
   onBack: () => void;
   isRefreshing: boolean;
+  onAddChannel?: (channel: Omit<import("@/lib/types/stream").Channel, "id">) => void;
 }
 
 export function StreamDetailHeader({
@@ -24,6 +25,7 @@ export function StreamDetailHeader({
   onSwitchGradient,
   onBack,
   isRefreshing,
+  onAddChannel,
 }: StreamDetailHeaderProps) {
   const streamGradient = stream.gradientClassName;
 
@@ -56,7 +58,7 @@ export function StreamDetailHeader({
         isRefreshing={isRefreshing}
       />
 
-      <StreamInfo stream={stream} playlist={playlist} />
+      <StreamInfo stream={stream} playlist={playlist} onAddChannel={onAddChannel} />
     </div>
   );
 }

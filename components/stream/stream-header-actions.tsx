@@ -74,7 +74,7 @@ export function StreamHeaderActions({
               onClick={onDelete}
               className="cursor-pointer text-red-400 hover:bg-red-500/10 hover:text-red-400 focus:bg-red-500/10 focus:text-red-400"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4 text-red-400" />
               Delete Stream
             </DropdownMenuItem>
           </DropdownMenuContent>

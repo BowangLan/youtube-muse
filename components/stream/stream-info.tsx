@@ -5,13 +5,15 @@ import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import type { Stream } from "@/lib/types/stream";
 import type { Playlist } from "@/lib/types/playlist";
+import { AddChannelPopover } from "./add-channel-popover";
 
 interface StreamInfoProps {
   stream: Stream;
   playlist: Playlist;
+  onAddChannel?: (channel: Omit<import("@/lib/types/stream").Channel, "id">) => void;
 }
 
-export function StreamInfo({ stream, playlist }: StreamInfoProps) {
+export function StreamInfo({ stream, playlist, onAddChannel }: StreamInfoProps) {
   const getChannelUrl = React.useCallback(
     (customUrl: string | undefined, id: string) => {
       if (customUrl) {
@@ -76,6 +78,14 @@ export function StreamInfo({ stream, playlist }: StreamInfoProps) {
             </span>
           </a>
         ))}
+
+        {onAddChannel && (
+          <AddChannelPopover
+            streamId={stream.id}
+            existingChannels={stream.channels}
+            onAddChannel={onAddChannel}
+          />
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-white/70 sm:text-sm">
         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">

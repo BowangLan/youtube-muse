@@ -145,6 +145,22 @@ export function StreamDetailSection() {
     [activePlaylistId, removeTrackFromPlaylist]
   );
 
+  const handleAddChannel = React.useCallback(
+    (channel: Omit<import("@/lib/types/stream").Channel, "id">) => {
+      if (!activeStream) return;
+
+      // Generate a unique ID for the new channel
+      const channelId = `channel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Add the channel to the stream
+      updateStream(activeStream.id, {
+        channels: [...activeStream.channels, { ...channel, id: channelId }],
+        updatedAt: Date.now(),
+      });
+    },
+    [activeStream, updateStream]
+  );
+
   if (!activePlaylist || !activeStream) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white/60">
@@ -163,6 +179,7 @@ export function StreamDetailSection() {
         onSwitchGradient={handleSwitchGradient}
         onBack={() => returnToGrid("streams")}
         isRefreshing={isRefreshing}
+        onAddChannel={handleAddChannel}
       />
 
       <StreamTrackList
