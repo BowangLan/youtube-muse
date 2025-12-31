@@ -18,6 +18,7 @@ import {
   useReducedMotion,
 } from "motion/react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
 import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
@@ -31,7 +32,10 @@ import { Track } from "@/lib/types/playlist";
 import { BackgroundOverlay } from "./mini-player-view";
 import { MiniPlayerMoreMenu } from "./mini-player-more-menu";
 import { Icons } from "@/components/icons";
-import { MiniPlayerProvider, useMiniPlayerContext } from "./mini-player-context";
+import {
+  MiniPlayerProvider,
+  useMiniPlayerContext,
+} from "./mini-player-context";
 
 // =============================================================================
 // Constants
@@ -73,7 +77,7 @@ interface GlowLayerProps {
 }
 
 interface TrackCoverProps {
-  // No props needed - gets track from context
+  glowStyle: React.CSSProperties;
 }
 
 interface TrackInfoProps {
@@ -229,7 +233,7 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
   if (!track) return null;
 
   return (
-    <div className="relative size-10 shrink-0 overflow-visible">
+    <div className="relative aspect-video h-10 shrink-0 overflow-visible">
       <div className="relative w-full h-full overflow-hidden rounded-md flex-none">
         <Image
           src={track.thumbnailUrl}
@@ -252,15 +256,15 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   return (
     <motion.div
       layoutId="track-cover-mobile"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none w-[74vw] sm:w-[50vw] aspect-square"
+      className="relative shrink-0 overflow-visible rounded-lg flex-none aspect-video w-full sm:h-40 sm:w-72"
       transition={{ duration: EXPAND_DURATION, ease: EASING }}
     >
       <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
         <Image
-          src={track.thumbnailUrl}
+          src={getThumbnailUrl(track.id, "maxresdefault")}
           alt={track.title}
           fill
-          sizes="74vw"
+          sizes="90vw"
           className="object-cover"
         />
       </div>
@@ -278,17 +282,19 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
   if (isCollapsed) {
     return (
       <div className="flex flex-col flex-1 min-w-0">
-        <Link
+        {/* <Link
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline w-fit max-w-[50vw] flex"
+          className="w-fit max-w-[50vw] flex"
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
           }}
-        >
-          <p className="truncate text-sm">{track.title || "Loading..."}</p>
-        </Link>
+        ></Link> */}
+        <p className="max-w-[50vw] truncate text-sm">
+          {track.title || "Loading..."}
+        </p>
         <div className="flex items-center gap-1.5">
           <p className="truncate text-xs/tight text-neutral-400">
             {track.author || "Unknown Artist"}
@@ -401,7 +407,7 @@ const PlayerControls = () => {
         ) : isPlaying || pendingPlayState !== null ? (
           <Icons.Pause className="h-8 w-8" />
         ) : (
-          <Icons.Play className="h-8 w-8 translate-x-[1px]" />
+          <Icons.Play className="h-8 w-8 translate-x-px" />
         )}
       </button>
       <button
@@ -422,12 +428,8 @@ const PlayerControls = () => {
 
 export const NextButton = () => {
   const dispatch = usePlayerStore((state) => state.dispatch);
-  const {
-    repeatMode,
-    currentTrackIndex,
-    playlists,
-    currentPlaylistId,
-  } = usePlaylistStore();
+  const { repeatMode, currentTrackIndex, playlists, currentPlaylistId } =
+    usePlaylistStore();
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =
@@ -602,7 +604,7 @@ const ExpandedStateView = ({
 
       {/* TopNav Spacer  */}
       <div className="h-14 flex-none"></div>
-      <div className="py-12 flex-none">
+      <div className="py-12 flex-none w-full">
         <TrackCoverExpanded glowStyle={glowStyle} />
       </div>
 
@@ -663,10 +665,7 @@ export function MiniPlayerViewMobile() {
         bottom: !isOpen ? `2rem` : "0",
       }}
     >
-      <MiniPlayerProvider
-        isExpanded={isOpen}
-        onClose={() => setIsOpen(false)}
-      >
+      <MiniPlayerProvider isExpanded={isOpen} onClose={() => setIsOpen(false)}>
         <motion.div
           onClick={(e) => {
             // Only toggle if not currently expanded (to allow drag when expanded)
@@ -700,7 +699,9 @@ export function MiniPlayerViewMobile() {
               : "border-zinc-500/10 border rounded-xl trans",
             "animate-container-glow"
           )}
-          style={isOpen ? {} : { ...glowStyle, ...(reduceMotion ? {} : beatStyle) }}
+          style={
+            isOpen ? {} : { ...glowStyle, ...(reduceMotion ? {} : beatStyle) }
+          }
           variants={containerVariants}
           initial="collapsed"
           animate={isOpen ? "expanded" : "collapsed"}

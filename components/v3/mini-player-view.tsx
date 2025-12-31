@@ -18,7 +18,10 @@ import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
-import { MiniPlayerProvider, useMiniPlayerContext } from "./mini-player-context";
+import {
+  MiniPlayerProvider,
+  useMiniPlayerContext,
+} from "./mini-player-context";
 
 // =============================================================================
 // Constants
@@ -106,7 +109,7 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
   return (
     <motion.div
       layoutId="track-cover"
-      className="relative h-10 w-10 shrink-0 overflow-visible rounded-md"
+      className="relative aspect-video h-10 shrink-0 overflow-visible rounded-md"
       transition={{
         duration: reduceMotion ? 0 : COLLAPSE_DURATION,
         ease: [0.4, 0, 0.2, 1],
@@ -135,11 +138,7 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   return (
     <motion.div
       layoutId="track-cover"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none"
-      style={{
-        width: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
-        height: EXPANDED_HEIGHT - EXPANDED_PADDING * 2,
-      }}
+      className="relative shrink-0 overflow-visible rounded-lg flex-none h-32 w-56 self-center"
       transition={{
         duration: reduceMotion ? 0 : EXPAND_DURATION,
         ease: [0.4, 0, 0.2, 1],
