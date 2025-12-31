@@ -37,7 +37,7 @@ export function StreamInfo({ stream, playlist }: StreamInfoProps) {
   );
 
   return (
-    <div className="relative z-10 mx-auto mt-10 max-w-5xl space-y-4 sm:space-y-5">
+    <div className="relative z-10 mx-auto mt-6 max-w-5xl space-y-3 sm:mt-10 sm:space-y-5">
       <div className="text-[10px]/[12px] uppercase tracking-[0.32em] text-white/60 md:text-xs">
         Stream
       </div>
