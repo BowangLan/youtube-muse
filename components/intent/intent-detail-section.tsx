@@ -8,13 +8,10 @@ import {
   ArrowLeft,
   Loader2,
   MoreVertical,
-  Palette,
-  Pencil,
   Plus,
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { EditIntentDialog } from "@/components/intent/edit-intent-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,10 +22,7 @@ import {
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import {
-  INTENTS,
-  buildIntentQuery,
   buildCustomIntentQuery,
   getIntentByName,
   getRandomGradient,
@@ -65,32 +59,11 @@ export function IntentDetailSection() {
 
   const dispatch = usePlayerStore((state) => state.dispatch);
 
-  const customIntents = useCustomIntentsStore((state) => state.customIntents);
-  const removeCustomIntent = useCustomIntentsStore(
-    (state) => state.removeCustomIntent
-  );
-  const updateCustomIntent = useCustomIntentsStore(
-    (state) => state.updateCustomIntent
-  );
-  const setGradientOverride = useCustomIntentsStore(
-    (state) => state.setGradientOverride
-  );
-  const gradientOverrides = useCustomIntentsStore(
-    (state) => state.gradientOverrides
-  );
-  const minDurationOverrides = useCustomIntentsStore(
-    (state) => state.minDurationOverrides
-  );
-  const hideBuiltInIntent = useCustomIntentsStore(
-    (state) => state.hideBuiltInIntent
-  );
-
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
   const updatePlaylist = usePlaylistStore((state) => state.updatePlaylist);
 
   const [isAdding, setIsAdding] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   // Derive active playlist from stores
   const activePlaylist = React.useMemo(() => {
@@ -98,24 +71,10 @@ export function IntentDetailSection() {
     return playlists.find((p) => p.id === activePlaylistId);
   }, [activePlaylistId, playlists]);
 
-  // Derive active intent from playlist name (check both built-in and custom)
+  // Derive active intent from playlist name
   const activeIntent = React.useMemo(() => {
-    // First check built-in intents
-    const builtIn = getIntentByName(activePlaylist?.name);
-    if (builtIn) return builtIn;
-    // Then check custom intents
-    if (!activePlaylistId) return undefined;
-    return customIntents.find((ci) => ci.playlistId === activePlaylistId);
-  }, [activePlaylist?.name, activePlaylistId, customIntents]);
-
-  // Check if this is a custom intent (can be deleted/modified)
-  const isCustomIntent = React.useMemo(() => {
-    return (
-      activeIntent &&
-      "isCustom" in activeIntent &&
-      activeIntent.isCustom === true
-    );
-  }, [activeIntent]);
+    return getIntentByName(activePlaylist?.name);
+  }, [activePlaylist?.name]);
 
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
@@ -123,21 +82,11 @@ export function IntentDetailSection() {
       ? shuffleOrder[currentTrackIndex] ?? currentTrackIndex
       : currentTrackIndex;
 
-  // Get gradient - check for override first, then use intent's default
-  const intentGradient = activePlaylistId
-    ? gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
-    : activeIntent?.gradientClassName;
+  // Get gradient
+  const intentGradient = activeIntent?.gradientClassName;
 
-  // Get minimum duration - check for custom intent, override, or default to 20
-  const minDuration = React.useMemo((): number => {
-    if (isCustomIntent && activeIntent && "isCustom" in activeIntent) {
-      return activeIntent.minDuration ?? 20;
-    }
-    if (activePlaylistId) {
-      return minDurationOverrides[activePlaylistId] ?? 20;
-    }
-    return 20;
-  }, [isCustomIntent, activeIntent, activePlaylistId, minDurationOverrides]);
+  // Get minimum duration
+  const minDuration = 20;
 
   const handleTrackClick = React.useCallback(
     (index: number) => {
@@ -169,7 +118,6 @@ export function IntentDetailSection() {
 
     setIsAdding(true);
     try {
-      // Build query based on intent type (built-in or custom)
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
       const { results } = await searchYouTubeVideos(query, "video", {
@@ -205,11 +153,7 @@ export function IntentDetailSection() {
 
     setIsRefreshing(true);
     try {
-      // Build query based on intent type (built-in or custom)
-      const builtInIntent = INTENTS.find((i) => i.name === activePlaylist.name);
-      const query = builtInIntent
-        ? buildIntentQuery(builtInIntent)
-        : buildCustomIntentQuery([...activeIntent.keywords]);
+      const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
       const { results } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
@@ -226,7 +170,9 @@ export function IntentDetailSection() {
             id: result.id,
             title: result.title,
             author: result.channelTitle,
-            authorUrl: `https://www.youtube.com/channel/${result.channelId || ""}`,
+            authorUrl: `https://www.youtube.com/channel/${
+              result.channelId || ""
+            }`,
             authorThumbnail: result.channelThumbnail,
             duration: result.length?.simpleText
               ? parseDuration(result.length.simpleText)
@@ -277,20 +223,7 @@ export function IntentDetailSection() {
       setCurrentPlaylist(null);
     }
 
-    if (isCustomIntent) {
-      // Custom intent: remove from custom intents store and delete playlist
-      const customIntent = customIntents.find(
-        (ci) => ci.playlistId === activePlaylistId
-      );
-      if (customIntent) {
-        removeCustomIntent(customIntent.id);
-      }
-      deletePlaylist(activePlaylistId);
-    } else {
-      // Built-in intent: hide it and delete the playlist
-      hideBuiltInIntent(activePlaylist.name);
-      deletePlaylist(activePlaylistId);
-    }
+    deletePlaylist(activePlaylistId);
 
     // Navigate back to grid view
     returnToGrid("intents");
@@ -298,53 +231,15 @@ export function IntentDetailSection() {
     activePlaylistId,
     activeIntent,
     activePlaylist,
-    isCustomIntent,
-    customIntents,
     currentPlaylistId,
     setCurrentPlaylist,
-    removeCustomIntent,
-    hideBuiltInIntent,
     deletePlaylist,
     returnToGrid,
   ]);
 
   const handleSwitchGradient = React.useCallback(() => {
-    if (!activePlaylistId || !activeIntent) return;
-
-    // Get current gradient (from override or intent default)
-    const currentGradient =
-      gradientOverrides[activePlaylistId] ?? activeIntent.gradientClassName;
-
-    // Get a new random gradient (excluding current one)
-    let newGradient = getRandomGradient(false); // Allow all gradients
-    // Ensure we get a different gradient
-    let attempts = 0;
-    while (newGradient === currentGradient && attempts < 10) {
-      newGradient = getRandomGradient(false);
-      attempts++;
-    }
-
-    if (isCustomIntent) {
-      // For custom intents, update the custom intent directly
-      const customIntent = customIntents.find(
-        (ci) => ci.playlistId === activePlaylistId
-      );
-      if (customIntent) {
-        updateCustomIntent(customIntent.id, { gradientClassName: newGradient });
-      }
-    } else {
-      // For built-in intents, store as gradient override
-      setGradientOverride(activePlaylistId, newGradient);
-    }
-  }, [
-    activePlaylistId,
-    activeIntent,
-    isCustomIntent,
-    customIntents,
-    gradientOverrides,
-    updateCustomIntent,
-    setGradientOverride,
-  ]);
+    // This functionality has been removed - all intents use their default gradients
+  }, []);
 
   if (!activePlaylist) return null;
 
@@ -430,14 +325,6 @@ export function IntentDetailSection() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                  <Pencil />
-                  Edit Keywords
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSwitchGradient}>
-                  <Palette />
-                  Random Gradient
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleDelete}
                   className="text-red-400 focus:text-red-400"
@@ -450,7 +337,7 @@ export function IntentDetailSection() {
           </div>
         </div>
 
-        <div className="space-y-1 mt-4 mb-2 px-4">
+        <div className="space-y-1 mt-4 mb-2 px-3">
           {activePlaylist.tracks.map((track, index) => (
             <div
               key={`${track.id}-${track.addedAt}`}
@@ -476,15 +363,6 @@ export function IntentDetailSection() {
           ))}
         </div>
       </div>
-
-      {/* Edit Intent Dialog */}
-      {activePlaylistId && (
-        <EditIntentDialog
-          playlistId={activePlaylistId}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-        />
-      )}
     </motion.section>
   );
 }
