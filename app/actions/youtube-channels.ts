@@ -85,6 +85,7 @@ export async function searchYouTubeChannels(
       q: query,
       type: ["channel"],
       maxResults: 20,
+      order: "relevance",
     })
 
     if (!response.data.items) {
@@ -131,9 +132,6 @@ export async function searchYouTubeChannels(
         subscriberCountRaw,
       }
     })
-
-    // Sort by subscriber count in descending order
-    channels.sort((a, b) => (b.subscriberCountRaw || 0) - (a.subscriberCountRaw || 0))
 
     return { results: channels }
   } catch (error) {
