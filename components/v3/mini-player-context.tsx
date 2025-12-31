@@ -73,7 +73,7 @@ export function MiniPlayerProvider({
       : currentTrackIndex < currentPlaylist.tracks.length - 1);
 
   const value: MiniPlayerContextValue = {
-    track,
+    track: track || undefined,
     isPlaying,
     isLoadingNewVideo,
     pendingPlayState,
