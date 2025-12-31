@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 // {
 //   "id": "hVQibt46TA4",
@@ -10,7 +10,7 @@ const fs = require("fs");
 //   "addedAt": Date.now()
 // }
 
-async function fetchYouTubChanneleData(channelId: string) {
+async function fetchYouTubChanneleData(channelId) {
   if (!channelId) {
     throw new Error("Channel ID is required");
   }

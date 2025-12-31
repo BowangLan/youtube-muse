@@ -25,17 +25,13 @@ export function PlayerControls() {
     playlists,
     currentPlaylistId,
     currentTrackIndex,
-    playNext,
-    playPrevious,
   } = usePlaylistStore();
   const {
+    dispatch,
     isPlaying,
     currentTime,
     duration,
     volume,
-    togglePlay,
-    seek,
-    handleVolumeChange,
     isLoadingNewVideo,
     apiReady,
     pendingPlayState,
@@ -58,7 +54,7 @@ export function PlayerControls() {
         <div className="flex items-center justify-center gap-6">
           <button
             className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30"
-            onClick={playPrevious}
+            onClick={() => dispatch({ type: "UserPreviousTrack" })}
             disabled={!canPlayPrevious}
             title="Previous"
             type="button"
@@ -67,7 +63,7 @@ export function PlayerControls() {
           </button>
           <button
             className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black hover:scale-105 disabled:opacity-40"
-            onClick={togglePlay}
+            onClick={() => dispatch({ type: "UserTogglePlay" })}
             disabled={
               isLoadingNewVideo || pendingPlayState !== null || !apiReady
             }
@@ -84,7 +80,7 @@ export function PlayerControls() {
           </button>
           <button
             className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/40 disabled:opacity-30"
-            onClick={playNext}
+            onClick={() => dispatch({ type: "UserNextTrack" })}
             disabled={!canPlayNext}
             title="Next"
             type="button"
@@ -109,7 +105,9 @@ export function PlayerControls() {
               max={duration || 100}
               step="0.1"
               value={currentTime || 0}
-              onChange={(e) => seek(Number(e.target.value))}
+              onChange={(e) =>
+                dispatch({ type: "UserSeek", seconds: Number(e.target.value) })
+              }
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
@@ -137,7 +135,12 @@ export function PlayerControls() {
                 max="100"
                 step="1"
                 value={volume || 0}
-                onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                onChange={(e) =>
+                  dispatch({
+                    type: "UserSetVolume",
+                    volume: Number(e.target.value),
+                  })
+                }
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               />
             </div>

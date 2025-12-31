@@ -142,7 +142,7 @@ function validateStorageValue(
 
 // Sanitize the state to fix any logical inconsistencies
 function sanitizePlaylistState(state: PlaylistState): PlaylistState {
-  let sanitized = { ...state }
+  const sanitized = { ...state }
 
   // Ensure currentPlaylistId references a valid playlist
   if (sanitized.currentPlaylistId !== null) {

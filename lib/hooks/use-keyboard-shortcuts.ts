@@ -1,6 +1,11 @@
 import { useEffect } from "react"
 import { usePlayerStore } from "@/lib/store/player-store"
-import { usePlaylistStore } from "@/lib/store/playlist-store"
+
+declare global {
+  interface Window {
+    __previousVolume?: number
+  }
+}
 
 /**
  * Keyboard shortcuts for the music player
@@ -40,23 +45,10 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      const {
-        togglePlay,
-        skipForward,
-        skipBackward,
-        handleVolumeChange,
-        seek,
-        playerRef,
-        volume,
-        duration,
-        currentTime,
-      } = usePlayerStore.getState()
-
-      const { playNext, playPrevious } = usePlaylistStore.getState()
+      const { dispatch, volume, duration } = usePlayerStore.getState()
 
       // Handle different key combinations
       const key = e.key.toLowerCase()
-      const shift = e.shiftKey
       const ctrl = e.ctrlKey || e.metaKey
 
       // Prevent default for keys we're handling
@@ -75,46 +67,40 @@ export function useKeyboardShortcuts() {
 
       // Playback controls
       if (key === " " || key === "k") {
-        togglePlay()
+        dispatch({ type: "UserTogglePlay" })
         return
       }
 
       if (key === "arrowright" || key === "l") {
-        skipForward()
+        dispatch({ type: "UserSkipForward" })
         return
       }
 
       if (key === "arrowleft" || key === "j") {
-        skipBackward()
+        dispatch({ type: "UserSkipBackward" })
         return
       }
 
       if (key === "n" && !ctrl) {
-        const nextTrack = playNext()
-        if (nextTrack && playerRef) {
-          usePlayerStore.getState().loadVideo(nextTrack.id, true)
-        }
+        dispatch({ type: "UserNextTrack" })
         return
       }
 
       if (key === "p" && !ctrl) {
-        const prevTrack = playPrevious()
-        if (prevTrack && playerRef) {
-          usePlayerStore.getState().loadVideo(prevTrack.id, true)
-        }
+        dispatch({ type: "UserPreviousTrack" })
         return
       }
 
       // Volume controls
       if (key === "arrowup") {
         const newVolume = Math.min(100, volume + 5)
-        handleVolumeChange(newVolume)
+        dispatch({ type: "UserSetVolume", volume: newVolume })
         return
       }
 
       if (key === "arrowdown") {
         const newVolume = Math.max(0, volume - 5)
-        handleVolumeChange(newVolume)
+        dispatch({ type: "UserSetVolume", volume: newVolume })
         return
       }
 
@@ -123,13 +109,13 @@ export function useKeyboardShortcuts() {
         if (volume > 0) {
           // Store current volume and mute
           const currentVolume = volume
-          handleVolumeChange(0)
+          dispatch({ type: "UserSetVolume", volume: 0 })
           // Store the previous volume for unmuting
-          ;(window as any).__previousVolume = currentVolume
+          window.__previousVolume = currentVolume
         } else {
           // Unmute to previous volume or default to 100
-          const previousVolume = (window as any).__previousVolume || 100
-          handleVolumeChange(previousVolume)
+          const previousVolume = window.__previousVolume || 100
+          dispatch({ type: "UserSetVolume", volume: previousVolume })
         }
         return
       }
@@ -139,18 +125,18 @@ export function useKeyboardShortcuts() {
       if (!isNaN(numKey) && numKey >= 0 && numKey <= 9) {
         const seekPercentage = numKey / 10
         const seekTime = duration * seekPercentage
-        seek(seekTime)
+        dispatch({ type: "UserSeek", seconds: seekTime })
         return
       }
 
       // Seek to start/end
       if (key === "home") {
-        seek(0)
+        dispatch({ type: "UserSeek", seconds: 0 })
         return
       }
 
       if (key === "end") {
-        seek(Math.max(0, duration - 1))
+        dispatch({ type: "UserSeek", seconds: Math.max(0, duration - 1) })
         return
       }
     }

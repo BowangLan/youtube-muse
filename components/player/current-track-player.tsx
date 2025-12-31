@@ -1,7 +1,7 @@
-import { Track } from "@/lib/types/playlist";
 import Image from "next/image";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 import { PlayPauseButton, ProgressBar, TimeDisplay } from "./player-controls";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
@@ -54,9 +54,7 @@ export function CurrentTrackPlayer() {
 
 function CurrentTrackPlayerDetailed() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-  const playPrevious = usePlaylistStore((state) => state.playPrevious);
-  // const canPlayPrevious = usePlaylistStore((state) => state.);
-  const playNext = usePlaylistStore((state) => state.playNext);
+  const dispatch = usePlayerStore((state) => state.dispatch);
   // const canPlayNext = usePlaylistStore((state) => state.canPlayNext);
 
   if (!track) {
@@ -132,7 +130,7 @@ function CurrentTrackPlayerDetailed() {
           <div className="flex items-center gap-6 w-full justify-center">
             <button
               className="text-white/70 hover:text-white transition-colors duration-200 cursor-pointer"
-              onClick={playPrevious}
+              onClick={() => dispatch({ type: "UserPreviousTrack" })}
             >
               <SkipBack className="h-5 w-5" />
             </button>
@@ -142,7 +140,7 @@ function CurrentTrackPlayerDetailed() {
             />
             <button
               className="text-white/70 hover:text-white transition-colors duration-200 cursor-pointer"
-              onClick={playNext}
+              onClick={() => dispatch({ type: "UserNextTrack" })}
             >
               <SkipForward className="h-5 w-5" />
             </button>

@@ -12,14 +12,13 @@ import { useHasMounted } from "@/hooks/use-has-mounted";
 export function StickyMiniPlayer() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
   const {
-    togglePlay,
+    dispatch,
     isLoadingNewVideo,
     apiReady,
     pendingPlayState,
     isPlaying,
   } = usePlayerStore();
   const {
-    playNext,
     repeatMode,
     currentTrackIndex,
     playlists,
@@ -114,7 +113,7 @@ export function StickyMiniPlayer() {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 type="button"
-                onClick={togglePlay}
+                onClick={() => dispatch({ type: "UserTogglePlay" })}
                 disabled={
                   isLoadingNewVideo || pendingPlayState !== null || !apiReady
                 }
@@ -130,7 +129,7 @@ export function StickyMiniPlayer() {
               </button>
               <button
                 type="button"
-                onClick={playNext}
+                onClick={() => dispatch({ type: "UserNextTrack" })}
                 disabled={!canPlayNext}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white disabled:opacity-30 hover:bg-white/10 transition-colors"
               >

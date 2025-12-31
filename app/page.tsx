@@ -174,7 +174,7 @@ export default function Home() {
           {view === "grid" ? (
             <Tabs
               value={gridTab}
-              // @ts-ignore - this is a valid type
+              // @ts-expect-error - this is a valid type
               onValueChange={setGridTab}
               className="w-full"
             >

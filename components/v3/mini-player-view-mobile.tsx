@@ -340,11 +340,12 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           onClick={(e) => {
             e.stopPropagation();
           }}
-        ></Link>
-        <p className="truncate text-sm">{track.title}</p>
+        >
+          <p className="truncate text-sm">{track.title || "Loading..."}</p>
+        </Link>
         <div className="flex items-center gap-1.5">
           <p className="truncate text-xs/tight text-neutral-400">
-            {track.author}
+            {track.author || "Unknown Artist"}
           </p>
 
           {/* Dot */}
@@ -373,7 +374,7 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           }}
         >
           <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
-            {track.title}
+            {track.title || "Loading..."}
           </h3>
         </Link>
       </motion.div>
@@ -485,8 +486,8 @@ const PlayerControls = ({
 };
 
 export const NextButton = () => {
+  const dispatch = usePlayerStore((state) => state.dispatch);
   const {
-    playNext,
     repeatMode,
     currentTrackIndex,
     playlists,
@@ -503,7 +504,7 @@ export const NextButton = () => {
   return (
     <button
       type="button"
-      onClick={playNext}
+      onClick={() => dispatch({ type: "UserNextTrack" })}
       disabled={!canPlayNext}
       className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150"
     >
@@ -723,15 +724,13 @@ export function MiniPlayerViewMobile() {
   const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
   const {
-    togglePlay,
+    dispatch,
     isLoadingNewVideo,
     apiReady,
     pendingPlayState,
     isPlaying,
-    skipBackward,
   } = usePlayerStore();
   const {
-    playNext,
     repeatMode,
     currentTrackIndex,
     playlists,
@@ -851,9 +850,9 @@ export function MiniPlayerViewMobile() {
           pendingPlayState={pendingPlayState}
           apiReady={apiReady}
           canPlayNext={canPlayNext}
-          onTogglePlay={togglePlay}
-          onSkipBackward={skipBackward}
-          onPlayNext={playNext}
+          onTogglePlay={() => dispatch({ type: "UserTogglePlay" })}
+          onSkipBackward={() => dispatch({ type: "UserSkipBackward" })}
+          onPlayNext={() => dispatch({ type: "UserNextTrack" })}
           onClose={() => setIsOpen(false)}
         />
       </motion.div>

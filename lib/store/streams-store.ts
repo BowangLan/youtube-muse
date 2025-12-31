@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { GRADIENT_CLASS_NAMES } from "@/lib/intents"
 import type { Stream, Channel } from "@/lib/types/stream"
 import type { Track } from "@/lib/types/playlist"
+import type { ChannelVideoResult } from "@/app/actions/youtube-channels"
 import { usePlaylistStore } from "./playlist-store"
 
 // Available gradient classes for streams (gradients 7-22, excluding built-in 1-6)
@@ -176,7 +177,7 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
             .slice(0, stream.trackLimit)
 
           // Convert to Track format
-          const convertToTrack = (video: any): Track => {
+          const convertToTrack = (video: ChannelVideoResult): Track => {
             // Helper to parse duration (e.g., "3:45" to 225 seconds)
             const parseDuration = (durationText?: string): number => {
               if (!durationText) return 0

@@ -21,7 +21,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
   const reduceMotion = useReducedMotion();
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const dispatch = usePlayerStore((state) => state.dispatch);
   const openIntent = useAppStateStore((state) => state.openIntent);
   const trackCount = playlist.tracks.length;
   const setCurrentPlaylist = usePlaylistStore(
@@ -86,7 +86,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             e.stopPropagation();
             e.preventDefault();
             if (isActive) {
-              togglePlay();
+              dispatch({ type: "UserTogglePlay" });
             } else {
               setCurrentPlaylist(playlist.id);
               setCurrentTrackIndex(0);
@@ -116,7 +116,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             e.stopPropagation();
             e.preventDefault();
             if (isActive) {
-              togglePlay();
+              dispatch({ type: "UserTogglePlay" });
             } else {
               setCurrentPlaylist(playlist.id);
               setCurrentTrackIndex(0);

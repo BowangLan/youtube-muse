@@ -1,32 +1,22 @@
 "use client"
 
 import * as React from "react"
-import type { YTPlayer } from "@/lib/types/youtube"
-import { usePlayerStore } from "@/lib/store/player-store"
+import type { YTPlayer, YTPlayerEvent } from "@/lib/types/youtube"
+import { usePlayerStore, setPlayerCommandRunner } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
+import { runPlayerCommands } from "@/lib/player-shell/cmd-runner"
+import { createPlaylistQueueAdapter } from "@/lib/player-shell/queue-adapter"
 import "@/lib/types/youtube"
 
 export function useYouTubePlayer() {
-  const {
-    setPlayerRef,
-    apiReady,
-    setApiReady,
-    isPlaying,
-    setIsPlaying,
-    setCurrentTime,
-    setDuration,
-    isLoadingNewVideo,
-    setIsLoadingNewVideo,
-    wasPlayingBeforeLoad,
-    setWasPlayingBeforeLoad,
-    pendingPlayState,
-    setPendingPlayState,
-  } = usePlayerStore()
+  const dispatch = usePlayerStore((state) => state.dispatch)
+  const apiReady = usePlayerStore((state) => state.apiReady)
+  const isPlaying = usePlayerStore((state) => state.isPlaying)
 
-  const { playNext, getCurrentTrack, repeatMode } = usePlaylistStore()
+  const { getCurrentTrack } = usePlaylistStore()
 
   const playerRef = React.useRef<YTPlayer | null>(null)
-  const playerReady = React.useRef(false)
+  const queueAdapter = React.useMemo(() => createPlaylistQueueAdapter(), [])
   const currentTrack = getCurrentTrack()
 
   const syncTrackMetadataFromPlayer = React.useCallback(
@@ -48,33 +38,16 @@ export function useYouTubePlayer() {
     []
   )
 
-  // Use ref to store latest callback to avoid stale closures in event handlers
-  const handlePlayNextRef = React.useRef<() => void>(() => { })
-  handlePlayNextRef.current = () => {
-    const player = playerRef.current
-    if (!player) return
-
-    if (repeatMode === "one") {
-      player.seekTo(0, true)
-      player.playVideo()
-      setCurrentTime(0)
-      setPendingPlayState(null)
-      setIsPlaying(true)
-      return
-    }
-
-    const nextTrack = playNext()
-    if (nextTrack) {
-      setWasPlayingBeforeLoad(isPlaying)
-      setIsLoadingNewVideo(true)
-      player.loadVideoById(nextTrack.id)
-    }
-  }
-
-  // Stable wrapper function for event handlers
-  const handlePlayNext = React.useCallback(() => {
-    handlePlayNextRef.current?.()
-  }, [])
+  const runCommands = React.useCallback(
+    (commands: Parameters<typeof runPlayerCommands>[0]) => {
+      runPlayerCommands(commands, {
+        getPlayer: () => playerRef.current,
+        dispatch,
+        queueAdapter,
+      })
+    },
+    [dispatch, queueAdapter]
+  )
 
   // Load YouTube IFrame API
   React.useEffect(() => {
@@ -87,7 +60,7 @@ export function useYouTubePlayer() {
     const markReady = () => {
       if (resolved) return
       resolved = true
-      setApiReady(true)
+      dispatch({ type: "ApiReady" })
     }
 
     // If already available, still wait at least 500ms before setting
@@ -124,7 +97,14 @@ export function useYouTubePlayer() {
     return () => {
       if (readyTimeout) clearTimeout(readyTimeout)
     }
-  }, [setApiReady])
+  }, [dispatch])
+
+  React.useEffect(() => {
+    setPlayerCommandRunner(runCommands)
+    return () => {
+      setPlayerCommandRunner(() => {})
+    }
+  }, [runCommands])
 
   // Initialize player
   React.useEffect(() => {
@@ -135,87 +115,44 @@ export function useYouTubePlayer() {
     const player = new window.YT.Player("youtube-player", {
       height: "1",
       width: "1",
-      videoId: currentTrack?.id || "dQw4w9WgXcQ",
+      videoId: "dQw4w9WgXcQ",
       playerVars: {
         autoplay: 0,
         controls: 0,
         disablekb: 1,
       },
       events: {
-        onReady: (event: any) => {
-          playerReady.current = true
+        onReady: (event: YTPlayerEvent) => {
           const dur = event.target.getDuration()
-          setDuration(dur)
+          dispatch({ type: "PlayerReady", duration: dur })
         },
-        onStateChange: (event: any) => {
-          const newIsPlaying = event.data === window.YT.PlayerState.PLAYING
-
-          // console.log('[onStateChange] New track:', event.target)
-
-          // Update duration when video is cued or playing (new video loaded)
-          const isCuedEvent = event.data === window.YT.PlayerState.CUED
-          const isPlayingEvent =
-            event.data === window.YT.PlayerState.PLAYING
-
-          if (isCuedEvent || isPlayingEvent) {
-            const dur = event.target.getDuration()
-            if (dur > 0) {
-              setDuration(dur)
-              if (isCuedEvent) {
-                setCurrentTime(0) // Only reset when a new video is cued
-              }
-              syncTrackMetadataFromPlayer(event.target, { duration: dur })
-            }
-            // When video is cued, clear loading flag and possibly auto-play
-            if (isCuedEvent && isLoadingNewVideo) {
-              setIsLoadingNewVideo(false)
-              // If we were playing before, resume playback
-              if (wasPlayingBeforeLoad) {
-                setWasPlayingBeforeLoad(false)
-                event.target.playVideo()
-              }
-            }
+        onStateChange: (event: YTPlayerEvent) => {
+          const stateMap: Record<number, "unstarted" | "ended" | "playing" | "paused" | "buffering" | "cued"> = {
+            [-1]: "unstarted",
+            0: "ended",
+            1: "playing",
+            2: "paused",
+            3: "buffering",
+            5: "cued",
           }
+          const mappedState = stateMap[event.data] ?? "unstarted"
+          const duration = event.target.getDuration()
 
-          // If we're loading a new video, don't update playing state to prevent flash
-          if (isLoadingNewVideo) {
-            // Ignore state changes during initial video loading
-            return
-          }
+          dispatch({
+            type: "PlayerStateChanged",
+            state: mappedState,
+            duration: duration > 0 ? duration : undefined,
+          })
 
-          // Update playing state based on YouTube player state
-          // Ignore transient PAUSED events while a play action is pending to avoid UI flashes
-          if (
-            pendingPlayState &&
-            event.data === window.YT.PlayerState.PAUSED
-          ) {
-            return
-          }
-
-          // Clear pending state when we reach a definitive state
-          if (
-            event.data === window.YT.PlayerState.PLAYING ||
-            event.data === window.YT.PlayerState.PAUSED
-          ) {
-            setPendingPlayState(null)
-            setIsPlaying(newIsPlaying)
-          } else {
-            // For other states (BUFFERING, CUED, etc.), only update if no pending operation
-            if (pendingPlayState === null) {
-              setIsPlaying(newIsPlaying)
-            }
-          }
-
-          if (event.data === window.YT.PlayerState.ENDED) {
-            handlePlayNext()
+          if (mappedState === "cued" || mappedState === "playing") {
+            syncTrackMetadataFromPlayer(event.target, { duration })
           }
         },
       },
     })
 
     playerRef.current = player
-    setPlayerRef(player)
-  }, [apiReady, syncTrackMetadataFromPlayer])
+  }, [apiReady, dispatch, syncTrackMetadataFromPlayer])
 
   // Update current time
   React.useEffect(() => {
@@ -226,23 +163,23 @@ export function useYouTubePlayer() {
     const interval = setInterval(() => {
       if (playerRef.current) {
         const time = playerRef.current.getCurrentTime()
-        setCurrentTime(time)
+        dispatch({ type: "TimeTick", currentTime: time })
       }
     }, 250)
 
     return () => clearInterval(interval)
-  }, [isPlaying, setCurrentTime])
+  }, [dispatch, isPlaying])
 
-  // Load new track
+  const lastTrackIdRef = React.useRef<string | null>(null)
+
   React.useEffect(() => {
-    if (currentTrack && playerRef.current && playerReady.current) {
-      playerRef.current.loadVideoById(currentTrack.id)
-      // Duration will be updated in onStateChange event handler
+    const nextTrackId = currentTrack?.id ?? null
+    if (!nextTrackId || nextTrackId === lastTrackIdRef.current) {
+      return
     }
-  }, [currentTrack?.id])
+    lastTrackIdRef.current = nextTrackId
+    dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: true })
+  }, [currentTrack?.id, dispatch])
 
-  return {
-    playerRef: playerRef.current,
-    handlePlayNext,
-  }
+  return undefined
 }

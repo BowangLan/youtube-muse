@@ -127,13 +127,13 @@ function TrackList({ tracks }: { tracks: Track[] }) {
     setCurrentTrackIndex,
     removeTrackFromPlaylist,
   } = usePlaylistStore();
-  const { togglePlay } = usePlayerStore();
+  const { dispatch } = usePlayerStore();
 
   const currentActualTrackIndex = getCurrentActualTrackIndex();
 
   const handleTrackClick = (index: number) => {
     if (currentActualTrackIndex === index) {
-      togglePlay();
+      dispatch({ type: "UserTogglePlay" });
     } else {
       setCurrentTrackIndex(index);
     }

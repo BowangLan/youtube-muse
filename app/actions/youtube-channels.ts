@@ -157,7 +157,7 @@ export async function getChannelById(
   }
 
   try {
-    let channelId = channelIdOrHandle
+    const channelId = channelIdOrHandle
 
     // If it's a handle (@username) or custom URL, search for it first
     if (channelIdOrHandle.startsWith("@") || !channelIdOrHandle.startsWith("UC")) {

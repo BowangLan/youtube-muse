@@ -378,7 +378,7 @@ export function KeywordSelector({
                       No matching keywords found
                     </div>
                     <div className="text-xs text-zinc-500">
-                      Press Enter to create "{searchTerm.trim()}"
+                      Press Enter to create &quot;{searchTerm.trim()}&quot;
                     </div>
                   </div>
                 )

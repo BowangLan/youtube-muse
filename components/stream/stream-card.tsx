@@ -20,7 +20,7 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
   const reduceMotion = useReducedMotion();
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const dispatch = usePlayerStore((state) => state.dispatch);
   const openStream = useAppStateStore((state) => state.openStream);
   const trackCount = playlist.tracks.length;
   const setCurrentPlaylist = usePlaylistStore(
@@ -94,7 +94,7 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
             e.stopPropagation();
             e.preventDefault();
             if (isActive) {
-              togglePlay();
+              dispatch({ type: "UserTogglePlay" });
             } else {
               setCurrentPlaylist(playlist.id);
               setCurrentTrackIndex(0);
@@ -124,7 +124,7 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
             e.stopPropagation();
             e.preventDefault();
             if (isActive) {
-              togglePlay();
+              dispatch({ type: "UserTogglePlay" });
             } else {
               setCurrentPlaylist(playlist.id);
               setCurrentTrackIndex(0);

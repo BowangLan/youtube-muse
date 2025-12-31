@@ -22,7 +22,7 @@ export function PlaylistSection() {
     removeTrackFromPlaylist,
     addTrackToPlaylist,
   } = usePlaylistStore();
-  const { togglePlay, apiReady } = usePlayerStore();
+  const { dispatch, apiReady } = usePlayerStore();
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
   const currentActualTrackIndex = getCurrentActualTrackIndex();
@@ -31,7 +31,7 @@ export function PlaylistSection() {
 
   const handleTrackClick = (index: number) => {
     if (currentActualTrackIndex === index) {
-      togglePlay();
+      dispatch({ type: "UserTogglePlay" });
     } else {
       setCurrentTrackIndex(index);
     }

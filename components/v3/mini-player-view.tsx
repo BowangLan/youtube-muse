@@ -194,7 +194,7 @@ export const TrackAuthorCollapsed = ({ track }: { track: Track }) => {
         className="hover:underline"
       >
         <p className="truncate text-xs/tight text-neutral-400">
-          {track.author}
+          {track.author || "Unknown Artist"}
         </p>
       </Link>
     </motion.div>
@@ -211,7 +211,7 @@ export const TrackAuthorExpanded = ({ track }: { track: Track }) => {
         className="hover:underline"
       >
         <p className="truncate text-sm/tight text-neutral-400">
-          {track.author}
+          {track.author || "Unknown Artist"}
         </p>
       </Link>
     </motion.div>
@@ -231,10 +231,10 @@ const TrackInfo = ({ track, variant }: TrackInfoProps) => {
           className="hover:underline w-fit max-w-[50vw] flex"
         >
           {isCollapsed ? (
-            <p className="truncate text-sm">{track.title}</p>
+            <p className="truncate text-sm">{track.title || "Loading..."}</p>
           ) : (
             <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
-              {track.title}
+              {track.title || "Loading..."}
             </h3>
           )}
         </Link>
@@ -566,15 +566,13 @@ export function MiniPlayerViewDesktop() {
   const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
   const {
-    togglePlay,
+    dispatch,
     isLoadingNewVideo,
     apiReady,
     pendingPlayState,
     isPlaying,
-    skipBackward,
   } = usePlayerStore();
   const {
-    playNext,
     repeatMode,
     currentTrackIndex,
     playlists,
@@ -657,9 +655,9 @@ export function MiniPlayerViewDesktop() {
           pendingPlayState={pendingPlayState}
           apiReady={apiReady}
           canPlayNext={canPlayNext}
-          onTogglePlay={togglePlay}
-          onSkipBackward={skipBackward}
-          onPlayNext={playNext}
+          onTogglePlay={() => dispatch({ type: "UserTogglePlay" })}
+          onSkipBackward={() => dispatch({ type: "UserSkipBackward" })}
+          onPlayNext={() => dispatch({ type: "UserNextTrack" })}
           onToggleExpanded={() => setIsPinned((prev) => !prev)}
         />
       </motion.div>

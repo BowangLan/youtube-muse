@@ -6,19 +6,13 @@ import { usePlaylistStore } from "@/lib/store/playlist-store"
 
 export function useMediaSession() {
   const {
-    playerRef,
+    dispatch,
     isPlaying,
     currentTime,
     duration,
-    togglePlay,
-    seek,
   } = usePlayerStore()
 
-  const {
-    getCurrentTrack,
-    playNext,
-    playPrevious,
-  } = usePlaylistStore()
+  const { getCurrentTrack } = usePlaylistStore()
 
   const currentTrack = getCurrentTrack()
 
@@ -56,35 +50,29 @@ export function useMediaSession() {
     // Play/Pause handlers
     const handlePlay = () => {
       if (!isPlaying) {
-        togglePlay()
+        dispatch({ type: "UserPlay" })
       }
     }
 
     const handlePause = () => {
       if (isPlaying) {
-        togglePlay()
+        dispatch({ type: "UserPause" })
       }
     }
 
     // Track navigation handlers
     const handleNextTrack = () => {
-      const nextTrack = playNext()
-      if (nextTrack && playerRef) {
-        playerRef.loadVideoById(nextTrack.id)
-      }
+      dispatch({ type: "UserNextTrack" })
     }
 
     const handlePreviousTrack = () => {
-      const prevTrack = playPrevious()
-      if (prevTrack && playerRef) {
-        playerRef.loadVideoById(prevTrack.id)
-      }
+      dispatch({ type: "UserPreviousTrack" })
     }
 
     // Seek handler
     const handleSeekTo = (details: MediaSessionActionDetails) => {
       if (details.seekTime !== undefined) {
-        seek(details.seekTime)
+        dispatch({ type: "UserSeek", seconds: details.seekTime })
       }
     }
 
@@ -103,7 +91,7 @@ export function useMediaSession() {
       navigator.mediaSession.setActionHandler("nexttrack", null)
       navigator.mediaSession.setActionHandler("seekto", null)
     }
-  }, [isPlaying, playerRef, togglePlay, seek, playNext, playPrevious])
+  }, [dispatch, isPlaying])
 
   // Update playback position
   React.useEffect(() => {

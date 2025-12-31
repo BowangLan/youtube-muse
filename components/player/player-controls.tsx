@@ -1,17 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  Shuffle,
-  Repeat,
-  Repeat1,
-  Loader2,
-} from "lucide-react";
+import { SkipBack, SkipForward, Volume2, Shuffle, Repeat, Repeat1 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -45,12 +35,11 @@ function PlayerToggleButton({
 }
 
 export function PlayerControls() {
+  const dispatch = usePlayerStore((state) => state.dispatch);
   const {
     playlists,
     currentPlaylistId,
     currentTrackIndex,
-    playNext,
-    playPrevious,
     isShuffleEnabled,
     toggleShuffle,
     repeatMode,
@@ -84,7 +73,7 @@ export function PlayerControls() {
               "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
               "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
             )}
-            onClick={playPrevious}
+            onClick={() => dispatch({ type: "UserPreviousTrack" })}
             disabled={!canPlayPrevious}
             title="Previous"
             type="button"
@@ -127,7 +116,7 @@ export function PlayerControls() {
               "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
               "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
             )}
-            onClick={playNext}
+            onClick={() => dispatch({ type: "UserNextTrack" })}
             disabled={!canPlayNext}
             title="Next"
             type="button"
@@ -191,7 +180,7 @@ export function PlayerControls() {
 
 export const ProgressBar = React.memo(
   ({ className }: { className?: string }) => {
-    const seek = usePlayerStore((state) => state.seek);
+    const dispatch = usePlayerStore((state) => state.dispatch);
     const currentTime = usePlayerStore((state) => state.currentTime);
     const duration = usePlayerStore((state) => state.duration);
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
@@ -208,13 +197,17 @@ export const ProgressBar = React.memo(
           max={duration || 100}
           step="0.1"
           value={currentTime || 0}
-          onChange={(e) => seek(Number(e.target.value))}
+          onChange={(e) =>
+            dispatch({ type: "UserSeek", seconds: Number(e.target.value) })
+          }
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
         />
       </div>
     );
   }
 );
+
+ProgressBar.displayName = "ProgressBar";
 
 export const TimeDisplay = React.memo(
   ({ className }: { className?: string }) => {
@@ -235,12 +228,12 @@ export const TimeDisplay = React.memo(
   }
 );
 
+TimeDisplay.displayName = "TimeDisplay";
+
 export const VolumeControl = React.memo(
   ({ className }: { className?: string }) => {
     const volume = usePlayerStore((state) => state.volume);
-    const handleVolumeChange = usePlayerStore(
-      (state) => state.handleVolumeChange
-    );
+    const dispatch = usePlayerStore((state) => state.dispatch);
 
     return (
       <div
@@ -258,7 +251,9 @@ export const VolumeControl = React.memo(
             max="100"
             step="1"
             value={volume || 0}
-            onChange={(e) => handleVolumeChange(Number(e.target.value))}
+            onChange={(e) =>
+              dispatch({ type: "UserSetVolume", volume: Number(e.target.value) })
+            }
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
@@ -269,6 +264,8 @@ export const VolumeControl = React.memo(
     );
   }
 );
+
+VolumeControl.displayName = "VolumeControl";
 
 export const PlayPauseButton = React.memo(
   ({
@@ -281,7 +278,7 @@ export const PlayPauseButton = React.memo(
     variant?: "default" | "ghost";
   }) => {
     const isPlaying = usePlayerStore((state) => state.isPlaying);
-    const togglePlay = usePlayerStore((state) => state.togglePlay);
+    const dispatch = usePlayerStore((state) => state.dispatch);
     const isLoadingNewVideo = usePlayerStore(
       (state) => state.isLoadingNewVideo
     );
@@ -300,7 +297,7 @@ export const PlayPauseButton = React.memo(
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          togglePlay();
+          dispatch({ type: "UserTogglePlay" });
         }}
         disabled={isLoadingNewVideo || !apiReady}
       >
@@ -327,3 +324,5 @@ export const PlayPauseButton = React.memo(
     );
   }
 );
+
+PlayPauseButton.displayName = "PlayPauseButton";

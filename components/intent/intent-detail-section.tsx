@@ -63,7 +63,7 @@ export function IntentDetailSection() {
     (state) => state.removeTrackFromPlaylist
   );
 
-  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const dispatch = usePlayerStore((state) => state.dispatch);
 
   const customIntents = useCustomIntentsStore((state) => state.customIntents);
   const removeCustomIntent = useCustomIntentsStore(
@@ -130,8 +130,8 @@ export function IntentDetailSection() {
 
   // Get minimum duration - check for custom intent, override, or default to 20
   const minDuration = React.useMemo((): number => {
-    if (isCustomIntent && activeIntent && "minDuration" in activeIntent) {
-      return (activeIntent as any).minDuration ?? 20;
+    if (isCustomIntent && activeIntent && "isCustom" in activeIntent) {
+      return activeIntent.minDuration ?? 20;
     }
     if (activePlaylistId) {
       return minDurationOverrides[activePlaylistId] ?? 20;
@@ -149,7 +149,7 @@ export function IntentDetailSection() {
         // setCurrentPlaylist resets to index 0, so we need to set the correct index
         setCurrentTrackIndex(index);
       } else if (currentActualTrackIndex === index) {
-        togglePlay();
+        dispatch({ type: "UserTogglePlay" });
       } else {
         setCurrentTrackIndex(index);
       }
@@ -158,7 +158,7 @@ export function IntentDetailSection() {
       activePlaylistId,
       currentPlaylistId,
       currentActualTrackIndex,
-      togglePlay,
+      dispatch,
       setCurrentPlaylist,
       setCurrentTrackIndex,
     ]

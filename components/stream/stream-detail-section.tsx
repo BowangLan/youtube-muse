@@ -28,7 +28,7 @@ export function StreamDetailSection() {
   const setCurrentPlaylist = usePlaylistStore(
     (state) => state.setCurrentPlaylist
   );
-  const togglePlay = usePlayerStore((state) => state.togglePlay);
+  const dispatch = usePlayerStore((state) => state.dispatch);
 
   const streams = useStreamsStore((state) => state.streams);
   const deleteStream = useStreamsStore((state) => state.deleteStream);
@@ -70,7 +70,7 @@ export function StreamDetailSection() {
         setCurrentPlaylist(activePlaylistId);
         setCurrentTrackIndex(index);
       } else if (currentActualTrackIndex === index) {
-        togglePlay();
+        dispatch({ type: "UserTogglePlay" });
       } else {
         setCurrentTrackIndex(index);
       }
@@ -79,7 +79,7 @@ export function StreamDetailSection() {
       activePlaylistId,
       currentPlaylistId,
       currentActualTrackIndex,
-      togglePlay,
+      dispatch,
       setCurrentPlaylist,
       setCurrentTrackIndex,
     ]

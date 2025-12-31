@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 
 interface ImageColors {
   dominant: string;
@@ -8,11 +8,32 @@ interface ImageColors {
 }
 
 export function useImageColors(imageUrl: string | undefined): ImageColors | null {
-  const [colors, setColors] = useState<ImageColors | null>(null);
+  const store = useMemo(() => {
+    const valueRef = { current: null as ImageColors | null };
+    const listeners = new Set<() => void>();
+
+    return {
+      getSnapshot: () => valueRef.current,
+      set: (next: ImageColors | null) => {
+        valueRef.current = next;
+        listeners.forEach((listener) => listener());
+      },
+      subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+  }, []);
+
+  const colors = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    () => null
+  );
 
   useEffect(() => {
     if (!imageUrl) {
-      setColors(null);
+      store.set(null);
       return;
     }
 
@@ -84,18 +105,18 @@ export function useImageColors(imageUrl: string | undefined): ImageColors | null
 
         const [dr, dg, db] = dominantBucket.split(",").map((n) => parseInt(n) * 32 + 16);
 
-        setColors({
+        store.set({
           dominant: `rgb(${dr}, ${dg}, ${db})`,
           vibrant: `rgb(${mostVibrantColor.r}, ${mostVibrantColor.g}, ${mostVibrantColor.b})`,
         });
       } catch (error) {
         console.error("Error extracting colors:", error);
-        setColors(null);
+        store.set(null);
       }
     };
 
     extractColors();
-  }, [imageUrl]);
+  }, [imageUrl, store]);
 
   return colors;
 }

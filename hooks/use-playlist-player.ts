@@ -13,22 +13,16 @@ import { usePlayerStore } from "@/lib/store/player-store"
 export function usePlaylistPlayer() {
   const {
     getCurrentTrack,
-    playNext,
-    playPrevious,
     currentPlaylistId,
     currentTrackIndex,
   } = usePlaylistStore()
 
   const {
+    dispatch,
     isPlaying,
     currentTime,
     duration,
     volume,
-    togglePlay,
-    seek,
-    handleVolumeChange,
-    skipForward,
-    skipBackward,
   } = usePlayerStore()
 
   const currentTrack = getCurrentTrack()
@@ -53,17 +47,17 @@ export function usePlaylistPlayer() {
     isReady,
 
     // Player controls
-    play: togglePlay,
-    pause: togglePlay,
-    togglePlay,
-    seek,
-    setVolume: handleVolumeChange,
-    skipForward,
-    skipBackward,
+    play: () => dispatch({ type: "UserPlay" }),
+    pause: () => dispatch({ type: "UserPause" }),
+    togglePlay: () => dispatch({ type: "UserTogglePlay" }),
+    seek: (time: number) => dispatch({ type: "UserSeek", seconds: time }),
+    setVolume: (value: number) => dispatch({ type: "UserSetVolume", volume: value }),
+    skipForward: () => dispatch({ type: "UserSkipForward" }),
+    skipBackward: () => dispatch({ type: "UserSkipBackward" }),
 
     // Playlist controls
-    playNext,
-    playPrevious,
+    playNext: () => dispatch({ type: "UserNextTrack" }),
+    playPrevious: () => dispatch({ type: "UserPreviousTrack" }),
     currentTrack,
     currentPlaylistId,
     currentTrackIndex,
