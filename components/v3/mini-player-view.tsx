@@ -200,7 +200,7 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
 
   return (
     <div className={cn("min-w-0", !isCollapsed && "flex flex-col gap-3")}>
-      <motion.div layoutId="track-title">
+      <div key={`title-${track.id}`}>
         <Link
           href={`https://www.youtube.com/watch?v=${track.id}`}
           target="_blank"
@@ -215,8 +215,8 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
             </h3>
           )}
         </Link>
-      </motion.div>
-      <motion.div layoutId="track-author">
+      </div>
+      <div key={`author-${track.id}`}>
         <Link
           href={track.authorUrl ?? ""}
           target="_blank"
@@ -232,7 +232,7 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
             {track.author || "Unknown Artist"}
           </p>
         </Link>
-      </motion.div>
+      </div>
     </div>
   );
 };
