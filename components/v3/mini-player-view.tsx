@@ -9,7 +9,6 @@ import {
   Variants,
   useReducedMotion,
 } from "motion/react";
-import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
@@ -19,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
+import { MiniPlayerProvider, useMiniPlayerContext } from "./mini-player-context";
 
 // =============================================================================
 // Constants
@@ -55,40 +55,25 @@ const getContainerVariants = (reduceMotion: boolean): Variants => ({
 // =============================================================================
 
 interface GlowLayerProps {
-  isPlaying: boolean;
   glowStyle: React.CSSProperties;
   variant: "collapsed" | "expanded";
 }
 
 interface TrackCoverProps {
-  track: Track;
-  isPlaying: boolean;
   glowStyle: React.CSSProperties;
 }
 
 interface TrackInfoProps {
-  track: Track;
   variant: "collapsed" | "expanded";
-}
-
-interface PlayerControlsProps {
-  isPlaying: boolean;
-  isLoadingNewVideo: boolean;
-  pendingPlayState: boolean | null;
-  apiReady: boolean;
-  canPlayNext: boolean;
-  onTogglePlay: () => void;
-  onSkipBackward: () => void;
-  onPlayNext: () => void;
 }
 
 // =============================================================================
 // Subcomponents
 // =============================================================================
 
-const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
+const GlowLayer = ({ glowStyle, variant }: GlowLayerProps) => {
   const reduceMotion = useReducedMotion();
-  const borderRadius = variant === "collapsed" ? "rounded-md" : "rounded-lg";
+  const { isPlaying } = useMiniPlayerContext();
 
   return (
     <AnimatePresence>
@@ -100,7 +85,7 @@ const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
           transition={{ duration: reduceMotion ? 0 : 0.6, ease: "easeInOut" }}
           className={cn(
             "absolute inset-0 pointer-events-none animate-glow-pulse motion-reduce:animate-none",
-            borderRadius
+            variant === "collapsed" ? "rounded-md" : "rounded-lg"
           )}
           style={{
             zIndex: -1,
@@ -112,12 +97,11 @@ const GlowLayer = ({ isPlaying, glowStyle, variant }: GlowLayerProps) => {
   );
 };
 
-const TrackCoverCollapsed = ({
-  track,
-  isPlaying,
-  glowStyle,
-}: TrackCoverProps) => {
+const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
   const reduceMotion = useReducedMotion();
+  const { track } = useMiniPlayerContext();
+
+  if (!track) return null;
 
   return (
     <motion.div
@@ -137,21 +121,16 @@ const TrackCoverCollapsed = ({
           className="object-cover"
         />
       </div>
-      <GlowLayer
-        isPlaying={isPlaying}
-        glowStyle={glowStyle}
-        variant="collapsed"
-      />
+      <GlowLayer glowStyle={glowStyle} variant="collapsed" />
     </motion.div>
   );
 };
 
-const TrackCoverExpanded = ({
-  track,
-  isPlaying,
-  glowStyle,
-}: TrackCoverProps) => {
+const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   const reduceMotion = useReducedMotion();
+  const { track } = useMiniPlayerContext();
+
+  if (!track) return null;
 
   return (
     <motion.div
@@ -175,11 +154,7 @@ const TrackCoverExpanded = ({
           className="object-cover"
         />
       </div>
-      <GlowLayer
-        isPlaying={isPlaying}
-        glowStyle={glowStyle}
-        variant="expanded"
-      />
+      <GlowLayer glowStyle={glowStyle} variant="expanded" />
     </motion.div>
   );
 };
@@ -218,8 +193,11 @@ export const TrackAuthorExpanded = ({ track }: { track: Track }) => {
   );
 };
 
-const TrackInfo = ({ track, variant }: TrackInfoProps) => {
+const TrackInfo = ({ variant }: TrackInfoProps) => {
+  const { track } = useMiniPlayerContext();
   const isCollapsed = variant === "collapsed";
+
+  if (!track) return null;
 
   return (
     <div className={cn("min-w-0", !isCollapsed && "flex flex-col gap-3")}>
@@ -283,16 +261,18 @@ const ProgressSection = ({ isExpanded }: { isExpanded: boolean }) => {
   );
 };
 
-const PlayerControls = ({
-  isPlaying,
-  isLoadingNewVideo,
-  pendingPlayState,
-  apiReady,
-  canPlayNext,
-  onTogglePlay,
-  onSkipBackward,
-  onPlayNext,
-}: PlayerControlsProps) => {
+const PlayerControls = () => {
+  const {
+    isPlaying,
+    isLoadingNewVideo,
+    pendingPlayState,
+    apiReady,
+    canPlayNext,
+    onTogglePlay,
+    onSkipBackward,
+    onPlayNext,
+  } = useMiniPlayerContext();
+
   const controlButtonClass =
     "flex h-11 w-11 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
 
@@ -425,17 +405,14 @@ function useGlowStyle(colors: ReturnType<typeof useImageColors>) {
 // =============================================================================
 
 const CollapsedStateView = ({
-  track,
-  isPlaying,
   glowStyle,
-  isExpanded,
 }: {
-  track: Track;
-  isPlaying: boolean;
   glowStyle: React.CSSProperties;
-  isExpanded: boolean;
 }) => {
   const reduceMotion = useReducedMotion();
+  const { track, isExpanded } = useMiniPlayerContext();
+
+  if (!track) return null;
 
   return (
     <motion.div
@@ -448,13 +425,9 @@ const CollapsedStateView = ({
       transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.4, 0, 0.2, 1] }}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <TrackCoverCollapsed
-          track={track}
-          isPlaying={isPlaying}
-          glowStyle={glowStyle}
-        />
+        <TrackCoverCollapsed glowStyle={glowStyle} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <TrackInfo track={track} variant="collapsed" />
+          <TrackInfo variant="collapsed" />
           <ProgressBar className="h-1" />
         </div>
       </div>
@@ -467,33 +440,14 @@ const CollapsedStateView = ({
 // =============================================================================
 
 const ExpandedStateView = ({
-  track,
-  isPlaying,
   glowStyle,
-  isExpanded,
-  isLoadingNewVideo,
-  pendingPlayState,
-  apiReady,
-  canPlayNext,
-  onTogglePlay,
-  onSkipBackward,
-  onPlayNext,
-  onToggleExpanded,
 }: {
-  track: Track;
-  isPlaying: boolean;
   glowStyle: React.CSSProperties;
-  isExpanded: boolean;
-  isLoadingNewVideo: boolean;
-  pendingPlayState: boolean | null;
-  apiReady: boolean;
-  canPlayNext: boolean;
-  onTogglePlay: () => void;
-  onSkipBackward: () => void;
-  onPlayNext: () => void;
-  onToggleExpanded: () => void;
 }) => {
   const reduceMotion = useReducedMotion();
+  const { track, isExpanded, onToggleExpanded } = useMiniPlayerContext();
+
+  if (!track) return null;
 
   return (
     <motion.div
@@ -513,32 +467,21 @@ const ExpandedStateView = ({
         gap: EXPANDED_PADDING,
       }}
     >
-      <TrackCoverExpanded
-        track={track}
-        isPlaying={isPlaying}
-        glowStyle={glowStyle}
-      />
+      <TrackCoverExpanded glowStyle={glowStyle} />
 
       <div className="flex flex-col flex-1">
         <div className="flex items-start justify-between gap-4">
-          <TrackInfo track={track} variant="expanded" />
-          <ExpandToggleButton
-            isExpanded={isExpanded}
-            onToggle={onToggleExpanded}
-          />
+          <TrackInfo variant="expanded" />
+          {onToggleExpanded && (
+            <ExpandToggleButton
+              isExpanded={isExpanded}
+              onToggle={onToggleExpanded}
+            />
+          )}
         </div>
         <ProgressSection isExpanded={isExpanded} />
         <AnimatedControlsWrapper isExpanded={isExpanded}>
-          <PlayerControls
-            isPlaying={isPlaying}
-            isLoadingNewVideo={isLoadingNewVideo}
-            pendingPlayState={pendingPlayState}
-            apiReady={apiReady}
-            canPlayNext={canPlayNext}
-            onTogglePlay={onTogglePlay}
-            onSkipBackward={onSkipBackward}
-            onPlayNext={onPlayNext}
-          />
+          <PlayerControls />
         </AnimatedControlsWrapper>
       </div>
     </motion.div>
@@ -565,19 +508,6 @@ export const BackgroundOverlay = () => (
 export function MiniPlayerViewDesktop() {
   const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-  const {
-    dispatch,
-    isLoadingNewVideo,
-    apiReady,
-    pendingPlayState,
-    isPlaying,
-  } = usePlayerStore();
-  const {
-    repeatMode,
-    currentTrackIndex,
-    playlists,
-    currentPlaylistId,
-  } = usePlaylistStore();
 
   const [isHovered, setIsHovered] = React.useState(false);
   const [isPinned, setIsPinned] = React.useState(false);
@@ -597,13 +527,6 @@ export function MiniPlayerViewDesktop() {
     [reduceMotion]
   );
 
-  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
-  const canPlayNext =
-    !!currentPlaylist &&
-    (repeatMode === "playlist"
-      ? currentPlaylist.tracks.length > 0
-      : currentTrackIndex < currentPlaylist.tracks.length - 1);
-
   if (!track) {
     return (
       <div
@@ -616,51 +539,36 @@ export function MiniPlayerViewDesktop() {
     );
   }
 
-  const _isPlaying = isPlaying || pendingPlayState !== null;
-
   return (
     <div
       className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40"
       style={{ minHeight: COLLAPSED_HEIGHT }}
     >
-      <motion.div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        layout
-        className={cn(
-          "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
-          isExpanded ? "border-zinc-500/20" : "border-zinc-500/20",
-          _isPlaying && "animate-container-glow"
-        )}
-        style={{ ...glowStyle, ...(reduceMotion ? {} : beatStyle) }}
-        variants={containerVariants}
-        initial="collapsed"
-        animate={isExpanded ? "expanded" : "collapsed"}
+      <MiniPlayerProvider
+        isExpanded={isExpanded}
+        onToggleExpanded={() => setIsPinned((prev) => !prev)}
       >
-        <BackgroundOverlay />
+        <motion.div
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          layout
+          className={cn(
+            "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
+            isExpanded ? "border-zinc-500/20" : "border-zinc-500/20",
+            "animate-container-glow"
+          )}
+          style={{ ...glowStyle, ...(reduceMotion ? {} : beatStyle) }}
+          variants={containerVariants}
+          initial="collapsed"
+          animate={isExpanded ? "expanded" : "collapsed"}
+        >
+          <BackgroundOverlay />
 
-        <CollapsedStateView
-          track={track}
-          isPlaying={_isPlaying}
-          glowStyle={glowStyle}
-          isExpanded={isExpanded}
-        />
+          <CollapsedStateView glowStyle={glowStyle} />
 
-        <ExpandedStateView
-          track={track}
-          isPlaying={_isPlaying}
-          glowStyle={glowStyle}
-          isExpanded={isExpanded}
-          isLoadingNewVideo={isLoadingNewVideo}
-          pendingPlayState={pendingPlayState}
-          apiReady={apiReady}
-          canPlayNext={canPlayNext}
-          onTogglePlay={() => dispatch({ type: "UserTogglePlay" })}
-          onSkipBackward={() => dispatch({ type: "UserSkipBackward" })}
-          onPlayNext={() => dispatch({ type: "UserNextTrack" })}
-          onToggleExpanded={() => setIsPinned((prev) => !prev)}
-        />
-      </motion.div>
+          <ExpandedStateView glowStyle={glowStyle} />
+        </motion.div>
+      </MiniPlayerProvider>
     </div>
   );
 }
