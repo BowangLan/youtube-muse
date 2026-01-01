@@ -7,8 +7,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 
 export function AnimatedBackground() {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack);
-  const currentTrack = getCurrentTrack();
+  const currentTrack = usePlaylistStore((state) => state.getCurrentTrack());
 
   const thumbnailUrl = currentTrack?.thumbnailUrl;
 

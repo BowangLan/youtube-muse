@@ -10,9 +10,7 @@ export function useMediaSession() {
   const currentTime = usePlayerStore((state) => state.currentTime)
   const duration = usePlayerStore((state) => state.duration)
 
-  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack)
-
-  const currentTrack = getCurrentTrack()
+  const currentTrack = usePlaylistStore((state) => state.getCurrentTrack())
 
   // Update track metadata
   React.useEffect(() => {

@@ -13,11 +13,10 @@ export function useYouTubePlayer() {
   const apiReady = usePlayerStore((state) => state.apiReady)
   const isPlaying = usePlayerStore((state) => state.isPlaying)
 
-  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack)
+  const currentTrack = usePlaylistStore((state) => state.getCurrentTrack())
 
   const playerRef = React.useRef<YTPlayer | null>(null)
   const queueAdapter = React.useMemo(() => createPlaylistQueueAdapter(), [])
-  const currentTrack = getCurrentTrack()
 
   const syncTrackMetadataFromPlayer = React.useCallback(
     (playerInstance: YTPlayer, metadata?: { duration?: number }) => {

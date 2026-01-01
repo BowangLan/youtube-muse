@@ -11,19 +11,16 @@ import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export function StickyMiniPlayer() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-  const {
-    dispatch,
-    isLoadingNewVideo,
-    apiReady,
-    pendingPlayState,
-    isPlaying,
-  } = usePlayerStore();
-  const {
-    repeatMode,
-    currentTrackIndex,
-    playlists,
-    currentPlaylistId,
-  } = usePlaylistStore();
+  const dispatch = usePlayerStore((state) => state.dispatch);
+  const isLoadingNewVideo = usePlayerStore((state) => state.isLoadingNewVideo);
+  const apiReady = usePlayerStore((state) => state.apiReady);
+  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+
+  const repeatMode = usePlaylistStore((state) => state.repeatMode);
+  const currentTrackIndex = usePlaylistStore((state) => state.currentTrackIndex);
+  const playlists = usePlaylistStore((state) => state.playlists);
+  const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
   // const hasMounted = useHasMounted();
 
   const [isPlayerHidden, setIsPlayerHidden] = React.useState(false);
