@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:youtube-unofficial": "node scripts/test-unofficial-latest-videos.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
