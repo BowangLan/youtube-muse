@@ -12,7 +12,7 @@ import { useHasMounted } from "@/hooks/use-has-mounted";
 // Using the AnimatedPlayerHeader component instead
 export function NowPlaying() {
   const hasMounted = useHasMounted();
-  const { getCurrentTrack } = usePlaylistStore();
+  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack);
   const track = hasMounted ? getCurrentTrack() : null;
   if (!track) {
     return (

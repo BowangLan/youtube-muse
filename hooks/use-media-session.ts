@@ -5,14 +5,12 @@ import { usePlayerStore } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 
 export function useMediaSession() {
-  const {
-    dispatch,
-    isPlaying,
-    currentTime,
-    duration,
-  } = usePlayerStore()
+  const dispatch = usePlayerStore((state) => state.dispatch)
+  const isPlaying = usePlayerStore((state) => state.isPlaying)
+  const currentTime = usePlayerStore((state) => state.currentTime)
+  const duration = usePlayerStore((state) => state.duration)
 
-  const { getCurrentTrack } = usePlaylistStore()
+  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack)
 
   const currentTrack = getCurrentTrack()
 

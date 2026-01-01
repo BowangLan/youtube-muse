@@ -22,7 +22,8 @@ export function PlaylistSection() {
     removeTrackFromPlaylist,
     addTrackToPlaylist,
   } = usePlaylistStore();
-  const { dispatch, apiReady } = usePlayerStore();
+  const dispatch = usePlayerStore((state) => state.dispatch);
+  const apiReady = usePlayerStore((state) => state.apiReady);
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
   const currentActualTrackIndex = getCurrentActualTrackIndex();

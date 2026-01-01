@@ -13,7 +13,7 @@ export function useYouTubePlayer() {
   const apiReady = usePlayerStore((state) => state.apiReady)
   const isPlaying = usePlayerStore((state) => state.isPlaying)
 
-  const { getCurrentTrack } = usePlaylistStore()
+  const getCurrentTrack = usePlaylistStore((state) => state.getCurrentTrack)
 
   const playerRef = React.useRef<YTPlayer | null>(null)
   const queueAdapter = React.useMemo(() => createPlaylistQueueAdapter(), [])

@@ -18,7 +18,7 @@ const FOLLOWING_CARD_SHIFT = 100;
 export function PlaylistSectionCardsVariant() {
   const { playlists, currentPlaylistId, addTrackToPlaylist } =
     usePlaylistStore();
-  const { apiReady } = usePlayerStore();
+  const apiReady = usePlayerStore((state) => state.apiReady);
   const hasMounted = useHasMounted();
 
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
@@ -127,7 +127,7 @@ function TrackList({ tracks }: { tracks: Track[] }) {
     setCurrentTrackIndex,
     removeTrackFromPlaylist,
   } = usePlaylistStore();
-  const { dispatch } = usePlayerStore();
+  const dispatch = usePlayerStore((state) => state.dispatch);
 
   const currentActualTrackIndex = getCurrentActualTrackIndex();
 
@@ -177,7 +177,8 @@ function TrackItem({
   hoveredIndex,
   onHoverChange,
 }: TrackItemProps) {
-  const { pendingPlayState, isPlaying } = usePlayerStore();
+  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
   const _isPlaying = isPlaying || pendingPlayState !== null;
   const baseTranslate = index * CARD_OVERLAP;
   const hoverShift =

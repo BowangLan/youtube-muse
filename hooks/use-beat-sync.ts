@@ -40,7 +40,7 @@ const SMOOTHING_FACTOR = 0.8; // Intensity decay factor
  * Beat detection uses energy-based analysis of low frequencies (bass/kick).
  */
 export function useBeatSync(): BeatSyncState {
-  const { isPlaying } = usePlayerStore();
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
 
   const [bpm, setBpm] = useState(DEFAULT_BPM);
   const [intensity, setIntensity] = useState(0);
@@ -295,7 +295,7 @@ export function useBeatSync(): BeatSyncState {
  */
 export function useBeatSyncStyles() {
   const { pulseInterval, intensity, bpm, isListening, startListening, stopListening, error } = useBeatSync();
-  const { isPlaying } = usePlayerStore();
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
 
   return {
     style: {
