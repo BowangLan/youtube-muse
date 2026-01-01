@@ -211,7 +211,7 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
           {stream.channels.length} channel
           {stream.channels.length !== 1 ? "s" : ""}
         </span>
-        <span>{trackCount} tracks</span>
+        <span className="hidden sm:inline">{trackCount} tracks</span>
       </div>
     </div>
   );
