@@ -155,7 +155,6 @@ export function StreamDetailSection() {
       // Add the channel to the stream
       updateStream(activeStream.id, {
         channels: [...activeStream.channels, { ...channel, id: channelId }],
-        updatedAt: Date.now(),
       });
     },
     [activeStream, updateStream]
