@@ -157,6 +157,9 @@ export function CreateIntentDialog({
 
       // Search for tracks using the keywords
       const query = buildCustomIntentQuery(keywordList);
+      if (typeof window !== 'undefined' && window.umami) {
+        window.umami.track('youtube-api-search-videos', { context: 'create-intent', intentName: trimmedName });
+      }
       const { results, error: searchError } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
         order: "relevance",

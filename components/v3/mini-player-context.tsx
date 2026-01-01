@@ -51,19 +51,18 @@ export function MiniPlayerProvider({
   onClose,
 }: MiniPlayerProviderProps) {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-  const {
-    dispatch,
-    isLoadingNewVideo,
-    apiReady,
-    pendingPlayState,
-    isPlaying,
-  } = usePlayerStore();
-  const {
-    repeatMode,
-    currentTrackIndex,
-    playlists,
-    currentPlaylistId,
-  } = usePlaylistStore();
+
+  // Use selectors to only subscribe to specific properties
+  const dispatch = usePlayerStore((state) => state.dispatch);
+  const isLoadingNewVideo = usePlayerStore((state) => state.isLoadingNewVideo);
+  const apiReady = usePlayerStore((state) => state.apiReady);
+  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+
+  const repeatMode = usePlaylistStore((state) => state.repeatMode);
+  const currentTrackIndex = usePlaylistStore((state) => state.currentTrackIndex);
+  const playlists = usePlaylistStore((state) => state.playlists);
+  const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
 
   const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
   const canPlayNext =

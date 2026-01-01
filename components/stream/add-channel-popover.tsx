@@ -45,6 +45,9 @@ export function AddChannelPopover({
     setError(null);
 
     try {
+      if (typeof window !== 'undefined' && window.umami) {
+        window.umami.track('youtube-api-search-channels', { context: 'add-channel-popover', query: query.substring(0, 50) });
+      }
       const { results, error: searchError } = await searchYouTubeChannels(
         query
       );

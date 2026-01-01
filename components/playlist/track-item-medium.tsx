@@ -64,7 +64,9 @@ export function TrackItemMedium({
   onClick: () => void;
   onRemove: () => void;
 }) {
-  const { pendingPlayState, isPlaying } = usePlayerStore();
+  // Use selectors to only subscribe to specific properties
+  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
   const _isPlaying = isPlaying || pendingPlayState !== null;
 
   return (

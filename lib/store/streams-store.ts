@@ -157,6 +157,15 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
           // Calculate tracks per channel
           const tracksPerChannel = Math.ceil(stream.trackLimit / stream.channels.length)
 
+          // Track API usage
+          if (typeof window !== 'undefined' && window.umami) {
+            window.umami.track('youtube-api-get-channel-videos', {
+              context: 'refresh-stream',
+              streamId: streamId,
+              channelCount: stream.channels.length
+            });
+          }
+
           // Fetch videos from all channels in parallel
           const allVideosResults = await Promise.all(
             stream.channels.map((ch) => getChannelLatestVideos(ch.id, ch.title, tracksPerChannel, ch.thumbnailUrl))

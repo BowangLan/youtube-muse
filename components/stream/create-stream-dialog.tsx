@@ -101,6 +101,9 @@ export function CreateStreamDialog({
         lastSearchTimeRef.current = Date.now();
 
         try {
+          if (typeof window !== 'undefined' && window.umami) {
+            window.umami.track('youtube-api-search-channels', { context: 'create-stream-dialog', query: channelInput.substring(0, 50) });
+          }
           const { results } = await searchYouTubeChannels(channelInput);
 
           // Only update if this search wasn't aborted
@@ -184,6 +187,9 @@ export function CreateStreamDialog({
       if (channelId) {
         setIsSearching(true);
         try {
+          if (typeof window !== 'undefined' && window.umami) {
+            window.umami.track('youtube-api-get-channel', { context: 'create-stream-dialog' });
+          }
           const { channel, error: fetchError } = await getChannelById(
             channelId
           );

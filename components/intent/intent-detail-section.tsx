@@ -120,6 +120,9 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
+      if (typeof window !== 'undefined' && window.umami) {
+        window.umami.track('youtube-api-search-videos', { context: 'intent-add-track', intent: activePlaylist.name });
+      }
       const { results } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
         order: "relevance",
@@ -155,6 +158,9 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
+      if (typeof window !== 'undefined' && window.umami) {
+        window.umami.track('youtube-api-search-videos', { context: 'intent-refresh', intent: activePlaylist.name });
+      }
       const { results } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
         order: "relevance",

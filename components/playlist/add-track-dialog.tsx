@@ -103,6 +103,9 @@ export function AddTrackDialogContent({
     setError(null);
 
     try {
+      if (typeof window !== 'undefined' && window.umami) {
+        window.umami.track('youtube-api-search-videos', { context: 'add-track-dialog', query: query.substring(0, 50) });
+      }
       const { results, error: searchError } = await searchYouTubeVideos(query);
 
       if (searchError) {
