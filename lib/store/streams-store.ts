@@ -5,6 +5,7 @@ import type { Stream, Channel } from "@/lib/types/stream"
 import type { Track } from "@/lib/types/playlist"
 import type { ChannelVideoResult } from "@/app/actions/youtube-channels"
 import { usePlaylistStore } from "./playlist-store"
+import { getChannelLatestVideos } from "@/app/actions/youtube-channels"
 
 // Available gradient classes for streams (gradients 7-22, excluding built-in 1-6)
 const CUSTOM_STREAM_GRADIENTS = GRADIENT_CLASS_NAMES.slice(6)
@@ -34,8 +35,9 @@ interface StreamsActions {
   updateLastRefreshed: (streamId: string) => void
 
   // Bulk operations
-  refreshAllStreams: () => Promise<void>
-  refreshStream: (streamId: string) => Promise<void>
+  // Deprecated
+  _refreshAllStreams: () => Promise<void>
+  _refreshStream: (streamId: string) => Promise<void>
 }
 
 const generateId = () => {
@@ -131,20 +133,20 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
         }))
       },
 
-      refreshAllStreams: async () => {
-        const { streams, refreshStream } = get()
+      _refreshAllStreams: async () => {
+        const { streams, _refreshStream } = get()
 
         // Refresh all streams in parallel
         await Promise.all(
           streams.map((stream) =>
-            refreshStream(stream.id).catch((error) => {
+            _refreshStream(stream.id).catch((error) => {
               console.error(`Failed to refresh stream ${stream.id}:`, error)
             })
           )
         )
       },
 
-      refreshStream: async (streamId) => {
+      _refreshStream: async (streamId) => {
         const stream = get().getStream(streamId)
         if (!stream || stream.channels.length === 0) {
           return
@@ -152,7 +154,6 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
 
         try {
           // Import server action dynamically to avoid circular dependency
-          const { getChannelLatestVideos } = await import("@/app/actions/youtube-channels")
 
           // Calculate tracks per channel
           const tracksPerChannel = Math.ceil(stream.trackLimit / stream.channels.length)
@@ -181,6 +182,8 @@ export const useStreamsStore = create<StreamsState & StreamsActions>()(
             .sort((a, b) => {
               const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
               const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
+              // Return 0 if either date is invalid (both will be 0)
+              if (isNaN(dateA) || isNaN(dateB)) return 0;
               return dateB - dateA // Newer first (descending order)
             })
             .slice(0, stream.trackLimit)

@@ -1,5 +1,5 @@
-const channelId = "UCWXYDYv5STLk-zoxMP2I1Lw"
-const url = `https://www.youtube.com/channel/${channelId}/videos?view=0&sort=dd&flow=grid`
+const channelId = "@LofiZenSpot"
+const url = `https://youtube.com/${channelId}/videos?view=0&sort=dd&flow=grid`
 
 const extractJsonBlock = (html, marker) => {
   const markerIndex = html.indexOf(marker)

@@ -33,7 +33,7 @@ export function StreamDetailSection() {
   const streams = useStreamsStore((state) => state.streams);
   const deleteStream = useStreamsStore((state) => state.deleteStream);
   const updateStream = useStreamsStore((state) => state.updateStream);
-  const refreshStream = useStreamsStore((state) => state.refreshStream);
+  // const refreshStream = useStreamsStore((state) => state.refreshStream);
   const removeTrackFromPlaylist = usePlaylistStore(
     (state) => state.removeTrackFromPlaylist
   );
@@ -55,7 +55,7 @@ export function StreamDetailSection() {
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
     isShuffleEnabled && shuffleOrder.length > 0
-      ? shuffleOrder[currentTrackIndex] ?? currentTrackIndex
+      ? (shuffleOrder[currentTrackIndex] ?? currentTrackIndex)
       : currentTrackIndex;
 
   // Get gradient
@@ -85,18 +85,18 @@ export function StreamDetailSection() {
     ]
   );
 
-  const handleRefreshStream = React.useCallback(async () => {
-    if (!activeStream) return;
+  // const handleRefreshStream = React.useCallback(async () => {
+  //   if (!activeStream) return;
 
-    setIsRefreshing(true);
-    try {
-      await refreshStream(activeStream.id);
-    } catch (error) {
-      console.error("Error refreshing stream:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [activeStream, refreshStream]);
+  //   setIsRefreshing(true);
+  //   try {
+  //     await refreshStream(activeStream.id);
+  //   } catch (error) {
+  //     console.error("Error refreshing stream:", error);
+  //   } finally {
+  //     setIsRefreshing(false);
+  //   }
+  // }, [activeStream, refreshStream]);
 
   const handleDelete = React.useCallback(() => {
     if (!activePlaylistId || !activeStream) return;
@@ -173,7 +173,7 @@ export function StreamDetailSection() {
       <StreamDetailHeader
         stream={activeStream}
         playlist={activePlaylist}
-        onRefresh={handleRefreshStream}
+        // onRefresh={handleRefreshStream}
         onDelete={handleDelete}
         onSwitchGradient={handleSwitchGradient}
         onBack={() => returnToGrid("streams")}

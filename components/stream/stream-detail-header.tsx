@@ -9,18 +9,20 @@ import type { Playlist } from "@/lib/types/playlist";
 interface StreamDetailHeaderProps {
   stream: Stream;
   playlist: Playlist;
-  onRefresh: () => void;
+  // onRefresh: () => void;
   onDelete: () => void;
   onSwitchGradient: () => void;
   onBack: () => void;
   isRefreshing: boolean;
-  onAddChannel?: (channel: Omit<import("@/lib/types/stream").Channel, "id">) => void;
+  onAddChannel?: (
+    channel: Omit<import("@/lib/types/stream").Channel, "id">
+  ) => void;
 }
 
 export function StreamDetailHeader({
   stream,
   playlist,
-  onRefresh,
+  // onRefresh,
   onDelete,
   onSwitchGradient,
   onBack,
@@ -51,14 +53,17 @@ export function StreamDetailHeader({
       )}
 
       <StreamHeaderActions
-        onRefresh={onRefresh}
         onDelete={onDelete}
         onSwitchGradient={onSwitchGradient}
         onBack={onBack}
         isRefreshing={isRefreshing}
       />
 
-      <StreamInfo stream={stream} playlist={playlist} onAddChannel={onAddChannel} />
+      <StreamInfo
+        stream={stream}
+        playlist={playlist}
+        onAddChannel={onAddChannel}
+      />
     </div>
   );
 }

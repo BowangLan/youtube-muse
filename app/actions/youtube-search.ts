@@ -2,7 +2,8 @@
 
 import { google } from "googleapis";
 
-const youtube = google.youtube({
+// Create YouTube client function to avoid global state issues
+const createYouTubeClient = () => google.youtube({
   version: "v3",
   auth: process.env.YOUTUBE_API_KEY,
 });
@@ -88,7 +89,7 @@ export async function searchYouTubeVideos(
     const order = options?.order ?? "relevance";
 
     // Search for videos
-    const searchResponse = await youtube.search.list({
+    const searchResponse = await createYouTubeClient().search.list({
       part: ["snippet"],
       q: query,
       type: [type],
@@ -108,7 +109,7 @@ export async function searchYouTubeVideos(
         .filter((id): id is string => !!id);
 
       // Fetch video details including duration
-      const videosResponse = await youtube.videos.list({
+      const videosResponse = await createYouTubeClient().videos.list({
         part: ["contentDetails", "snippet"],
         id: videoIds,
       });
@@ -123,7 +124,7 @@ export async function searchYouTubeVideos(
       );
 
       // Fetch channel details to get channel thumbnails
-      const channelsResponse = await youtube.channels.list({
+      const channelsResponse = await createYouTubeClient().channels.list({
         part: ["snippet"],
         id: channelIds,
       });

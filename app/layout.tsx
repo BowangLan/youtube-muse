@@ -4,6 +4,7 @@ import "./globals.css";
 import "./intent-styles.css";
 import { StructuredData } from "@/components/seo/structured-data";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/app/providers";
 import {
   SITE_DESCRIPTION_FULL,
   SITE_DESCRIPTION_SHORT,
@@ -141,8 +142,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster />
-        {children}
+        <Providers>
+          <Toaster />
+          {children}
+        </Providers>
       </body>
     </html>
   );

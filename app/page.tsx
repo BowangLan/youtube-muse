@@ -43,6 +43,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { GridTab as GridTabType } from "@/lib/store/app-state-store";
+import { StreamDataLoader } from "@/components/data-loaders/stream-data-loader";
 
 const INTENT_HELP_STEPS = [
   {
@@ -104,7 +105,6 @@ export default function Home() {
     (state) => state.hiddenBuiltInIntents
   );
   const streams = useStreamsStore((state) => state.streams);
-  const refreshAllStreams = useStreamsStore((state) => state.refreshAllStreams);
 
   React.useEffect(() => {
     if (view === "intent") {
@@ -139,16 +139,6 @@ export default function Home() {
     return playlists.filter((p) => streamPlaylistIds.has(p.id));
   }, [playlists, streams]);
 
-  // Auto-refresh streams on mount
-  React.useEffect(() => {
-    if (hasMounted && apiReady && streams.length > 0) {
-      // Non-blocking background refresh
-      refreshAllStreams().catch((error) => {
-        console.error("Error refreshing streams:", error);
-      });
-    }
-  }, [hasMounted, apiReady, refreshAllStreams, streams.length]);
-
   // Show loading UI if not mounted (prevents hydration mismatch) or API not ready
   if (!hasMounted || !apiReady) {
     return <AppLoadingUI />;
@@ -158,6 +148,10 @@ export default function Home() {
     <main className="min-h-screen w-full bg-[#050505] text-white">
       {/* Animated background based on current track */}
       <AnimatedBackground />
+
+      {streams.map((stream) => (
+        <StreamDataLoader key={stream.id} stream={stream} />
+      ))}
 
       {/* Hidden YouTube player */}
       <div className="absolute left-[-9999px] h-px w-px" aria-hidden="true">

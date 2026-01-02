@@ -346,15 +346,20 @@ type YouTubeVideoMetadata = {
 
 ## Convex Usage
 
-**Not used** - This project does not use Convex. All data is stored locally using:
-- Zustand stores with localStorage persistence
-- No backend database or real-time sync
+**Optional for streams** - Convex can sync latest channel videos for streams without replacing local stores.
 
-**Stores**:
-- `lib/store/player-store.ts` - Player state
+**Flow**:
+- `convex/youtube-unofficial.ts` scrapes the channel videos page to detect the latest IDs.
+- `convex/channel-videos.ts` checks for changes; only then calls the official API to fetch full metadata.
+- `convex/schema.ts` stores channels and videos for live subscription from the frontend.
+
+**Env**:
+- `YOUTUBE_API_KEY` for official Data API fetches in Convex actions
+- `NEXT_PUBLIC_CONVEX_URL` for the frontend Convex client
+
+**Stores remain**:
+- `lib/store/streams-store.ts` - Stream configuration and local playlist updates
 - `lib/store/playlist-store.ts` - Playlists and tracks
-- `lib/store/streams-store.ts` - Channel streams
-- `lib/store/custom-intents-store.ts` - Custom intents
 
 ---
 

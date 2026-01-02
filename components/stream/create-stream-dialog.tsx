@@ -55,7 +55,6 @@ export function CreateStreamDialog({
     (state) => state.setCurrentPlaylist
   );
   const createStream = useStreamsStore((state) => state.createStream);
-  const refreshStream = useStreamsStore((state) => state.refreshStream);
 
   // Auto-generate name from channel titles
   const generateNameFromChannels = React.useCallback(
@@ -101,8 +100,11 @@ export function CreateStreamDialog({
         lastSearchTimeRef.current = Date.now();
 
         try {
-          if (typeof window !== 'undefined' && window.umami) {
-            window.umami.track('youtube-api-search-channels', { context: 'create-stream-dialog', query: channelInput.substring(0, 50) });
+          if (typeof window !== "undefined" && window.umami) {
+            window.umami.track("youtube-api-search-channels", {
+              context: "create-stream-dialog",
+              query: channelInput.substring(0, 50),
+            });
           }
           const { results } = await searchYouTubeChannels(channelInput);
 
@@ -187,12 +189,13 @@ export function CreateStreamDialog({
       if (channelId) {
         setIsSearching(true);
         try {
-          if (typeof window !== 'undefined' && window.umami) {
-            window.umami.track('youtube-api-get-channel', { context: 'create-stream-dialog' });
+          if (typeof window !== "undefined" && window.umami) {
+            window.umami.track("youtube-api-get-channel", {
+              context: "create-stream-dialog",
+            });
           }
-          const { channel, error: fetchError } = await getChannelById(
-            channelId
-          );
+          const { channel, error: fetchError } =
+            await getChannelById(channelId);
           if (channel) {
             handleAddChannel(channel);
           } else {
@@ -261,8 +264,7 @@ export function CreateStreamDialog({
 
       setLoadingStatus("Fetching latest videos from channels...");
 
-      // Fetch initial videos from all channels
-      await refreshStream(newStream.id);
+      // Once the stream is created, the videos will be fetched in the new StreamDataLoader
 
       // Set as current playlist
       setCurrentPlaylist(newPlaylist.id);

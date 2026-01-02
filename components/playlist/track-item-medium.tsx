@@ -17,6 +17,10 @@ function formatPublishedDate(publishedAt?: string): string {
 
   const now = new Date();
   const published = new Date(publishedAt);
+
+  // Validate that the date is valid
+  if (isNaN(published.getTime())) return "";
+
   const diffMs = now.getTime() - published.getTime();
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);

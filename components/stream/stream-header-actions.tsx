@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface StreamHeaderActionsProps {
-  onRefresh: () => void;
   onDelete: () => void;
   onSwitchGradient: () => void;
   onBack: () => void;
@@ -25,7 +24,7 @@ interface StreamHeaderActionsProps {
 }
 
 export function StreamHeaderActions({
-  onRefresh,
+  // onRefresh,
   onDelete,
   onSwitchGradient,
   onBack,
@@ -33,15 +32,11 @@ export function StreamHeaderActions({
 }: StreamHeaderActionsProps) {
   return (
     <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between">
-      <Button
-        variant="ghost"
-        onClick={onBack}
-        size="icon"
-      >
+      <Button variant="ghost" onClick={onBack} size="icon">
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="flex items-center gap-1">
-        <Button
+        {/* <Button
           onClick={onRefresh}
           disabled={isRefreshing}
           variant="ghost"
@@ -52,7 +47,7 @@ export function StreamHeaderActions({
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
