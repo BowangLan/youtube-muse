@@ -140,7 +140,7 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   return (
     <motion.div
       layoutId="track-cover"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none h-32 w-56 self-center"
+      className="relative shrink-0 overflow-visible rounded-lg flex-none h-full aspect-video self-center"
       transition={{
         duration: reduceMotion ? 0 : EXPAND_DURATION,
         ease: [0.4, 0, 0.2, 1],
@@ -336,29 +336,6 @@ const PlayerControls = () => {
   );
 };
 
-const ExpandToggleButton = ({
-  isExpanded,
-  onToggle,
-}: {
-  isExpanded: boolean;
-  onToggle: () => void;
-}) => (
-  <button
-    type="button"
-    aria-label={isExpanded ? "Collapse player" : "Expand player"}
-    aria-expanded={isExpanded}
-    onClick={onToggle}
-    className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
-  >
-    <Icons.ChevronUp
-      className={cn(
-        "h-5 w-5 transition-transform duration-200",
-        isExpanded ? "rotate-180" : "rotate-0"
-      )}
-    />
-  </button>
-);
-
 const AnimatedControlsWrapper = ({
   isExpanded,
   children,
@@ -489,17 +466,11 @@ const ExpandedStateView = ({
       <div className="flex flex-col flex-1">
         <div className="flex items-start justify-between gap-4">
           <TrackInfo variant="expanded" />
-          {onToggleExpanded && (
-            <ExpandToggleButton
-              isExpanded={isExpanded}
-              onToggle={onToggleExpanded}
-            />
-          )}
         </div>
         <ProgressSection isExpanded={isExpanded} />
-        <AnimatedControlsWrapper isExpanded={isExpanded}>
-          <PlayerControls />
-        </AnimatedControlsWrapper>
+        {/* <AnimatedControlsWrapper isExpanded={isExpanded}>
+        </AnimatedControlsWrapper> */}
+        <PlayerControls />
       </div>
     </motion.div>
   );
