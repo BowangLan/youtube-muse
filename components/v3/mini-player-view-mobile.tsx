@@ -3,13 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  X,
-  ChevronDown,
-  ArrowDown,
-  MoreVertical,
-  MoreHorizontal,
-} from "lucide-react";
+import { ChevronDown, MoreHorizontal, MonitorPlay } from "lucide-react";
 import {
   AnimatePresence,
   cubicBezier,
@@ -21,7 +15,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
-import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
+import { getThumbnailUrl } from "@/lib/utils/youtube";
 import {
   PlayPauseButton,
   ProgressBar,
@@ -36,6 +30,8 @@ import {
   MiniPlayerProvider,
   useMiniPlayerContext,
 } from "./mini-player-context";
+import { VideoPlayerSlot } from "@/components/player/video-player-host";
+import { FEATURE_FLAGS } from "@/lib/constants";
 
 // =============================================================================
 // Constants
@@ -367,9 +363,11 @@ const PlayerControls = () => {
     pendingPlayState,
     apiReady,
     canPlayNext,
+    isVideoEnabled,
     onTogglePlay,
     onSkipBackward,
     onPlayNext,
+    onToggleVideo,
   } = useMiniPlayerContext();
 
   const controlButtonClass =
@@ -379,7 +377,7 @@ const PlayerControls = () => {
     "flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150";
 
   return (
-    <div className="flex items-center text-foreground justify-center gap-4 mt-2">
+    <div className="flex items-center justify-center gap-4 mt-2 text-foreground">
       <button
         type="button"
         onClick={(e) => {
@@ -422,6 +420,24 @@ const PlayerControls = () => {
       >
         <Icons.SkipForward className="h-7 w-7" />
       </button>
+      {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
+        <button
+          type="button"
+          aria-label={isVideoEnabled ? "Disable video" : "Enable video"}
+          aria-pressed={isVideoEnabled}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onToggleVideo();
+          }}
+          className={cn(
+            controlButtonClass,
+            isVideoEnabled && "bg-white/15 text-white"
+          )}
+        >
+          <MonitorPlay className="h-7 w-7" />
+        </button>
+      )}
     </div>
   );
 };
@@ -581,7 +597,7 @@ const ExpandedStateView = ({
 }: {
   glowStyle: React.CSSProperties;
 }) => {
-  const { track, isExpanded, onClose } = useMiniPlayerContext();
+  const { track, isExpanded, onClose, isVideoEnabled } = useMiniPlayerContext();
 
   if (!track) return null;
 
@@ -604,9 +620,20 @@ const ExpandedStateView = ({
 
       {/* TopNav Spacer  */}
       <div className="h-14 flex-none"></div>
-      <div className="py-12 flex-none w-full">
-        <TrackCoverExpanded glowStyle={glowStyle} />
-      </div>
+      {isVideoEnabled && FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK ? (
+        <div className="py-10 flex-none w-full">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-2xl">
+            <VideoPlayerSlot
+              active={isVideoEnabled}
+              className="yt-video-host absolute inset-0"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="py-12 flex-none w-full">
+          <TrackCoverExpanded glowStyle={glowStyle} />
+        </div>
+      )}
 
       <div className="flex flex-col w-full gap-3">
         <TrackInfo variant="expanded" />

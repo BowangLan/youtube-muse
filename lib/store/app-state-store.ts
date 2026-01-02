@@ -8,6 +8,7 @@ export type AppState = {
   view: ViewMode
   activePlaylistId: string | null
   gridTab: GridTab
+  isVideoEnabled: boolean
 }
 
 export type AppStateActions = {
@@ -15,6 +16,8 @@ export type AppStateActions = {
   setView: (view: ViewMode) => void
   setActivePlaylist: (id: string | null) => void
   setGridTab: (tab: GridTab) => void
+  setVideoEnabled: (enabled: boolean) => void
+  toggleVideoEnabled: () => void
   openIntent: (playlistId: string) => void
   openStream: (playlistId: string) => void
   returnToGrid: (tab?: GridTab) => void
@@ -26,10 +29,14 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
   view: "grid",
   activePlaylistId: null,
   gridTab: "intents",
+  isVideoEnabled: false,
   toggleFocus: () => set((state) => ({ isFocused: !state.isFocused })),
   setView: (view) => set({ view }),
   setActivePlaylist: (id) => set({ activePlaylistId: id }),
   setGridTab: (tab) => set({ gridTab: tab }),
+  setVideoEnabled: (enabled) => set({ isVideoEnabled: enabled }),
+  toggleVideoEnabled: () =>
+    set((state) => ({ isVideoEnabled: !state.isVideoEnabled })),
   openIntent: (playlistId) =>
     set({ activePlaylistId: playlistId, view: "intent", gridTab: "intents" }),
   openStream: (playlistId) =>

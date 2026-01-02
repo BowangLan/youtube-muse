@@ -10,6 +10,7 @@ export interface YTPlayer {
   loadVideoById: (videoId: string) => void;
   cueVideoById?: (videoId: string, startSeconds?: number) => void;
   getVideoData: () => { title: string; video_id: string; author: string };
+  getIframe?: () => HTMLIFrameElement;
 }
 
 export interface YTPlayerEvent {

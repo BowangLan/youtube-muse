@@ -18,10 +18,12 @@ import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
+import { MonitorPlay } from "lucide-react";
 import {
   MiniPlayerProvider,
   useMiniPlayerContext,
 } from "./mini-player-context";
+import { FEATURE_FLAGS } from "@/lib/constants";
 
 // =============================================================================
 // Constants
@@ -267,9 +269,11 @@ const PlayerControls = () => {
     pendingPlayState,
     apiReady,
     canPlayNext,
+    isVideoEnabled,
     onTogglePlay,
     onSkipBackward,
     onPlayNext,
+    onToggleVideo,
   } = useMiniPlayerContext();
 
   const controlButtonClass =
@@ -279,7 +283,7 @@ const PlayerControls = () => {
     "flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
 
   return (
-    <div className="flex items-center text-foreground justify-center gap-4 mt-2">
+    <div className="flex items-center justify-center gap-4 mt-2 text-foreground">
       <button
         type="button"
         aria-label="Skip back"
@@ -314,6 +318,20 @@ const PlayerControls = () => {
       >
         <Icons.SkipForward className="h-5 w-5" />
       </button>
+      {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
+        <button
+          type="button"
+          aria-label={isVideoEnabled ? "Disable video" : "Enable video"}
+          aria-pressed={isVideoEnabled}
+          onClick={onToggleVideo}
+          className={cn(
+            controlButtonClass,
+            isVideoEnabled && "bg-white/15 text-white"
+          )}
+        >
+          <MonitorPlay className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 };

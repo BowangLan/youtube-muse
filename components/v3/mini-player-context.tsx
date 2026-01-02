@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { useAppStateStore } from "@/lib/store/app-state-store";
 import { Track } from "@/lib/types/playlist";
 
 interface MiniPlayerContextValue {
@@ -14,6 +15,7 @@ interface MiniPlayerContextValue {
   isLoadingNewVideo: boolean;
   pendingPlayState: boolean | null;
   apiReady: boolean;
+  isVideoEnabled: boolean;
 
   // Computed values
   canPlayNext: boolean;
@@ -23,6 +25,7 @@ interface MiniPlayerContextValue {
   onTogglePlay: () => void;
   onSkipBackward: () => void;
   onPlayNext: () => void;
+  onToggleVideo: () => void;
   onToggleExpanded?: () => void;
   onClose?: () => void;
 }
@@ -58,6 +61,10 @@ export function MiniPlayerProvider({
   const apiReady = usePlayerStore((state) => state.apiReady);
   const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const isVideoEnabled = useAppStateStore((state) => state.isVideoEnabled);
+  const toggleVideoEnabled = useAppStateStore(
+    (state) => state.toggleVideoEnabled
+  );
 
   const repeatMode = usePlaylistStore((state) => state.repeatMode);
   const currentTrackIndex = usePlaylistStore((state) => state.currentTrackIndex);
@@ -77,11 +84,13 @@ export function MiniPlayerProvider({
     isLoadingNewVideo,
     pendingPlayState,
     apiReady,
+    isVideoEnabled,
     canPlayNext,
     isExpanded,
     onTogglePlay: () => dispatch({ type: "UserTogglePlay" }),
     onSkipBackward: () => dispatch({ type: "UserSkipBackward" }),
     onPlayNext: () => dispatch({ type: "UserNextTrack" }),
+    onToggleVideo: () => toggleVideoEnabled(),
     onToggleExpanded,
     onClose,
   };

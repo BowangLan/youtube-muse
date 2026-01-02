@@ -6,6 +6,10 @@ import { usePlayerStore, setPlayerCommandRunner } from "@/lib/store/player-store
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { runPlayerCommands } from "@/lib/player-shell/cmd-runner"
 import { createPlaylistQueueAdapter } from "@/lib/player-shell/queue-adapter"
+import {
+  ensureYouTubePlayerElement,
+  setYouTubePlayerElement,
+} from "@/components/player/youtube-player-element"
 import "@/lib/types/youtube"
 
 export function useYouTubePlayer() {
@@ -111,17 +115,36 @@ export function useYouTubePlayer() {
       return
     }
 
+    // Create the player element
+    ensureYouTubePlayerElement()
+
+    // Move it to the audio dock immediately (before YouTube API initializes)
+    const audioDock = document.getElementById("audio-dock")
+    if (audioDock) {
+      const playerElement = document.getElementById("youtube-player")
+      if (playerElement) {
+        audioDock.appendChild(playerElement)
+      }
+    }
+
     const player = new window.YT.Player("youtube-player", {
-      height: "1",
-      width: "1",
-      videoId: "dQw4w9WgXcQ",
+      height: "100%",
+      width: "100%",
+      videoId: "",
       playerVars: {
         autoplay: 0,
         controls: 0,
         disablekb: 1,
+        modestbranding: 1,
+        playsinline: 1,
+        rel: 0,
       },
       events: {
         onReady: (event: YTPlayerEvent) => {
+          const iframe = event.target.getIframe?.()
+          if (iframe) {
+            setYouTubePlayerElement(iframe)
+          }
           const dur = event.target.getDuration()
           dispatch({ type: "PlayerReady", duration: dur })
         },

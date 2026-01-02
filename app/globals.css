@@ -224,6 +224,23 @@
   }
 }
 
+/* Ensure YouTube player fills container in video mode */
+.yt-video-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.yt-video-host > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.yt-video-host iframe {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .trans {
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }

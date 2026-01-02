@@ -76,3 +76,7 @@ export const DEFAULT_PLAYLIST_TRACKS = [
     "addedAt": Date.now()
   }
 ]
+
+export const FEATURE_FLAGS = {
+  ENABLE_VIDEO_PLAYBACK: false,
+}
