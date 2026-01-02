@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Loader2,
   MoreVertical,
+  Pencil,
   Plus,
   RefreshCw,
   Trash2,
@@ -30,6 +31,7 @@ import {
 import { searchYouTubeVideos } from "@/app/actions/youtube-search";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
+import { EditIntentDialog } from "./edit-intent-dialog";
 
 export function IntentDetailSection() {
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
@@ -64,6 +66,7 @@ export function IntentDetailSection() {
 
   const [isAdding, setIsAdding] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   // Derive active playlist from stores
   const activePlaylist = React.useMemo(() => {
@@ -79,7 +82,7 @@ export function IntentDetailSection() {
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
     isShuffleEnabled && shuffleOrder.length > 0
-      ? shuffleOrder[currentTrackIndex] ?? currentTrackIndex
+      ? (shuffleOrder[currentTrackIndex] ?? currentTrackIndex)
       : currentTrackIndex;
 
   // Get gradient
@@ -120,8 +123,11 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      if (typeof window !== 'undefined' && window.umami) {
-        window.umami.track('youtube-api-search-videos', { context: 'intent-add-track', intent: activePlaylist.name });
+      if (typeof window !== "undefined" && window.umami) {
+        window.umami.track("youtube-api-search-videos", {
+          context: "intent-add-track",
+          intent: activePlaylist.name,
+        });
       }
       const { results } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
@@ -158,8 +164,11 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      if (typeof window !== 'undefined' && window.umami) {
-        window.umami.track('youtube-api-search-videos', { context: 'intent-refresh', intent: activePlaylist.name });
+      if (typeof window !== "undefined" && window.umami) {
+        window.umami.track("youtube-api-search-videos", {
+          context: "intent-refresh",
+          intent: activePlaylist.name,
+        });
       }
       const { results } = await searchYouTubeVideos(query, "video", {
         minDurationMinutes: minDuration,
@@ -332,6 +341,13 @@ export function IntentDetailSection() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
+                  onClick={() => setIsEditDialogOpen(true)}
+                  disabled={!activePlaylistId}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit Intent
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={handleDelete}
                   className="text-red-400 focus:text-red-400"
                 >
@@ -369,6 +385,14 @@ export function IntentDetailSection() {
           ))}
         </div>
       </div>
+
+      {activePlaylistId && (
+        <EditIntentDialog
+          playlistId={activePlaylistId}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+        />
+      )}
     </motion.section>
   );
 }
