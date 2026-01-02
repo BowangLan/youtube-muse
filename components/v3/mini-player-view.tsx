@@ -512,7 +512,7 @@ const ExpandedStateView = ({
 export const BackgroundOverlay = () => (
   <motion.div
     aria-hidden="true"
-    className="absolute inset-0 z-0 pointer-events-none bg-black/95"
+    className="absolute inset-0 z-0 pointer-events-none bg-glass"
     initial={false}
     transition={{ duration: 0.3, ease: EASING_EASE_OUT }}
   />

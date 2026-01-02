@@ -146,6 +146,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full bg-[#050505] text-white">
+      {/* <div className="absolute top-6 left-6 rounded-xl w-[700px] h-[200px] z-100 pointer-events-none bg-glass" /> */}
+
       {/* Animated background based on current track */}
       <AnimatedBackground />
 
