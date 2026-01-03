@@ -120,10 +120,23 @@ export const getLatestVideosByChannelIds = query({
 export const getChannelState = query({
   args: { channelId: v.string() },
   handler: async (ctx, args) => {
-    return ctx.db
+    const channel = await ctx.db
       .query("channels")
       .withIndex("by_channel_id", (q) => q.eq("channelId", args.channelId))
       .unique()
+
+    const totalVideos = await ctx.db
+      .query("videos")
+      .withIndex("by_channel_published", (q) => q.eq("channelId", args.channelId))
+      .order("desc")
+      .collect();
+
+    return {
+      ...channel,
+      lastVideoId: totalVideos.length > 0 ? totalVideos[0].videoId : undefined,
+      lastVideoTitle: totalVideos.length > 0 ? totalVideos[0].title : undefined,
+      totalVideos: totalVideos.length,
+    }
   },
 })
 

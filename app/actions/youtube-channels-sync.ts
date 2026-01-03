@@ -6,22 +6,40 @@ import { getChannelById, getChannelLatestVideoIdUnofficial, getChannelLatestVide
 
 const syncIntervalMs = 2 * 60 * 1000 // 2 minutes
 
-export async function syncChannelLatestVideo(channelId: string, limit: number) {
-  // Helper to parse ISO 8601 duration to seconds
-  const parseDurationToSeconds = (isoDuration: string | null | undefined): number => {
-    if (!isoDuration) return 0
+const parseDurationToSeconds = (isoDuration: string | null | undefined): number => {
+  if (!isoDuration) return 0
 
-    // Parse ISO 8601 duration (e.g., "PT3M45S")
-    const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
-    if (!match) return 0
+  // Parse ISO 8601 duration (e.g., "PT3M45S")
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!match) return 0
 
-    const hours = parseInt(match[1] || "0", 10)
-    const minutes = parseInt(match[2] || "0", 10)
-    const seconds = parseInt(match[3] || "0", 10)
+  const hours = parseInt(match[1] || "0", 10)
+  const minutes = parseInt(match[2] || "0", 10)
+  const seconds = parseInt(match[3] || "0", 10)
 
-    return hours * 3600 + minutes * 60 + seconds
+  return hours * 3600 + minutes * 60 + seconds
+}
+
+async function syncChannelDetails(channelId: string): Promise<{ success: boolean; channelTitle?: string; message?: string }> {
+  // sync channel detail
+  const channel = await getChannelById(channelId);
+
+  if (channel.error || !channel.channel) {
+    console.error("error", channel.error);
+    return { success: false, message: `Failed to fetch channel for channel ${channelId}: ${channel.error}` };
   }
 
+  await convexClient.mutation(api.channelVideos.updateChannelState, {
+    channelId: channelId,
+    title: channel.channel.title,
+    thumbnail: channel.channel.thumbnail.thumbnails
+  })
+
+  return { success: true, channelTitle: channel.channel.title }
+}
+
+export async function syncChannelLatestVideo(channelId: string, limit: number) {
+  // Helper to parse ISO 8601 duration to seconds
   // get the latest video id from the channel
   const result = await getChannelLatestVideoIdUnofficial(channelId);
   if (result.error) {
@@ -29,8 +47,10 @@ export async function syncChannelLatestVideo(channelId: string, limit: number) {
     return { success: false, message: `Failed to fetch latest video id for channel ${channelId}: ${result.error}` };
   }
 
+  console.log(`[syncChannelLatestVideo] Unofficial latest:\n\t<Video id="${result.videos[0].videoId}" title="${result.videos[0].title.runs[0].text}" />`);
+
   if (result.videos.length === 0) {
-    console.error("No videos found for this channel");
+    console.error(`[syncChannelLatestVideo] No videos found for channel ${channelId}`);
     return { success: false, message: `No videos found for channel ${channelId}` };
   }
 
@@ -41,34 +61,36 @@ export async function syncChannelLatestVideo(channelId: string, limit: number) {
     channelId: channelId,
   })
 
-  if (channelState?.lastSyncedAt && Date.now() - channelState.lastSyncedAt < syncIntervalMs) {
+  const convexLatestVideoId = channelState?.lastVideoId;
+  const convexLatestVideoTitle = channelState?.lastVideoTitle;
+  console.log(`[syncChannelLatestVideo] Convex latest:\n\t<Video id="${convexLatestVideoId}" title="${convexLatestVideoTitle}" />`);
+
+  if (channelState?.lastSyncedAt
+    && Date.now() - channelState.lastSyncedAt < syncIntervalMs
+    && channelState.totalVideos >= limit
+  ) {
+    // skip sync if the channel was recently synced
     return { success: true, message: `Skipped sync for channel ${channelId} (recently synced)` }
   }
 
-  if (!channelState?.lastVideoId || channelState.lastVideoId !== latestVideoId) {
+  if (!channelState?.lastVideoId || channelState.lastVideoId !== latestVideoId
+    // total video count check
+    || channelState.totalVideos < limit
+  ) {
     // update the channel state by upserting the videos using the Official API
-    let channelTitle = channelState?.title
 
+    let channelTitle = channelState?.title;
     if (!channelState?.title || !channelState?.thumbnail) {
-      // sync channel detail
-      const channel = await getChannelById(channelId);
-
-      if (channel.error || !channel.channel) {
-        console.error("error", channel.error);
-        return { success: false, message: `Failed to fetch channel for channel ${channelId}: ${channel.error}` };
+      const channelDetailsResult = await syncChannelDetails(channelId);
+      if (!channelDetailsResult.success) {
+        console.error("[syncChannelLatestVideo] Failed to sync channel details", channelDetailsResult.message);
+        return { success: false, message: channelDetailsResult.message };
       }
-
-      await convexClient.mutation(api.channelVideos.updateChannelState, {
-        channelId: channelId,
-        title: channel.channel.title,
-        thumbnail: channel.channel.thumbnail.thumbnails
-      })
-
-      channelTitle = channel.channel.title
+      channelTitle = channelDetailsResult.channelTitle!
     }
 
     let videosToFetch = limit
-    if (channelState?.lastVideoId) {
+    if (channelState?.lastVideoId && channelState.totalVideos >= limit) {
       const offset = result.videos.findIndex((v) => v.videoId === channelState.lastVideoId)
       videosToFetch = offset >= 0 ? offset : limit
     }

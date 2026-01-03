@@ -570,7 +570,7 @@ export async function getChannelLatestVideos(
     return { results: [], error: validation.error }
   }
 
-  console.log(`[getChannelLatestVideos] Fetching videos for channel: ${channelId}`);
+  console.log(`<LatestVideosFetch channelId="${channelId}" channelTitle="${channelTitle}" limit="${limit}" />`);
 
   if (!channelId.startsWith("UC") && !channelId.startsWith("@")) {
     return { results: [], error: `Invalid channel ID: ${channelId}` }
@@ -674,11 +674,6 @@ export async function getChannelLatestVideos(
     }
 
     const videos: ChannelVideoResult[] = (videosResponse.data.items || [])
-      .filter((item) => {
-        // Filter out shorts (videos shorter than 4 minutes)
-        const durationInSeconds = parseDurationToSeconds(item.contentDetails?.duration)
-        return durationInSeconds >= 240 // 4 minutes in seconds
-      })
       .slice(0, limit) // Limit to requested number
       .map((item) => {
         const snippet = item.snippet
