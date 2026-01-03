@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import type { GridTab as GridTabType } from "@/lib/store/app-state-store";
 import { StreamDataLoader } from "@/components/data-loaders/stream-data-loader";
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 
 const INTENT_HELP_STEPS = [
   {
@@ -162,6 +163,9 @@ export default function Home() {
 
       {/* Mini Player View - bottom of the screen */}
       {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />}
+
+      {/* Keyboard shortcuts help dialog */}
+      <KeyboardShortcutsDialog />
 
       <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6 z-10 isolate">
         <AppHeader />
