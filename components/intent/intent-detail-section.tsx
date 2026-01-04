@@ -386,7 +386,7 @@ export function IntentDetailSection() {
           </div>
         </div>
 
-        <div className="space-y-1 mt-4 mb-2 px-3">
+        <div className="space-y-1 mt-4 mb-2 px-3 flex-1 overflow-y-auto">
           {activePlaylist.tracks.map((track, index) => (
             <div
               key={`${track.id}-${track.addedAt}`}
