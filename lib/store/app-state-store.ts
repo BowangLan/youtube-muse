@@ -9,6 +9,7 @@ export type AppState = {
   activePlaylistId: string | null
   gridTab: GridTab
   isVideoEnabled: boolean
+  isMiniPlayerPinned: boolean
 }
 
 export type AppStateActions = {
@@ -18,6 +19,8 @@ export type AppStateActions = {
   setGridTab: (tab: GridTab) => void
   setVideoEnabled: (enabled: boolean) => void
   toggleVideoEnabled: () => void
+  toggleMiniPlayerPinned: () => void
+  setMiniPlayerPinned: (pinned: boolean) => void
   openIntent: (playlistId: string) => void
   openStream: (playlistId: string) => void
   returnToGrid: (tab?: GridTab) => void
@@ -30,6 +33,7 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
   activePlaylistId: null,
   gridTab: "intents",
   isVideoEnabled: false,
+  isMiniPlayerPinned: false,
   toggleFocus: () => set((state) => ({ isFocused: !state.isFocused })),
   setView: (view) => set({ view }),
   setActivePlaylist: (id) => set({ activePlaylistId: id }),
@@ -37,6 +41,9 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
   setVideoEnabled: (enabled) => set({ isVideoEnabled: enabled }),
   toggleVideoEnabled: () =>
     set((state) => ({ isVideoEnabled: !state.isVideoEnabled })),
+  toggleMiniPlayerPinned: () =>
+    set((state) => ({ isMiniPlayerPinned: !state.isMiniPlayerPinned })),
+  setMiniPlayerPinned: (pinned) => set({ isMiniPlayerPinned: pinned }),
   openIntent: (playlistId) =>
     set({ activePlaylistId: playlistId, view: "intent", gridTab: "intents" }),
   openStream: (playlistId) =>

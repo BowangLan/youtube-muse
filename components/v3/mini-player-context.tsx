@@ -20,6 +20,7 @@ interface MiniPlayerContextValue {
   // Computed values
   canPlayNext: boolean;
   isExpanded: boolean;
+  isPinned?: boolean;
 
   // Event handlers
   onTogglePlay: () => void;
@@ -43,6 +44,7 @@ export function useMiniPlayerContext() {
 interface MiniPlayerProviderProps {
   children: React.ReactNode;
   isExpanded: boolean;
+  isPinned?: boolean;
   onToggleExpanded?: () => void;
   onClose?: () => void;
 }
@@ -50,6 +52,7 @@ interface MiniPlayerProviderProps {
 export function MiniPlayerProvider({
   children,
   isExpanded,
+  isPinned = false,
   onToggleExpanded,
   onClose,
 }: MiniPlayerProviderProps) {
@@ -87,6 +90,7 @@ export function MiniPlayerProvider({
     isVideoEnabled,
     canPlayNext,
     isExpanded,
+    isPinned,
     onTogglePlay: () => dispatch({ type: "UserTogglePlay" }),
     onSkipBackward: () => dispatch({ type: "UserSkipBackward" }),
     onPlayNext: () => dispatch({ type: "UserNextTrack" }),

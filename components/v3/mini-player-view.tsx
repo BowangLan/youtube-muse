@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
-import { MonitorPlay, Repeat, Repeat1 } from "lucide-react";
+import { MonitorPlay, Pin, PinOff, Repeat, Repeat1 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +34,7 @@ import {
 } from "./mini-player-context";
 import { FEATURE_FLAGS } from "@/lib/constants";
 import { useIsPlaying } from "@/hooks/use-is-playing";
+import { useAppStateStore } from "@/lib/store/app-state-store";
 
 // =============================================================================
 // PlayerIconButton Component
@@ -587,7 +588,7 @@ const ExpandedStateView = ({
   glowStyle: React.CSSProperties;
 }) => {
   const reduceMotion = useReducedMotion();
-  const { track } = useMiniPlayerContext();
+  const { track, isPinned, onToggleExpanded } = useMiniPlayerContext();
 
   if (!track) return null;
 
@@ -628,6 +629,27 @@ const ExpandedStateView = ({
       <div className="flex flex-col flex-1">
         <div className="flex items-start justify-between gap-4 flex-none">
           <TrackInfo variant="expanded" />
+          {onToggleExpanded && (
+            <StickyTooltip content={isPinned ? "Unpin player" : "Pin player"}>
+              <PlayerIconButton
+                onClick={onToggleExpanded}
+                label={isPinned ? "Unpin player" : "Pin player"}
+                icon={
+                  isPinned ? (
+                    <>
+                      <Pin className="h-4 w-4 group-hover:hidden fill-current" />
+                      <PinOff className="h-4 w-4 hidden group-hover:block" />
+                    </>
+                  ) : (
+                    <Pin className="h-4 w-4" />
+                  )
+                }
+                variant="toggle"
+                className={`${isPinned ? "bg-white/15 text-white" : ""} relative group`}
+                aria-pressed={isPinned}
+              />
+            </StickyTooltip>
+          )}
         </div>
         <ProgressSection />
         <PlayerControls />
@@ -656,9 +678,12 @@ export const BackgroundOverlay = () => (
 export function MiniPlayerViewDesktop() {
   const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
+  const isPinned = useAppStateStore((state) => state.isMiniPlayerPinned);
+  const togglePinned = useAppStateStore(
+    (state) => state.toggleMiniPlayerPinned
+  );
 
   const [isHovered, setIsHovered] = React.useState(false);
-  const [isPinned, setIsPinned] = React.useState(false);
   const isExpanded = isHovered || isPinned;
 
   const isPlaying = useIsPlaying();
@@ -696,7 +721,8 @@ export function MiniPlayerViewDesktop() {
     >
       <MiniPlayerProvider
         isExpanded={isExpanded}
-        onToggleExpanded={() => setIsPinned((prev) => !prev)}
+        isPinned={isPinned}
+        onToggleExpanded={togglePinned}
       >
         <motion.div
           onMouseEnter={() => setIsHovered(true)}
