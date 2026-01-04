@@ -43,7 +43,7 @@ export function KeyboardFeedback() {
       timeoutRef.current = setTimeout(() => {
         clearFeedback();
         timeoutRef.current = null;
-      }, 500);
+      }, 1000);
     }
 
     return () => {
@@ -79,7 +79,7 @@ export function KeyboardFeedback() {
               filter: "blur(10px)",
               transition: { duration: 0.15, ease: EASING_EASE_OUT },
             }}
-            className={`flex items-center gap-3 rounded-2xl px-6 py-4 backdrop-blur-xl shadow-2xl relative overflow-hidden ${
+            className={`flex flex-col items-center gap-2 rounded-2xl px-6 py-4 backdrop-blur-xl shadow-2xl relative overflow-hidden ${
               currentFeedback.gradientClassName
                 ? `before:pointer-events-none before:absolute before:inset-0 intent-card-active before:bg-linear-to-br before:opacity-90 ${currentFeedback.gradientClassName}`
                 : "bg-black/50 border-white/10 border"
@@ -87,10 +87,10 @@ export function KeyboardFeedback() {
           >
             {IconComponent && (
               <div className="text-foreground relative z-10">
-                <IconComponent className="size-5" />
+                <IconComponent className="size-12" />
               </div>
             )}
-            <span className="text-lg font-normal text-foreground relative z-10">
+            <span className="text-base font-normal text-foreground/80 relative z-10">
               {currentFeedback.label}
             </span>
           </motion.div>
