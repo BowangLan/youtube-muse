@@ -13,17 +13,85 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useImageColors } from "@/hooks/use-image-colors";
 import { useBeatSyncStyles } from "@/hooks/use-beat-sync";
 import { getThumbnailUrl } from "@/lib/utils/youtube";
-import { ProgressBar, TimeDisplay } from "@/components/player/player-controls";
+import {
+  ProgressBar,
+  TimeDisplay,
+  VolumeControl,
+} from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
-import { MonitorPlay } from "lucide-react";
+import { MonitorPlay, Repeat, Repeat1 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   MiniPlayerProvider,
   useMiniPlayerContext,
 } from "./mini-player-context";
 import { FEATURE_FLAGS } from "@/lib/constants";
+
+// =============================================================================
+// PlayerIconButton Component
+// =============================================================================
+
+interface PlayerIconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string;
+  icon: React.ReactNode;
+  className?: string;
+  variant?: "control" | "play" | "toggle";
+  "aria-pressed"?: boolean;
+  children?: React.ReactNode;
+}
+
+export const PlayerIconButton = React.forwardRef<
+  HTMLButtonElement,
+  PlayerIconButtonProps
+>(
+  (
+    {
+      label,
+      icon,
+      className,
+      variant = "control",
+      disabled = false,
+      "aria-pressed": ariaPressed,
+      children,
+      type = "button",
+      ...buttonProps
+    },
+    ref
+  ) => {
+    const baseClasses =
+      "flex items-center justify-center rounded-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
+
+    const variantClasses = {
+      control:
+        "h-10 w-10 text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent",
+      play: "h-10 w-10 bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10",
+      toggle:
+        "h-9 w-9 text-white/70 hover:text-white hover:bg-white/10 active:scale-95 active:bg-white/20",
+    };
+
+    return (
+      <button
+        ref={ref}
+        type={type}
+        aria-label={label}
+        aria-pressed={ariaPressed}
+        disabled={disabled}
+        className={cn(baseClasses, variantClasses[variant], className)}
+        {...buttonProps}
+      >
+        {children || icon}
+      </button>
+    );
+  }
+);
+PlayerIconButton.displayName = "PlayerIconButton";
 
 // =============================================================================
 // Constants
@@ -35,6 +103,7 @@ const COLLAPSED_HEIGHT = 66;
 
 const EXPAND_DURATION = 0.5;
 const COLLAPSE_DURATION = 0.5;
+const TOOLTIP_DELAY = 150;
 
 const getContainerVariants = (reduceMotion: boolean): Variants => ({
   collapsed: {
@@ -72,9 +141,73 @@ interface TrackInfoProps {
   variant: "collapsed" | "expanded";
 }
 
+interface StickyTooltipProps {
+  content: React.ReactNode;
+  children: React.ReactNode;
+  side?: React.ComponentProps<typeof TooltipContent>["side"];
+  sideOffset?: number;
+}
+
 // =============================================================================
 // Subcomponents
 // =============================================================================
+
+const StickyTooltip = ({
+  content,
+  children,
+  side = "top",
+  sideOffset = 6,
+}: StickyTooltipProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const openTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  const clearOpenTimeout = React.useCallback(() => {
+    if (!openTimeoutRef.current) return;
+    clearTimeout(openTimeoutRef.current);
+    openTimeoutRef.current = null;
+  }, []);
+
+  React.useEffect(() => clearOpenTimeout, [clearOpenTimeout]);
+
+  const handlePointerEnter = React.useCallback(() => {
+    clearOpenTimeout();
+    openTimeoutRef.current = setTimeout(() => setIsOpen(true), TOOLTIP_DELAY);
+  }, [clearOpenTimeout]);
+
+  const handlePointerLeave = React.useCallback(() => {
+    clearOpenTimeout();
+    setIsOpen(false);
+  }, [clearOpenTimeout]);
+
+  const handleFocus = React.useCallback(() => {
+    clearOpenTimeout();
+    setIsOpen(true);
+  }, [clearOpenTimeout]);
+
+  const handleBlur = React.useCallback(() => {
+    clearOpenTimeout();
+    setIsOpen(false);
+  }, [clearOpenTimeout]);
+
+  return (
+    <Tooltip open={isOpen}>
+      <TooltipTrigger
+        asChild
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side={side} sideOffset={sideOffset}>
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 const GlowLayer = ({ glowStyle, variant }: GlowLayerProps) => {
   const reduceMotion = useReducedMotion();
@@ -201,7 +334,7 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
   if (!track) return null;
 
   return (
-    <div className={cn("min-w-0", !isCollapsed && "flex flex-col gap-3")}>
+    <div className={cn("min-w-0", !isCollapsed && "flex flex-col gap-1")}>
       <div key={`title-${track.id}`}>
         <Link
           href={`https://www.youtube.com/watch?v=${track.id}`}
@@ -212,7 +345,7 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
           {isCollapsed ? (
             <p className="truncate text-sm">{track.title || "Loading..."}</p>
           ) : (
-            <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-2">
+            <h3 className="font-medium/tight text-base text-neutral-200 leading-snug line-clamp-1 lg:line-clamp-2">
               {track.title || "Loading..."}
             </h3>
           )}
@@ -244,7 +377,7 @@ const ProgressSection = ({ isExpanded }: { isExpanded: boolean }) => {
 
   return (
     <motion.div
-      className="flex flex-col gap-4 mt-7"
+      className="flex flex-col gap-2 mt-6 flex-none"
       initial={{ opacity: 0, y: 10 }}
       animate={{
         opacity: isExpanded ? 1 : 0,
@@ -276,90 +409,99 @@ const PlayerControls = () => {
     onToggleVideo,
   } = useMiniPlayerContext();
 
-  const controlButtonClass =
-    "flex h-11 w-11 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
+  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
+    usePlaylistStore();
 
-  const playButtonClass =
-    "flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
+  const repeatLabel =
+    repeatMode === "one"
+      ? "Repeat one"
+      : repeatMode === "playlist"
+        ? "Repeat playlist"
+        : "Repeat off";
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-2 text-foreground">
-      <button
-        type="button"
-        aria-label="Skip back"
-        onClick={onSkipBackward}
-        disabled={!apiReady}
-        className={controlButtonClass}
+    <div className="flex flex-wrap items-center gap-2 lg:gap-3 xl:gap-4 mt-auto text-foreground relative">
+      <StickyTooltip
+        content={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
       >
-        <Icons.SkipBack className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        aria-label={isPlaying || pendingPlayState !== null ? "Pause" : "Play"}
-        aria-pressed={isPlaying || pendingPlayState !== null}
+        <PlayerIconButton
+          onClick={toggleShuffle}
+          label={isShuffleEnabled ? "Disable shuffle" : "Enable shuffle"}
+          icon={isShuffleEnabled ? <Icons.Shuffle /> : <Icons.Shuffle />}
+          variant="control"
+          className={isShuffleEnabled ? "text-white" : "text-white/50"}
+          aria-pressed={isShuffleEnabled}
+        >
+          <div className="relative">
+            <Icons.Shuffle className="h-5 w-5" />
+            <div
+              className="absolute -bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-white transition-opacity duration-200"
+              style={{ opacity: isShuffleEnabled ? 1 : 0 }}
+            />
+          </div>
+        </PlayerIconButton>
+      </StickyTooltip>
+
+      <PlayerIconButton
+        onClick={onSkipBackward}
+        label="Skip back"
+        icon={<Icons.SkipBack />}
+        variant="control"
+        disabled={!apiReady}
+      />
+      <PlayerIconButton
         onClick={onTogglePlay}
+        label={isPlaying || pendingPlayState !== null ? "Pause" : "Play"}
+        icon={<Icons.Play />}
+        variant="play"
         disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
-        className={playButtonClass}
+        aria-pressed={isPlaying || pendingPlayState !== null}
       >
         {!apiReady || isLoadingNewVideo ? (
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         ) : isPlaying || pendingPlayState !== null ? (
-          <Icons.Pause className="h-6 w-6" />
+          <Icons.Pause />
         ) : (
-          <Icons.Play className="h-6 w-6" />
+          <Icons.Play />
         )}
-      </button>
-      <button
-        type="button"
-        aria-label="Skip forward"
+      </PlayerIconButton>
+      <PlayerIconButton
         onClick={onPlayNext}
+        label="Skip forward"
+        icon={<Icons.SkipForward />}
+        variant="control"
         disabled={!canPlayNext}
-        className={controlButtonClass}
-      >
-        <Icons.SkipForward className="h-5 w-5" />
-      </button>
+      />
       {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
-        <button
-          type="button"
-          aria-label={isVideoEnabled ? "Disable video" : "Enable video"}
-          aria-pressed={isVideoEnabled}
+        <PlayerIconButton
           onClick={onToggleVideo}
-          className={cn(
-            controlButtonClass,
-            isVideoEnabled && "bg-white/15 text-white"
-          )}
-        >
-          <MonitorPlay className="h-5 w-5" />
-        </button>
+          label={isVideoEnabled ? "Disable video" : "Enable video"}
+          icon={<MonitorPlay />}
+          variant="control"
+          className={isVideoEnabled ? "bg-white/15 text-white" : ""}
+          aria-pressed={isVideoEnabled}
+        />
       )}
+
+      <StickyTooltip content={repeatLabel}>
+        <PlayerIconButton
+          onClick={cycleRepeatMode}
+          label={repeatLabel}
+          icon={
+            repeatMode === "one" ? (
+              <Repeat1 className="h-4 w-4" />
+            ) : (
+              <Repeat className="h-4 w-4" />
+            )
+          }
+          variant="control"
+          className={repeatMode !== "off" ? "text-white" : ""}
+          aria-pressed={repeatMode !== "off"}
+        />
+      </StickyTooltip>
+
+      <VolumeControl className="text-xs shrink-0 ml-auto" />
     </div>
-  );
-};
-
-const AnimatedControlsWrapper = ({
-  isExpanded,
-  children,
-}: {
-  isExpanded: boolean;
-  children: React.ReactNode;
-}) => {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{
-        opacity: isExpanded ? 1 : 0,
-        y: isExpanded ? 0 : 10,
-      }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.3,
-        ease: [0.4, 0, 0.2, 1],
-        delay: isExpanded && !reduceMotion ? 0.2 : 0,
-      }}
-    >
-      {children}
-    </motion.div>
   );
 };
 
@@ -464,12 +606,10 @@ const ExpandedStateView = ({
       <TrackCoverExpanded glowStyle={glowStyle} />
 
       <div className="flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 flex-none">
           <TrackInfo variant="expanded" />
         </div>
         <ProgressSection isExpanded={isExpanded} />
-        {/* <AnimatedControlsWrapper isExpanded={isExpanded}>
-        </AnimatedControlsWrapper> */}
         <PlayerControls />
       </div>
     </motion.div>

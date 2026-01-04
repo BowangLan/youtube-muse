@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { SkipBack, SkipForward, Volume2, Shuffle, Repeat, Repeat1 } from "lucide-react";
+import {
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Shuffle,
+  Repeat,
+  Repeat1,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -57,8 +65,8 @@ export function PlayerControls() {
     repeatMode === "one"
       ? "Repeat one"
       : repeatMode === "playlist"
-      ? "Repeat playlist"
-      : "Repeat";
+        ? "Repeat playlist"
+        : "Repeat";
 
   return (
     <div className="flex flex-col gap-6">
@@ -217,7 +225,7 @@ export const TimeDisplay = React.memo(
     return (
       <div
         className={cn(
-          "flex items-center justify-between text-xs font-mono text-neutral-500",
+          "flex items-center justify-between text-xs font-mono text-muted-foreground",
           className
         )}
       >
@@ -234,32 +242,73 @@ export const VolumeControl = React.memo(
   ({ className }: { className?: string }) => {
     const volume = usePlayerStore((state) => state.volume);
     const dispatch = usePlayerStore((state) => state.dispatch);
+    const isMuted = volume === 0;
+
+    const toggleMute = () => {
+      if (isMuted) {
+        const previousVolume =
+          typeof window === "undefined"
+            ? 100
+            : ((window as Window & { __previousVolume?: number })
+                .__previousVolume ?? 100);
+        dispatch({ type: "UserSetVolume", volume: previousVolume });
+        return;
+      }
+
+      const currentVolume = volume;
+      dispatch({ type: "UserSetVolume", volume: 0 });
+      if (typeof window !== "undefined") {
+        (window as Window & { __previousVolume?: number }).__previousVolume =
+          currentVolume;
+      }
+    };
 
     return (
       <div
-        className={cn("flex items-center gap-3 text-neutral-500", className)}
+        className={cn(
+          "flex items-center gap-1 text-muted-foreground",
+          className
+        )}
       >
-        <Volume2 className="h-4 w-4" />
-        <div className="relative h-1.5 w-32 rounded-full bg-white/10">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
-            style={{ width: `${volume}%` }}
-          />
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            value={volume || 0}
-            onChange={(e) =>
-              dispatch({ type: "UserSetVolume", volume: Number(e.target.value) })
-            }
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          />
+        <div className="flex h-10 w-auto px-4 md:px-3 items-center justify-center rounded-full text-inherit hover:bg-white/10 trans">
+          <button
+            onClick={toggleMute}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            aria-pressed={isMuted}
+            title={isMuted ? "Unmute" : "Mute"}
+            className="flex items-center justify-center flex-none hover:text-foreground active:scale-95 trans"
+          >
+            {isMuted ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+          </button>
+          <div className="relative h-1.5 w-[50vw] md:w-16 lg:w-32 rounded-full bg-white/10 ml-4 md:ml-2">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
+              style={{ width: `${volume}%` }}
+            />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={volume || 0}
+              onChange={(e) => {
+                e.stopPropagation();
+                dispatch({
+                  type: "UserSetVolume",
+                  volume: Number(e.target.value),
+                });
+              }}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            />
+          </div>
+          <span className="text-xs font-mono tracking-wider block md:hidden lg:block ml-5 md:ml-3">
+            {Math.round(volume ?? 0)}%
+          </span>
         </div>
-        <span className="text-xs font-mono tracking-wider">
-          {Math.round(volume ?? 0)}%
-        </span>
       </div>
     );
   }

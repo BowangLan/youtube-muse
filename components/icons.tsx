@@ -4,6 +4,8 @@ import {
   IoPlaySkipForward,
   IoPause,
   IoChevronUp,
+  IoShuffle,
+  IoRepeat,
 } from "react-icons/io5";
 
 export const Icons = {
@@ -12,4 +14,5 @@ export const Icons = {
   SkipForward: IoPlaySkipForward,
   Pause: IoPause,
   ChevronUp: IoChevronUp,
+  Shuffle: IoShuffle,
 } as const;

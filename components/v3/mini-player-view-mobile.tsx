@@ -3,7 +3,13 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, MoreHorizontal, MonitorPlay } from "lucide-react";
+import {
+  ChevronDown,
+  MoreHorizontal,
+  MonitorPlay,
+  Repeat,
+  Repeat1,
+} from "lucide-react";
 import {
   AnimatePresence,
   cubicBezier,
@@ -20,10 +26,11 @@ import {
   PlayPauseButton,
   ProgressBar,
   TimeDisplay,
+  VolumeControl,
 } from "@/components/player/player-controls";
 import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
-import { BackgroundOverlay } from "./mini-player-view";
+import { BackgroundOverlay, PlayerIconButton } from "./mini-player-view";
 import { MiniPlayerMoreMenu } from "./mini-player-more-menu";
 import { Icons } from "@/components/icons";
 import {
@@ -32,6 +39,11 @@ import {
 } from "./mini-player-context";
 import { VideoPlayerSlot } from "@/components/player/video-player-host";
 import { FEATURE_FLAGS } from "@/lib/constants";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // =============================================================================
 // Constants
@@ -252,7 +264,7 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   return (
     <motion.div
       layoutId="track-cover-mobile"
-      className="relative shrink-0 overflow-visible rounded-lg flex-none aspect-video w-full sm:h-40 sm:w-72"
+      className="relative shrink-0 overflow-visible rounded-lg flex-none aspect-video w-full max-w-lg mx-auto"
       transition={{ duration: EXPAND_DURATION, ease: EASING }}
     >
       <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
@@ -370,74 +382,117 @@ const PlayerControls = () => {
     onToggleVideo,
   } = useMiniPlayerContext();
 
-  const controlButtonClass =
-    "flex h-14 w-14 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 hover:scale-110 active:scale-95 active:bg-white/20 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-transparent transition-all duration-150";
+  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
+    usePlaylistStore();
 
-  const playButtonClass =
-    "flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 active:scale-95 active:bg-white/30 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-white/10 transition-all duration-150";
+  const repeatLabel =
+    repeatMode === "one"
+      ? "Repeat one"
+      : repeatMode === "playlist"
+        ? "Repeat playlist"
+        : "Repeat off";
+
+  const handleButtonClick = (callback: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    callback();
+  };
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-2 text-foreground">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onSkipBackward();
-        }}
-        disabled={!apiReady}
-        className={controlButtonClass}
-      >
-        <Icons.SkipBack className="h-7 w-7" />
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onTogglePlay();
-        }}
-        disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
-        className={playButtonClass}
-      >
-        {!apiReady || isLoadingNewVideo ? (
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-        ) : isPlaying || pendingPlayState !== null ? (
-          <Icons.Pause className="h-8 w-8" />
-        ) : (
-          <Icons.Play className="h-8 w-8 translate-x-px" />
-        )}
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onPlayNext();
-        }}
-        disabled={!canPlayNext}
-        className={controlButtonClass}
-      >
-        <Icons.SkipForward className="h-7 w-7" />
-      </button>
-      {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
-        <button
-          type="button"
-          aria-label={isVideoEnabled ? "Disable video" : "Enable video"}
-          aria-pressed={isVideoEnabled}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onToggleVideo();
-          }}
-          className={cn(
-            controlButtonClass,
-            isVideoEnabled && "bg-white/15 text-white"
-          )}
+    <div className="flex flex-col items-center gap-3 mt-2 text-foreground">
+      {/* Main controls row */}
+      <div className="flex items-center justify-center gap-3">
+        <PlayerIconButton
+          onClick={handleButtonClick(toggleShuffle)}
+          label={isShuffleEnabled ? "Disable shuffle" : "Enable shuffle"}
+          icon={<Icons.Shuffle />}
+          variant="control"
+          className={isShuffleEnabled ? "text-white" : "text-white/50"}
+          aria-pressed={isShuffleEnabled}
         >
-          <MonitorPlay className="h-7 w-7" />
-        </button>
-      )}
+          <div className="relative">
+            <Icons.Shuffle className="h-5 w-5" />
+            <div
+              className="absolute -bottom-1 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-white transition-opacity duration-200"
+              style={{ opacity: isShuffleEnabled ? 1 : 0 }}
+            />
+          </div>
+        </PlayerIconButton>
+
+        <PlayerIconButton
+          onClick={handleButtonClick(onSkipBackward)}
+          label="Skip back"
+          icon={<Icons.SkipBack />}
+          variant="control"
+          disabled={!apiReady}
+        />
+
+        <PlayerIconButton
+          onClick={handleButtonClick(onTogglePlay)}
+          label={isPlaying || pendingPlayState !== null ? "Pause" : "Play"}
+          icon={<Icons.Play />}
+          variant="play"
+          disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
+          aria-pressed={isPlaying || pendingPlayState !== null}
+        >
+          {!apiReady || isLoadingNewVideo ? (
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          ) : isPlaying || pendingPlayState !== null ? (
+            <Icons.Pause />
+          ) : (
+            <Icons.Play />
+          )}
+        </PlayerIconButton>
+
+        <PlayerIconButton
+          onClick={handleButtonClick(onPlayNext)}
+          label="Skip forward"
+          icon={<Icons.SkipForward />}
+          variant="control"
+          disabled={!canPlayNext}
+        />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PlayerIconButton
+              onClick={handleButtonClick(cycleRepeatMode)}
+              label={repeatLabel}
+              icon={
+                repeatMode === "one" ? (
+                  <Repeat1 className="h-4 w-4" />
+                ) : (
+                  <Repeat className="h-4 w-4" />
+                )
+              }
+              variant="control"
+              className={repeatMode !== "off" ? "text-white" : ""}
+              aria-pressed={repeatMode !== "off"}
+            />
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={6}>
+            {repeatLabel}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
+          <PlayerIconButton
+            onClick={handleButtonClick(onToggleVideo)}
+            label={isVideoEnabled ? "Disable video" : "Enable video"}
+            icon={<MonitorPlay />}
+            variant="control"
+            className={isVideoEnabled ? "bg-white/15 text-white" : ""}
+            aria-pressed={isVideoEnabled}
+          />
+        )} */}
+      </div>
+    </div>
+  );
+};
+
+const PlaybackOptions = () => {
+  return (
+    <div className="flex items-center justify-center">
+      <VolumeControl className="text-xs shrink-0" />
     </div>
   );
 };
@@ -639,7 +694,10 @@ const ExpandedStateView = ({
         <TrackInfo variant="expanded" />
         <ProgressSection isHovered={isExpanded} />
         <AnimatedControlsWrapper isHovered={isExpanded}>
-          <PlayerControls />
+          <div className="flex flex-col gap-8">
+            <PlayerControls />
+            <PlaybackOptions />
+          </div>
         </AnimatedControlsWrapper>
       </div>
     </motion.div>
