@@ -1,5 +1,8 @@
 import { useEffect } from "react"
 import { usePlayerStore } from "@/lib/store/player-store"
+import { usePlaylistStore } from "@/lib/store/playlist-store"
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
+import { INTENTS } from "@/lib/intents"
 
 declare global {
   interface Window {
@@ -27,10 +30,8 @@ declare global {
  * - Arrow Down: Decrease volume by 5%
  * - M: Mute/Unmute
  *
- * Seeking:
- * - 0-9: Seek to 0%-90% of the track
- * - Home: Seek to start
- * - End: Seek to end
+ * Intent Selection:
+ * - 1-9: Play intent card 1-9
  */
 export function useKeyboardShortcuts() {
   useEffect(() => {
@@ -46,6 +47,10 @@ export function useKeyboardShortcuts() {
       }
 
       const { dispatch, volume, duration } = usePlayerStore.getState()
+      const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
+        usePlaylistStore.getState()
+      const { customIntents, hiddenBuiltInIntents } =
+        useCustomIntentsStore.getState()
 
       // Handle different key combinations
       const key = e.key.toLowerCase()
@@ -56,7 +61,6 @@ export function useKeyboardShortcuts() {
         if (key === " " || key === "k") return true
         if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) return true
         if (["j", "l", "n", "p", "m"].includes(key)) return true
-        if (key === "home" || key === "end") return true
         if (!isNaN(Number(key))) return true
         return false
       }
@@ -120,23 +124,38 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      // Seeking with number keys (0-9)
+      // Intent selection with number keys (1-9)
       const numKey = parseInt(key)
-      if (!isNaN(numKey) && numKey >= 0 && numKey <= 9) {
-        const seekPercentage = numKey / 10
-        const seekTime = duration * seekPercentage
-        dispatch({ type: "UserSeek", seconds: seekTime })
-        return
-      }
+      if (!isNaN(numKey) && numKey >= 1 && numKey <= 9) {
+        // Get all intent playlists in order (built-in + custom)
+        const intentNames = new Set(INTENTS.map((i) => i.name))
+        const hiddenNames = new Set(hiddenBuiltInIntents)
 
-      // Seek to start/end
-      if (key === "home") {
-        dispatch({ type: "UserSeek", seconds: 0 })
-        return
-      }
+        // Get built-in intents (not hidden)
+        const intentPlaylists = playlists
+          .filter((p) => intentNames.has(p.name) && !hiddenNames.has(p.name))
+          .sort(
+            (a, b) =>
+              INTENTS.findIndex((i) => i.name === a.name) -
+              INTENTS.findIndex((i) => i.name === b.name)
+          )
 
-      if (key === "end") {
-        dispatch({ type: "UserSeek", seconds: Math.max(0, duration - 1) })
+        // Get custom intent playlists
+        const customPlaylistIds = new Set(customIntents.map((ci) => ci.playlistId))
+        const customIntentPlaylists = playlists.filter((p) =>
+          customPlaylistIds.has(p.id)
+        )
+
+        // Combine all intents
+        const allIntents = [...intentPlaylists, ...customIntentPlaylists]
+
+        // Select intent by number (1-indexed)
+        const intentIndex = numKey - 1
+        if (intentIndex < allIntents.length) {
+          const selectedPlaylist = allIntents[intentIndex]
+          setCurrentPlaylist(selectedPlaylist.id)
+          setCurrentTrackIndex(0)
+        }
         return
       }
     }

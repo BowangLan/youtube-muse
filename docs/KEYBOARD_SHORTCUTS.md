@@ -20,16 +20,20 @@ YouTube Muse supports comprehensive keyboard shortcuts for efficient playback co
 | `↓` | Decrease volume 5% |
 | `M` | Mute/Unmute |
 
-## Seeking
+## Navigation
 
 | Key | Action |
 |-----|--------|
-| `0-9` | Jump to 0%-90% of track |
-| `Home` | Jump to start |
-| `End` | Jump to end |
+| `1-9` | Play intent card 1-9 |
+
+## Help
+
+| Key | Action |
+|-----|--------|
+| `?` | Show keyboard shortcuts |
 
 ## Notes
 
 - Shortcuts are disabled when typing in input fields
 - YouTube-style shortcuts (`K`, `J`, `L`) mirror familiar controls
-- Volume and seeking shortcuts provide precise control
+- Intent shortcuts map to visible cards in order (built-in + custom)

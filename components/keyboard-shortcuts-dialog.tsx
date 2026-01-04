@@ -39,12 +39,8 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
-    title: "Seeking",
-    shortcuts: [
-      { keys: ["0-9"], description: "Jump to 0%-90% of track" },
-      { keys: ["Home"], description: "Jump to start" },
-      { keys: ["End"], description: "Jump to end" },
-    ],
+    title: "Navigation",
+    shortcuts: [{ keys: ["1-9"], description: "Play intent card 1-9" }],
   },
 ];
 
@@ -85,24 +81,28 @@ export function KeyboardShortcutsDialog() {
           <Keyboard className="size-4 text-white/80" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-[#0a0a0a] border-white/10">
+      <DialogContent className="sm:max-w-2xl flex-col flex sm:h-[75vh] bg-[#0a0a0a] border-white/10">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">
             Keyboard Shortcuts
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-6 py-4 sm:grid-cols-3">
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-8">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title} className="space-y-3">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-white/60">
+              <h3 className="text-xs font-normal uppercase tracking-wider text-white/60">
                 {group.title}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {group.shortcuts.map((shortcut, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-col gap-1.5 text-sm"
+                    className="flex flex-row items-center justify-between gap-1.5 text-sm"
                   >
+                    <span className="text-sm text-foreground">
+                      {shortcut.description}
+                    </span>
+
                     <div className="flex flex-wrap gap-1">
                       {shortcut.keys.map((key, keyIdx) => (
                         <React.Fragment key={keyIdx}>
@@ -110,23 +110,26 @@ export function KeyboardShortcutsDialog() {
                             {key}
                           </kbd>
                           {keyIdx < shortcut.keys.length - 1 && (
-                            <span className="text-white/40 self-center">or</span>
+                            <span className="text-white/40 self-center">
+                              or
+                            </span>
                           )}
                         </React.Fragment>
                       ))}
                     </div>
-                    <span className="text-xs text-white/60">
-                      {shortcut.description}
-                    </span>
                   </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-2 rounded-lg border border-white/10 bg-white/5 p-3">
+        <div className="mt-auto flex-none rounded-lg border border-white/10 bg-white/5 p-3">
           <p className="text-xs text-white/60">
-            Press <kbd className="inline-flex items-center justify-center rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-white/90">?</kbd> to toggle this dialog
+            Press{" "}
+            <kbd className="inline-flex items-center justify-center rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-white/90">
+              ?
+            </kbd>{" "}
+            to toggle this dialog
           </p>
         </div>
       </DialogContent>
