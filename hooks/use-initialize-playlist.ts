@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { buildIntentQuery, INTENTS } from "@/lib/intents";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search";
+import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
 
 /**
  * Hook to initialize default playlist on first load

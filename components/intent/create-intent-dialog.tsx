@@ -11,11 +11,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Sparkles } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search";
+import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
 import { buildCustomIntentQuery } from "@/lib/intents";
 import { KeywordSelector } from "./keyword-selector";
 import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
@@ -76,13 +76,11 @@ export function CreateIntentDialog({
     []
   );
 
-  // Auto-generate name when keywords change and name hasn't been manually edited
   React.useEffect(() => {
     if (keywords.length > 0 && (!nameOverwritten || !name.trim())) {
       setName(generateNameFromKeywords(keywords));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only regenerate on keyword changes, not name changes
-  }, [keywords, nameOverwritten, generateNameFromKeywords]);
+  }, [keywords, nameOverwritten, name, generateNameFromKeywords]);
 
   const resetForm = () => {
     setName("");
@@ -157,13 +155,20 @@ export function CreateIntentDialog({
 
       // Search for tracks using the keywords
       const query = buildCustomIntentQuery(keywordList);
-      if (typeof window !== 'undefined' && window.umami) {
-        window.umami.track('youtube-api-search-videos', { context: 'create-intent', intentName: trimmedName });
+      if (typeof window !== "undefined" && window.umami && process.env.NODE_ENV === "production") {
+        window.umami.track("youtube-api-search-videos", {
+          context: "create-intent",
+          intentName: trimmedName,
+        });
       }
-      const { results, error: searchError } = await searchYouTubeVideos(query, "video", {
-        minDurationMinutes: minDuration,
-        order: "relevance",
-      });
+      const { results, error: searchError } = await searchYouTubeVideos(
+        query,
+        "video",
+        {
+          minDurationMinutes: minDuration,
+          order: "relevance",
+        }
+      );
 
       if (searchError) {
         console.warn("Search error:", searchError);
@@ -243,138 +248,68 @@ export function CreateIntentDialog({
       }}
     >
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="w-full h-full sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm max-h-[90vh] overflow-hidden">
-        <div className="space-y-3 p-4 sm:space-y-4 sm:p-6 overflow-y-auto max-h-[90vh] flex flex-col">
-          <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold sm:text-xl">
-              <Sparkles className="h-4 w-4 shrink-0 text-purple-400 sm:h-5 sm:w-5" />
-              Create Custom Intent
+      <DialogContent className="w-[92vw] max-h-[85vh] overflow-hidden rounded-3xl border border-white/10 bg-[#070707] p-0 text-white motion-preset-slide-up-sm sm:max-w-xl">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.08),transparent_40%)]"
+        />
+        <div className="relative flex max-h-[85vh] flex-col gap-6 overflow-y-auto p-6 sm:p-8">
+          <DialogHeader className="space-y-2 text-left motion-preset-blur-up-lg">
+            <DialogTitle className="text-2xl font-semibold text-white">
+              Build your intent.
             </DialogTitle>
-            <DialogDescription className="text-xs text-zinc-500 sm:text-sm">
-              Define your own intent with custom keywords. We&apos;ll
-              automatically find tracks that match your vibe.
+            <DialogDescription className="text-sm text-zinc-400">
+              Select or type keywords. The name is generated automatically.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 sm:space-y-4 flex-1">
-            <div className="space-y-1.5 sm:space-y-2">
-              <div>
-                <label
-                  htmlFor="intent-name"
-                  className="text-xs font-medium text-white/70 sm:text-sm"
-                >
-                  Name
-                </label>
-              </div>
-              <Input
-                id="intent-name"
-                placeholder="e.g., Night Owl, Coding Mode"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setNameOverwritten(true);
-                  setError(null);
-                }}
-                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:max-w-sm sm:text-base"
-                disabled={isLoading}
-              />
+          <div className="space-y-2">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+              Intent Name
             </div>
-
-            {/* Keywords */}
-            <div className="space-y-1.5 sm:space-y-2">
-              <div>
-                <label className="text-xs font-medium text-white/70 sm:text-sm">
-                  Keywords <span className="text-zinc-500">(max 10)</span>
-                </label>
-              </div>
-              <KeywordSelector
-                keywords={keywords}
-                onChange={setKeywords}
-                maxKeywords={10}
-                disabled={isLoading}
-                onError={setError}
-              />
-              <p className="text-[11px] text-zinc-500 sm:text-xs">
-                These keywords will be used to search for music that matches
-                your intent.
-              </p>
-            </div>
-
-            {/* Minimum Duration */}
-            <div className="space-y-1.5 sm:space-y-2">
-              <div>
-                <label
-                  htmlFor="intent-min-duration"
-                  className="text-xs font-medium text-white/70 sm:text-sm"
-                >
-                  Minimum Duration (minutes)
-                </label>
-              </div>
-              <Input
-                id="intent-min-duration"
-                type="number"
-                min="1"
-                max="240"
-                placeholder="20"
-                value={minDuration}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  if (!isNaN(value) && value >= 1 && value <= 240) {
-                    setMinDuration(value);
-                  }
-                }}
-                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:max-w-xs sm:text-base"
-                disabled={isLoading}
-              />
-              <p className="text-[11px] text-zinc-500 sm:text-xs">
-                Only fetch videos at least this long
-              </p>
-            </div>
-
-            <div className="space-y-1.5 sm:space-y-2 hidden sm:block">
-              <div>
-                <label
-                  htmlFor="intent-description"
-                  className="text-xs font-medium text-white/70 sm:text-sm"
-                >
-                  Description <span className="text-zinc-500">(optional)</span>
-                </label>
-              </div>
-              <Input
-                id="intent-description"
-                placeholder="e.g., For late night coding sessions"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:text-base"
-                disabled={isLoading}
-              />
-            </div>
-
-            {error && (
-              <p className="text-xs text-red-400 sm:text-sm">{error}</p>
-            )}
-
-            {loadingStatus && (
-              <p className="flex items-center gap-2 text-xs text-zinc-400 sm:text-sm">
-                <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
-                {loadingStatus}
-              </p>
-            )}
+            <Input
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameOverwritten(true);
+                setError(null);
+              }}
+              placeholder="Auto-generated"
+              className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-0 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+              disabled={isLoading}
+            />
           </div>
 
-          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-end">
+          <KeywordSelector
+            keywords={keywords}
+            onChange={setKeywords}
+            maxKeywords={10}
+            disabled={isLoading}
+            onError={setError}
+          />
+
+          {error && <p className="text-sm text-red-400">{error}</p>}
+
+          {loadingStatus && (
+            <p className="flex items-center gap-2 text-sm text-zinc-400">
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+              {loadingStatus}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
               onClick={handleClose}
               disabled={isLoading}
-              className="h-10 w-full rounded-full px-4 text-white hover:bg-white/10 sm:h-auto sm:w-auto"
+              className="h-10 w-full rounded-full px-5 text-white/70 hover:bg-white/10 hover:text-white sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || keywords.length === 0 || isLoading}
-              className="h-10 w-full rounded-full bg-white text-black hover:bg-white/90 sm:h-auto sm:w-auto"
+              className="h-11 w-full rounded-full bg-white px-6 text-sm font-semibold text-black hover:bg-white/90 sm:w-auto"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Intent

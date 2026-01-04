@@ -2,7 +2,8 @@
 
 import { api } from "@/convex/_generated/api"
 import { convexClient } from "@/lib/convex-client"
-import { getChannelById, getChannelLatestVideoIdUnofficial, getChannelLatestVideos } from "./youtube-channels"
+import { getChannelById, getChannelLatestVideos } from "./youtube-channels-official"
+import { getChannelLatestVideoIdUnofficial } from "./youtube-channels-unofficial"
 
 const syncIntervalMs = 2 * 60 * 1000 // 2 minutes
 

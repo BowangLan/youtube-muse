@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // 30+ built-in keyword suggestions for music intents
@@ -173,58 +172,14 @@ interface KeywordSelectorProps {
   onError?: (error: string | null) => void;
 }
 
-// Helper to get color classes for a keyword based on its category
 const getKeywordColorClasses = (keyword: string) => {
-  if (MOOD_ENERGY_KEYWORDS.includes(keyword)) {
-    return "bg-rose-500/25 text-rose-200 border-rose-500/40";
+  if (
+    SUGGESTED_KEYWORDS.includes(keyword as (typeof SUGGESTED_KEYWORDS)[number])
+  ) {
+    return "bg-white/5 text-white/80 border-white/15";
   }
-  if (GENRE_STYLE_KEYWORDS.includes(keyword)) {
-    return "bg-violet-500/25 text-violet-200 border-violet-500/40";
-  }
-  if (ACTIVITY_PURPOSE_KEYWORDS.includes(keyword)) {
-    return "bg-emerald-500/25 text-emerald-200 border-emerald-500/40";
-  }
-  if (ATMOSPHERE_KEYWORDS.includes(keyword)) {
-    return "bg-sky-500/25 text-sky-200 border-sky-500/40";
-  }
-  // Custom keywords - neutral white
-  return "bg-white/20 text-white border-white/30";
+  return "bg-white/10 text-white border-white/20";
 };
-
-const KEYWORD_CATEGORIES = [
-  {
-    id: "mood",
-    label: "Mood & Energy",
-    keywords: MOOD_ENERGY_KEYWORDS,
-    activeClass: "bg-rose-500/20 text-rose-300 border-rose-500/30",
-    pillClass:
-      "bg-rose-500/10 text-rose-300/80 border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-200",
-  },
-  {
-    id: "genre",
-    label: "Genre & Style",
-    keywords: GENRE_STYLE_KEYWORDS,
-    activeClass: "bg-violet-500/20 text-violet-300 border-violet-500/30",
-    pillClass:
-      "bg-violet-500/10 text-violet-300/80 border-violet-500/20 hover:bg-violet-500/20 hover:text-violet-200",
-  },
-  {
-    id: "activity",
-    label: "Activity",
-    keywords: ACTIVITY_PURPOSE_KEYWORDS,
-    activeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    pillClass:
-      "bg-emerald-500/10 text-emerald-300/80 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-200",
-  },
-  {
-    id: "atmosphere",
-    label: "Atmosphere",
-    keywords: ATMOSPHERE_KEYWORDS,
-    activeClass: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-    pillClass:
-      "bg-sky-500/10 text-sky-300/80 border-sky-500/20 hover:bg-sky-500/20 hover:text-sky-200",
-  },
-] as const;
 
 export function KeywordSelector({
   keywords,
@@ -233,10 +188,7 @@ export function KeywordSelector({
   disabled = false,
   onError,
 }: KeywordSelectorProps) {
-  const [activeCategory, setActiveCategory] = React.useState<string>("mood");
   const [searchTerm, setSearchTerm] = React.useState<string>("");
-  const [showSearchResults, setShowSearchResults] =
-    React.useState<boolean>(false);
 
   const handleToggleKeyword = (keyword: string) => {
     if (keywords.includes(keyword)) {
@@ -274,25 +226,22 @@ export function KeywordSelector({
       onError?.(null);
       input.value = "";
       setSearchTerm("");
-      setShowSearchResults(false);
     }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    setShowSearchResults(value.length > 0);
   };
 
   // Filter built-in keywords based on search term
   const filteredKeywords = React.useMemo(() => {
-    if (!searchTerm.trim()) return [];
-
-    const term = searchTerm.toLowerCase();
-    return SUGGESTED_KEYWORDS.filter(
-      (keyword) =>
-        keyword.toLowerCase().includes(term) && !keywords.includes(keyword)
-    );
+    const term = searchTerm.trim().toLowerCase();
+    return SUGGESTED_KEYWORDS.filter((keyword) => {
+      if (keywords.includes(keyword)) return false;
+      if (!term) return true;
+      return keyword.toLowerCase().includes(term);
+    });
   }, [searchTerm, keywords]);
 
   const handleSelectSearchResult = (keyword: string) => {
@@ -303,212 +252,78 @@ export function KeywordSelector({
     onChange([...keywords, keyword]);
     onError?.(null);
     setSearchTerm("");
-    setShowSearchResults(false);
   };
 
   return (
-    <div className="space-y-2">
-      {keywords.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {keywords.map((keyword) => (
-            <button
-              key={keyword}
-              type="button"
-              onClick={() => handleToggleKeyword(keyword)}
-              disabled={disabled}
-              className={cn(
-                "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium",
-                "transition-all duration-200 border",
-                getKeywordColorClasses(keyword)
-              )}
-            >
-              <Check className="h-3 w-3" />
-              {keyword}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Search Input Section */}
+    <div className="space-y-4">
       <div className="space-y-2">
-        <div className="relative">
-          <Input
-            placeholder="Search keywords or enter custom..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onKeyDown={handleAddCustomKeyword}
-            className="h-10 text-sm rounded-xl max-w-xs border-white/10 bg-white/5 text-white placeholder:text-zinc-500"
-            disabled={disabled || keywords.length >= maxKeywords}
-          />
-
-          {/* Search Results Dropdown */}
-          {showSearchResults && (
-            <div className="absolute top-full mt-1 w-full max-w-xs bg-black/90 border border-white/20 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-              {filteredKeywords.length > 0 ? (
-                <div className="p-2 space-y-1">
-                  {filteredKeywords.slice(0, 8).map((keyword) => {
-                    const category = KEYWORD_CATEGORIES.find((cat) =>
-                      cat.keywords.includes(keyword)
-                    );
-                    return (
-                      <button
-                        key={keyword}
-                        type="button"
-                        onClick={() => handleSelectSearchResult(keyword)}
-                        disabled={disabled || keywords.length >= maxKeywords}
-                        className={cn(
-                          "w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
-                          category?.pillClass ||
-                            "bg-white/10 text-white hover:bg-white/20",
-                          "flex items-center justify-between"
-                        )}
-                      >
-                        <span>{keyword}</span>
-                        <span className="text-xs opacity-60">
-                          {category?.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                searchTerm.trim() && (
-                  <div className="p-3 text-center">
-                    <div className="text-sm text-zinc-400 mb-1">
-                      No matching keywords found
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      Press Enter to create &quot;{searchTerm.trim()}&quot;
-                    </div>
-                  </div>
-                )
-              )}
+        <Input
+          placeholder="Type a keyword and press Enter"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onKeyDown={handleAddCustomKeyword}
+          className="h-11 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-0 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+          disabled={disabled || keywords.length >= maxKeywords}
+        />
+        <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+          Selected
+        </div>
+        <div className="h-24 overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-white/5 p-3">
+          {keywords.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {keywords.map((keyword) => (
+                <button
+                  key={keyword}
+                  type="button"
+                  onClick={() => handleToggleKeyword(keyword)}
+                  disabled={disabled}
+                  className={cn(
+                    "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
+                    "transition-all duration-200 border",
+                    getKeywordColorClasses(keyword)
+                  )}
+                >
+                  {keyword}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-white/40">
+              Add keywords to define the intent.
             </div>
           )}
         </div>
       </div>
 
-      {/* Keyword Selector - Desktop */}
-      <div className="hidden sm:flex rounded-lg border border-white/10 bg-white/2 overflow-hidden h-56">
-        {/* Sidebar */}
-        <div className="flex p-1 gap-1 flex-col border-r border-white/10 bg-white/2 shrink-0">
-          {KEYWORD_CATEGORIES.map((category) => {
-            const isActive = activeCategory === category.id;
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setActiveCategory(category.id)}
-                className={cn(
-                  "px-3 py-2 text-xs font-medium rounded-md text-left transition-all duration-200",
-                  isActive
-                    ? cn(category.activeClass, "border-current")
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-                )}
-              >
-                {category.label}
-              </button>
-            );
-          })}
+      <div className="space-y-2">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+          Suggested
         </div>
-
-        {/* Content */}
-        <div className="flex-1 p-3 overflow-y-auto">
-          {KEYWORD_CATEGORIES.map((category) => {
-            if (activeCategory !== category.id) return null;
-
-            return (
-              <div
-                key={category.id}
-                className="flex flex-wrap gap-1.5 content-start"
-              >
-                {category.keywords.map((keyword) => {
-                  const isSelected = keywords.includes(keyword);
-                  if (isSelected) return null;
-
-                  return (
-                    <button
-                      key={keyword}
-                      type="button"
-                      onClick={() => handleToggleKeyword(keyword)}
-                      disabled={disabled || keywords.length >= maxKeywords}
-                      className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                        "transition-all duration-200 border",
-                        category.pillClass,
-                        keywords.length >= maxKeywords &&
-                          "opacity-40 cursor-not-allowed"
-                      )}
-                    >
-                      {keyword}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Keyword Selector - Mobile */}
-      <div className="flex flex-col sm:hidden">
-        {/* top bar */}
-        <div className="flex mt-1 max-w-full overflow-x-auto min-w-0 min-h-0 gap-1 flex-row items-center flex-none scrollbar-none">
-          {KEYWORD_CATEGORIES.map((category) => {
-            const isActive = activeCategory === category.id;
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setActiveCategory(category.id)}
-                className={cn(
-                  "px-3 py-2 text-xs flex-none font-medium rounded-md text-left transition-all duration-200",
-                  isActive
-                    ? cn(category.activeClass, "border-current")
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-                )}
-              >
-                {category.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 mt-3 overflow-y-auto max-h-56">
-          {KEYWORD_CATEGORIES.map((category) => {
-            if (activeCategory !== category.id) return null;
-
-            return (
-              <div
-                key={category.id}
-                className="flex flex-wrap gap-1.5 content-start"
-              >
-                {category.keywords.map((keyword) => {
-                  const isSelected = keywords.includes(keyword);
-                  if (isSelected) return null;
-
-                  return (
-                    <button
-                      key={keyword}
-                      type="button"
-                      onClick={() => handleToggleKeyword(keyword)}
-                      disabled={disabled || keywords.length >= maxKeywords}
-                      className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                        "transition-all duration-200 border",
-                        category.pillClass,
-                        keywords.length >= maxKeywords &&
-                          "opacity-40 cursor-not-allowed"
-                      )}
-                    >
-                      {keyword}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
+        <div className="h-40 overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-white/5 p-3">
+          {filteredKeywords.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {filteredKeywords.map((keyword) => (
+                <button
+                  key={keyword}
+                  type="button"
+                  onClick={() => handleSelectSearchResult(keyword)}
+                  disabled={disabled || keywords.length >= maxKeywords}
+                  className={cn(
+                    "inline-flex items-center rounded-full border border-white/10 bg-white/3 px-3 py-1.5 text-xs text-white/70",
+                    "transition-all duration-200 hover:bg-white/10 hover:text-white",
+                    keywords.length >= maxKeywords &&
+                      "cursor-not-allowed opacity-40"
+                  )}
+                >
+                  {keyword}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-white/40">
+              No matches. Press Enter to add &quot;{searchTerm.trim()}&quot;.
+            </div>
+          )}
         </div>
       </div>
     </div>

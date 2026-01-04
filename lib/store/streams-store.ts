@@ -3,9 +3,9 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { GRADIENT_CLASS_NAMES } from "@/lib/intents"
 import type { Stream, Channel } from "@/lib/types/stream"
 import type { Track } from "@/lib/types/playlist"
-import type { ChannelVideoResult } from "@/app/actions/youtube-channels"
+import type { ChannelVideoResult } from "@/app/actions/youtube-channels-official"
 import { usePlaylistStore } from "./playlist-store"
-import { getChannelLatestVideos } from "@/app/actions/youtube-channels"
+import { getChannelLatestVideos } from "@/app/actions/youtube-channels-official"
 
 // Available gradient classes for streams (gradients 7-22, excluding built-in 1-6)
 const CUSTOM_STREAM_GRADIENTS = GRADIENT_CLASS_NAMES.slice(6)

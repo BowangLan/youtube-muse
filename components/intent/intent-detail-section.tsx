@@ -30,7 +30,7 @@ import {
   getIntentByName,
   getRandomGradient,
 } from "@/lib/intents";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search";
+import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { EditIntentDialog } from "./edit-intent-dialog";

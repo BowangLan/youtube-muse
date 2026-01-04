@@ -20,7 +20,7 @@ import {
   searchYouTubeChannels,
   getChannelById,
   type ChannelSearchResult,
-} from "@/app/actions/youtube-channels";
+} from "@/app/actions/youtube-channels-official";
 import { extractChannelId, isChannelUrl } from "@/lib/utils/youtube";
 
 interface CreateStreamDialogProps {

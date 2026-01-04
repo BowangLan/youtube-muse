@@ -12,7 +12,7 @@ import { Loader2, Plus, UserPlus } from "lucide-react";
 import {
   searchYouTubeChannels,
   type ChannelSearchResult,
-} from "@/app/actions/youtube-channels";
+} from "@/app/actions/youtube-channels-official";
 import { cn } from "@/lib/utils";
 import type { Channel } from "@/lib/types/stream";
 

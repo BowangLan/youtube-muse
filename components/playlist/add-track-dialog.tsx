@@ -19,7 +19,7 @@ import { RichButton } from "../ui/rich-button";
 import {
   searchYouTubeVideos,
   type SearchResult,
-} from "@/app/actions/youtube-search";
+} from "@/app/actions/youtube-search-official";
 
 interface AddTrackDialogContentProps {
   playlist: Playlist | null;
