@@ -30,7 +30,7 @@ import {
   getIntentByName,
   getRandomGradient,
 } from "@/lib/intents";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
+import { searchYouTubeUnofficial } from "@/app/actions/youtube-search-unofficial";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { EditIntentDialog } from "./edit-intent-dialog";
@@ -147,28 +147,23 @@ export function IntentDetailSection() {
           intent: activePlaylist.name,
         });
       }
-      const { results } = await searchYouTubeVideos(query, "video", {
-        minDurationMinutes: minDuration,
-        order: "relevance",
-      });
+      const { results } = await searchYouTubeUnofficial(query, "video", "long");
       const existing = new Set(activePlaylist.tracks.map((t) => t.id));
-      const next = results.find((r) => r?.id && !existing.has(r.id));
-      if (!next) return;
+      const next = results.find((r) => r && "videoId" in r && !existing.has(r.videoId));
+      if (!next || !("videoId" in next)) return;
 
-      const thumb = getThumbnailUrl(next.id, "hqdefault");
+      const thumb = getThumbnailUrl(next.videoId, "hqdefault");
 
       addTrackToPlaylist(activePlaylistId, {
-        id: next.id,
+        id: next.videoId,
         title: next.title,
         author: next.channelTitle,
-        authorUrl: `https://www.youtube.com/channel/${next.channelId || ""}`,
-        authorThumbnail: next.channelThumbnail,
-        duration: next.length?.simpleText
-          ? parseDuration(next.length.simpleText)
-          : 0,
+        authorUrl: `https://www.youtube.com/channel/${next.channelId}`,
+        authorThumbnail: undefined, // Unofficial API doesn't provide channel thumbnails
+        duration: next.lengthText ? parseDuration(next.lengthText) : 0,
         thumbnailUrl: thumb,
-        publishedAt: next.publishedAt,
-        publishedTimeText: next.publishedTimeText,
+        publishedAt: undefined, // Unofficial API doesn't provide publishedAt
+        publishedTimeText: next.publishedTime,
       });
     } finally {
       setIsAdding(false);
@@ -188,34 +183,30 @@ export function IntentDetailSection() {
           intent: activePlaylist.name,
         });
       }
-      const { results } = await searchYouTubeVideos(query, "video", {
-        minDurationMinutes: minDuration,
-        order: "relevance",
-      });
+      const { results } = await searchYouTubeUnofficial(query, "video", "long");
 
       // Convert search results to tracks
       const newTracks = results
-        .filter((r) => r?.id && r.title)
+        .filter((r) => r && "videoId" in r && r.title)
         .map((result) => {
-          const thumb = getThumbnailUrl(result.id, "hqdefault");
+          if (!("videoId" in result)) return null;
+
+          const thumb = getThumbnailUrl(result.videoId, "hqdefault");
 
           return {
-            id: result.id,
+            id: result.videoId,
             title: result.title,
             author: result.channelTitle,
-            authorUrl: `https://www.youtube.com/channel/${
-              result.channelId || ""
-            }`,
-            authorThumbnail: result.channelThumbnail,
-            duration: result.length?.simpleText
-              ? parseDuration(result.length.simpleText)
-              : 0,
+            authorUrl: `https://www.youtube.com/channel/${result.channelId}`,
+            authorThumbnail: undefined, // Unofficial API doesn't provide channel thumbnails
+            duration: result.lengthText ? parseDuration(result.lengthText) : 0,
             thumbnailUrl: thumb,
             addedAt: Date.now(),
-            publishedAt: result.publishedAt,
-            publishedTimeText: result.publishedTimeText,
+            publishedAt: undefined, // Unofficial API doesn't provide publishedAt
+            publishedTimeText: result.publishedTime,
           };
-        });
+        })
+        .filter((track): track is NonNullable<typeof track> => track !== null);
 
       // Remove all existing tracks and add new ones
       if (newTracks.length > 0) {

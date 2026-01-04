@@ -15,7 +15,7 @@ import { Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
+import { searchYouTubeUnofficial } from "@/app/actions/youtube-search-unofficial";
 import { buildCustomIntentQuery } from "@/lib/intents";
 import { KeywordSelector } from "./keyword-selector";
 import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
@@ -155,19 +155,20 @@ export function CreateIntentDialog({
 
       // Search for tracks using the keywords
       const query = buildCustomIntentQuery(keywordList);
-      if (typeof window !== "undefined" && window.umami && process.env.NODE_ENV === "production") {
+      if (
+        typeof window !== "undefined" &&
+        window.umami &&
+        process.env.NODE_ENV === "production"
+      ) {
         window.umami.track("youtube-api-search-videos", {
           context: "create-intent",
           intentName: trimmedName,
         });
       }
-      const { results, error: searchError } = await searchYouTubeVideos(
+      const { results, error: searchError } = await searchYouTubeUnofficial(
         query,
         "video",
-        {
-          minDurationMinutes: minDuration,
-          order: "relevance",
-        }
+        "long" // Use long videos (>20 minutes) to match minDuration behavior
       );
 
       if (searchError) {
@@ -180,27 +181,28 @@ export function CreateIntentDialog({
 
         const existingIds = new Set<string>();
         const toAdd = results.filter((r) => {
-          if (!r?.id) return false;
-          if (existingIds.has(r.id)) return false;
-          existingIds.add(r.id);
+          // Check if this is a video result and has videoId
+          if (!r || !("videoId" in r) || !r.videoId) return false;
+          if (existingIds.has(r.videoId)) return false;
+          existingIds.add(r.videoId);
           return true;
         });
 
         for (const result of toAdd) {
-          const thumb = getThumbnailUrl(result.id, "hqdefault");
+          if (!("videoId" in result)) continue;
+
+          const thumb = getThumbnailUrl(result.videoId, "hqdefault");
 
           addTrackToPlaylist(newPlaylist.id, {
-            id: result.id,
+            id: result.videoId,
             title: result.title,
             author: result.channelTitle,
-            authorUrl: `https://www.youtube.com/channel/${result.channelId || ""}`,
-            authorThumbnail: result.channelThumbnail,
-            duration: result.length?.simpleText
-              ? parseDuration(result.length.simpleText)
-              : 0,
+            authorUrl: `https://www.youtube.com/channel/${result.channelId}`,
+            authorThumbnail: undefined, // Unofficial API doesn't provide channel thumbnails
+            duration: result.lengthText ? parseDuration(result.lengthText) : 0,
             thumbnailUrl: thumb,
-            publishedAt: result.publishedAt,
-            publishedTimeText: result.publishedTimeText,
+            publishedAt: undefined, // Unofficial API doesn't provide publishedAt
+            publishedTimeText: result.publishedTime,
           });
         }
       }
