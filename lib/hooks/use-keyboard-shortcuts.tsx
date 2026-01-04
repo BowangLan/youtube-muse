@@ -3,7 +3,7 @@ import { usePlayerStore } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
 import { useKeyboardFeedbackStore } from "@/lib/store/keyboard-feedback-store"
-import { INTENTS } from "@/lib/intents"
+import { INTENTS, getIntentByName } from "@/lib/intents"
 
 declare global {
   interface Window {
@@ -50,7 +50,7 @@ export function useKeyboardShortcuts() {
       const { dispatch, volume, duration, isPlaying } = usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
-      const { customIntents, hiddenBuiltInIntents } =
+      const { customIntents, hiddenBuiltInIntents, gradientOverrides } =
         useCustomIntentsStore.getState()
       const { showFeedback } = useKeyboardFeedbackStore.getState()
 
@@ -194,9 +194,16 @@ export function useKeyboardShortcuts() {
           const selectedPlaylist = allIntents[intentIndex]
           setCurrentPlaylist(selectedPlaylist.id)
           setCurrentTrackIndex(0)
+
+          // Get gradient for feedback
+          const intent = getIntentByName(selectedPlaylist.name) ??
+            customIntents.find((ci) => ci.playlistId === selectedPlaylist.id)
+          const gradientClassName = gradientOverrides[selectedPlaylist.id] ?? intent?.gradientClassName
+
           showFeedback({
             label: selectedPlaylist.name,
             icon: "play",
+            gradientClassName: gradientClassName ? `${gradientClassName}-active` : undefined,
           })
         }
         return

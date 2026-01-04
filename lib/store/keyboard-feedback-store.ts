@@ -15,6 +15,7 @@ export type KeyboardFeedbackIcon =
 export type KeyboardFeedback = {
   label: string
   icon?: KeyboardFeedbackIcon
+  gradientClassName?: string
 }
 
 type KeyboardFeedbackState = {

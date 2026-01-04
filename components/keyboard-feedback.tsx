@@ -79,14 +79,18 @@ export function KeyboardFeedback() {
               filter: "blur(10px)",
               transition: { duration: 0.15, ease: EASING_EASE_OUT },
             }}
-            className="flex items-center gap-3 rounded-2xl border border-white/20 bg-black/50 px-6 py-4 backdrop-blur-xl shadow-2xl"
+            className={`flex items-center gap-3 rounded-2xl px-6 py-4 backdrop-blur-xl shadow-2xl relative overflow-hidden ${
+              currentFeedback.gradientClassName
+                ? `before:pointer-events-none before:absolute before:inset-0 intent-card-active before:bg-linear-to-br before:opacity-90 ${currentFeedback.gradientClassName}`
+                : "bg-black/50 border-white/10 border"
+            }`}
           >
             {IconComponent && (
-              <div className="text-foreground">
+              <div className="text-foreground relative z-10">
                 <IconComponent className="size-5" />
               </div>
             )}
-            <span className="text-lg font-normal text-foreground">
+            <span className="text-lg font-normal text-foreground relative z-10">
               {currentFeedback.label}
             </span>
           </motion.div>
