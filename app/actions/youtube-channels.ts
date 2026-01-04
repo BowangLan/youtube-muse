@@ -6,9 +6,106 @@ import { google } from "googleapis"
 import { query } from "@/convex/_generated/server"
 import { convexClient } from "@/lib/convex-client"
 
+// API Configuration Constants
+const YOUTUBE_API_VERSION = "v3"
+const YOUTUBE_API_PARTS = {
+  SNIPPET: "snippet",
+  STATISTICS: "statistics",
+  CONTENT_DETAILS: "contentDetails",
+} as const
+
+// Search Configuration
+const SEARCH_CONFIG = {
+  TYPE_CHANNEL: ["channel"],
+  MAX_RESULTS: 20,
+  ORDER_RELEVANCE: "relevance",
+}
+
+// Channel Configuration
+const CHANNEL_CONFIG = {
+  UPLOADS_PLAYLIST_MAX_RESULTS: 50,
+  VIDEO_RESOURCE_KIND: "youtube#video",
+  MIN_VIDEO_DURATION_SECONDS: 60,
+} as const
+
+// Thumbnail Defaults
+const THUMBNAIL_DEFAULTS = {
+  HIGH_WIDTH: 800,
+  HIGH_HEIGHT: 800,
+  MEDIUM_WIDTH: 480,
+  MEDIUM_HEIGHT: 360,
+} as const
+
+// Subscriber Count Formatting
+const SUBSCRIBER_THRESHOLDS = {
+  MILLION: 1000000,
+  THOUSAND: 1000,
+} as const
+
+// Time Conversion Constants
+const TIME_UNITS = {
+  SECONDS_PER_HOUR: 3600,
+  SECONDS_PER_MINUTE: 60,
+  MINUTES_PER_HOUR: 60,
+  HOURS_PER_DAY: 24,
+  DAYS_PER_WEEK: 7,
+  DAYS_PER_MONTH: 30,
+  DAYS_PER_YEAR: 365,
+} as const
+
+// URL Constants
+const YOUTUBE_URLS = {
+  BASE: "https://www.youtube.com",
+  CHANNEL_PATH: "/channel/",
+  VIDEOS_PATH: "/videos",
+  VIDEOS_TAB_TITLE: "Videos",
+} as const
+
+// HTTP Headers
+const HTTP_HEADERS = {
+  USER_AGENT: "Mozilla/5.0 (compatible; YouTubeMuse/1.0; +https://example.com)",
+  ACCEPT_LANGUAGE: "en-US,en;q=0.9",
+} as const
+
+// JSON Parsing
+const JSON_MARKERS = {
+  YT_INITIAL_DATA: "ytInitialData",
+} as const
+
+// Error Messages
+const ERROR_MESSAGES = {
+  API_KEY_MISSING: "YouTube API key not configured. Please add YOUTUBE_API_KEY to your .env.local file.",
+  SEARCH_FAILED: "Failed to search channels. Please check your API key and try again.",
+  CHANNEL_NOT_FOUND: "Channel not found",
+  FETCH_CHANNEL_FAILED: "Failed to fetch channel info",
+  INVALID_CHANNEL_ID: "Invalid channel ID:",
+  UPLOADS_PLAYLIST_NOT_FOUND: "Could not find uploads playlist",
+  FETCH_VIDEOS_FAILED: "Failed to fetch channel videos. Please check your API key and try again.",
+  REQUEST_FAILED: "Request failed:",
+  NO_VIDEOS_FOUND: "No videos found for this channel",
+  FETCH_LATEST_VIDEO_FAILED: "Failed to fetch latest video",
+} as const
+
+// Formatting Strings
+const FORMAT_STRINGS = {
+  SUBSCRIBERS_MILLION: "%.1fM subscribers",
+  SUBSCRIBERS_THOUSAND: "%.1fK subscribers",
+  SUBSCRIBERS_DEFAULT: "%d subscribers",
+  TIME_AGO_YEAR: "%d year%s ago",
+  TIME_AGO_MONTH: "%d month%s ago",
+  TIME_AGO_WEEK: "%d week%s ago",
+  TIME_AGO_DAY: "%d day%s ago",
+  TIME_AGO_HOUR: "%d hour%s ago",
+  TIME_AGO_MINUTE: "%d minute%s ago",
+  TIME_AGO_JUST_NOW: "Just now",
+  DURATION_HMS: "%d:%02d:%02d",
+  DURATION_MS: "%d:%02d",
+  DURATION_ZERO: "0:00",
+} as const
+
 // Create YouTube client function to avoid global state issues
 const createYouTubeClient = () => google.youtube({
-  version: "v3",
+  version: YOUTUBE_API_VERSION,
   auth: process.env.YOUTUBE_API_KEY,
 })
 
@@ -384,7 +481,7 @@ function validateApiKey(): { valid: boolean; error?: string } {
   if (!process.env.YOUTUBE_API_KEY) {
     return {
       valid: false,
-      error: "YouTube API key not configured. Please add YOUTUBE_API_KEY to your .env.local file.",
+      error: ERROR_MESSAGES.API_KEY_MISSING,
     }
   }
   return { valid: true }
@@ -398,10 +495,10 @@ function formatSubscriberCount(count: string | number | null | undefined): strin
   const num = typeof count === "string" ? parseInt(count, 10) : count
   if (isNaN(num)) return undefined
 
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M subscribers`
-  } else if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K subscribers`
+  if (num >= SUBSCRIBER_THRESHOLDS.MILLION) {
+    return `${(num / SUBSCRIBER_THRESHOLDS.MILLION).toFixed(1)}M subscribers`
+  } else if (num >= SUBSCRIBER_THRESHOLDS.THOUSAND) {
+    return `${(num / SUBSCRIBER_THRESHOLDS.THOUSAND).toFixed(1)}K subscribers`
   }
   return `${num} subscribers`
 }
@@ -423,11 +520,11 @@ export async function searchYouTubeChannels(
     }
 
     const response = await createYouTubeClient().search.list({
-      part: ["snippet"],
+      part: [YOUTUBE_API_PARTS.SNIPPET],
       q: query,
-      type: ["channel"],
-      maxResults: 20,
-      order: "relevance",
+      type: SEARCH_CONFIG.TYPE_CHANNEL,
+      maxResults: SEARCH_CONFIG.MAX_RESULTS,
+      order: SEARCH_CONFIG.ORDER_RELEVANCE,
     })
 
     if (!response.data.items) {
@@ -441,7 +538,7 @@ export async function searchYouTubeChannels(
 
     // Fetch channel details including subscriber counts
     const channelsResponse = await createYouTubeClient().channels.list({
-      part: ["snippet", "statistics"],
+      part: [YOUTUBE_API_PARTS.SNIPPET, YOUTUBE_API_PARTS.STATISTICS],
       id: channelIds,
     })
 
@@ -464,8 +561,8 @@ export async function searchYouTubeChannels(
           thumbnails: [
             {
               url: thumbnailUrl,
-              width: thumbnails?.high?.width || 800,
-              height: thumbnails?.high?.height || 800,
+              width: thumbnails?.high?.width || THUMBNAIL_DEFAULTS.HIGH_WIDTH,
+              height: thumbnails?.high?.height || THUMBNAIL_DEFAULTS.HIGH_HEIGHT,
             },
           ],
         },
@@ -480,7 +577,7 @@ export async function searchYouTubeChannels(
     console.error("YouTube channel search error:", error)
     return {
       results: [],
-      error: "Failed to search channels. Please check your API key and try again.",
+      error: ERROR_MESSAGES.SEARCH_FAILED,
     }
   }
 }
@@ -503,7 +600,7 @@ export async function getChannelById(
     if (channelIdOrHandle.startsWith("@") || !channelIdOrHandle.startsWith("UC")) {
       const { results } = await searchYouTubeChannels(channelIdOrHandle)
       if (results.length === 0) {
-        return { channel: null, error: "Channel not found" }
+        return { channel: null, error: ERROR_MESSAGES.CHANNEL_NOT_FOUND }
       }
       // Use the first result
       return { channel: results[0] }
@@ -516,7 +613,7 @@ export async function getChannelById(
     })
 
     if (!response.data.items || response.data.items.length === 0) {
-      return { channel: null, error: "Channel not found" }
+      return { channel: null, error: ERROR_MESSAGES.CHANNEL_NOT_FOUND }
     }
 
     const item = response.data.items[0]
@@ -534,15 +631,15 @@ export async function getChannelById(
     const channel: ChannelSearchResult = {
       id: item.id!,
       title: item.snippet?.title || "",
-      thumbnail: {
-        thumbnails: [
-          {
-            url: thumbnailUrl,
-            width: thumbnails?.high?.width || 800,
-            height: thumbnails?.high?.height || 800,
-          },
-        ],
-      },
+    thumbnail: {
+      thumbnails: [
+        {
+          url: thumbnailUrl,
+          width: thumbnails?.high?.width || THUMBNAIL_DEFAULTS.HIGH_WIDTH,
+          height: thumbnails?.high?.height || THUMBNAIL_DEFAULTS.HIGH_HEIGHT,
+        },
+      ],
+    },
       customUrl: item.snippet?.customUrl || undefined,
       subscriberCount: formatSubscriberCount(item.statistics?.subscriberCount),
       subscriberCountRaw,
@@ -551,7 +648,7 @@ export async function getChannelById(
     return { channel }
   } catch (error) {
     console.error("Get channel error:", error)
-    return { channel: null, error: "Failed to fetch channel info" }
+    return { channel: null, error: ERROR_MESSAGES.FETCH_CHANNEL_FAILED }
   }
 }
 
@@ -579,26 +676,26 @@ export async function getChannelLatestVideos(
   try {
     // First, get the channel's uploads playlist ID
     const channelResponse = await createYouTubeClient().channels.list({
-      part: ["contentDetails"],
+      part: [YOUTUBE_API_PARTS.CONTENT_DETAILS],
       id: channelId.startsWith("UC") ? [channelId] : undefined,
       forHandle: channelId.startsWith("@") ? channelId : undefined,
     })
 
     if (!channelResponse.data.items || channelResponse.data.items.length === 0) {
-      return { results: [], error: "Channel not found" }
+      return { results: [], error: ERROR_MESSAGES.CHANNEL_NOT_FOUND }
     }
 
     const uploadsPlaylistId = channelResponse.data.items[0].contentDetails?.relatedPlaylists?.uploads
 
     if (!uploadsPlaylistId) {
-      return { results: [], error: "Could not find uploads playlist" }
+      return { results: [], error: ERROR_MESSAGES.UPLOADS_PLAYLIST_NOT_FOUND }
     }
 
     // Fetch videos from the uploads playlist (most recent first)
     const playlistResponse = await createYouTubeClient().playlistItems.list({
-      part: ["snippet", "contentDetails"],
+      part: [YOUTUBE_API_PARTS.SNIPPET, YOUTUBE_API_PARTS.CONTENT_DETAILS],
       playlistId: uploadsPlaylistId,
-      maxResults: Math.min(limit, 50), // Fetch extra to filter out shorts
+      maxResults: Math.min(limit, CHANNEL_CONFIG.UPLOADS_PLAYLIST_MAX_RESULTS), // Fetch extra to filter out shorts
     })
 
     if (!playlistResponse.data.items || playlistResponse.data.items.length === 0) {
@@ -606,14 +703,19 @@ export async function getChannelLatestVideos(
     }
 
     // Get video IDs to fetch duration details
-    const videoIds = playlistResponse.data.items
+    const playlistVideoIds = playlistResponse.data.items
+      .filter((item) => item.snippet?.resourceId?.kind === CHANNEL_CONFIG.VIDEO_RESOURCE_KIND)
       .map((item) => item.contentDetails?.videoId)
       .filter((id): id is string => !!id)
 
+    if (playlistVideoIds.length === 0) {
+      return { results: [] }
+    }
+
     // Fetch video details including duration
     const videosResponse = await createYouTubeClient().videos.list({
-      part: ["contentDetails", "snippet"],
-      id: videoIds,
+      part: [YOUTUBE_API_PARTS.CONTENT_DETAILS, YOUTUBE_API_PARTS.SNIPPET],
+      id: playlistVideoIds,
     })
 
     // Helper to parse ISO 8601 duration to seconds
@@ -628,7 +730,7 @@ export async function getChannelLatestVideos(
       const minutes = parseInt(match[2] || "0", 10)
       const seconds = parseInt(match[3] || "0", 10)
 
-      return hours * 3600 + minutes * 60 + seconds
+      return hours * TIME_UNITS.SECONDS_PER_HOUR + minutes * TIME_UNITS.SECONDS_PER_MINUTE + seconds
     }
 
     // Helper to format ISO 8601 duration to simple text (e.g., "3:45")
@@ -657,12 +759,12 @@ export async function getChannelLatestVideos(
       const published = new Date(publishedAt)
       const diffMs = now.getTime() - published.getTime()
       const diffSeconds = Math.floor(diffMs / 1000)
-      const diffMinutes = Math.floor(diffSeconds / 60)
-      const diffHours = Math.floor(diffMinutes / 60)
-      const diffDays = Math.floor(diffHours / 24)
-      const diffWeeks = Math.floor(diffDays / 7)
-      const diffMonths = Math.floor(diffDays / 30)
-      const diffYears = Math.floor(diffDays / 365)
+      const diffMinutes = Math.floor(diffSeconds / TIME_UNITS.SECONDS_PER_MINUTE)
+      const diffHours = Math.floor(diffMinutes / TIME_UNITS.MINUTES_PER_HOUR)
+      const diffDays = Math.floor(diffHours / TIME_UNITS.HOURS_PER_DAY)
+      const diffWeeks = Math.floor(diffDays / TIME_UNITS.DAYS_PER_WEEK)
+      const diffMonths = Math.floor(diffDays / TIME_UNITS.DAYS_PER_MONTH)
+      const diffYears = Math.floor(diffDays / TIME_UNITS.DAYS_PER_YEAR)
 
       if (diffYears > 0) return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`
       if (diffMonths > 0) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`
@@ -673,8 +775,12 @@ export async function getChannelLatestVideos(
       return "Just now"
     }
 
-    const videos: ChannelVideoResult[] = (videosResponse.data.items || [])
-      .slice(0, limit) // Limit to requested number
+    const videoById = new Map((videosResponse.data.items || []).map((item) => [item.id || "", item]))
+    const videos: ChannelVideoResult[] = playlistVideoIds
+      .map((id) => videoById.get(id))
+      .filter((item): item is NonNullable<typeof item> => !!item)
+      .filter((item) => parseDurationToSeconds(item.contentDetails?.duration) > CHANNEL_CONFIG.MIN_VIDEO_DURATION_SECONDS)
+      .slice(0, limit)
       .map((item) => {
         const snippet = item.snippet
         const thumbnails = snippet?.thumbnails
@@ -693,8 +799,8 @@ export async function getChannelLatestVideos(
             thumbnails: [
               {
                 url: thumbnailUrl,
-                width: thumbnails?.high?.width || 480,
-                height: thumbnails?.high?.height || 360,
+                width: thumbnails?.high?.width || THUMBNAIL_DEFAULTS.MEDIUM_WIDTH,
+                height: thumbnails?.high?.height || THUMBNAIL_DEFAULTS.MEDIUM_HEIGHT,
               },
             ],
           },
@@ -720,7 +826,7 @@ export async function getChannelLatestVideos(
 
     return {
       results: [],
-      error: "Failed to fetch channel videos. Please check your API key and try again.",
+      error: ERROR_MESSAGES.FETCH_VIDEOS_FAILED,
     }
   }
 }
@@ -733,15 +839,15 @@ export async function getChannelLatestVideoIdUnofficial(
 ): Promise<{ videos: YouTubeUnofficialVideoRenderer[]; error?: string }> {
   try {
     const url = channelId.startsWith("@")
-      ? `https://www.youtube.com/${channelId}/videos`
-      : `https://www.youtube.com/channel/${channelId}/videos`;
+      ? `${YOUTUBE_URLS.BASE}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`
+      : `${YOUTUBE_URLS.BASE}${YOUTUBE_URLS.CHANNEL_PATH}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`;
 
     console.log(`[getChannelLatestVideoIdUnofficial] Fetching URL: ${url}`);
 
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; YouTubeMuse/1.0; +https://example.com)",
-        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent": HTTP_HEADERS.USER_AGENT,
+        "Accept-Language": HTTP_HEADERS.ACCEPT_LANGUAGE,
       },
     });
 
@@ -750,7 +856,7 @@ export async function getChannelLatestVideoIdUnofficial(
     if (!response.ok) {
       return {
         videos: [],
-        error: `Request failed: ${response.status} ${response.statusText}`,
+        error: `${ERROR_MESSAGES.REQUEST_FAILED} ${response.status} ${response.statusText}`,
       };
     }
 
@@ -804,15 +910,15 @@ export async function getChannelLatestVideoIdUnofficial(
       throw new Error(`JSON end not found for: ${marker}`);
     };
 
-    const initialDataJson = extractJsonBlock(html, "ytInitialData");
+    const initialDataJson = extractJsonBlock(html, JSON_MARKERS.YT_INITIAL_DATA);
     const initialData = JSON.parse(initialDataJson);
 
     const tabs = initialData?.contents?.twoColumnBrowseResultsRenderer?.tabs ?? [];
     const videosTab = tabs.find((tab: any) => {
       const renderer = tab?.tabRenderer;
       if (!renderer) return false;
-      if (renderer.title === "Videos") return true;
-      return renderer.endpoint?.commandMetadata?.webCommandMetadata?.url?.includes("/videos");
+      if (renderer.title === YOUTUBE_URLS.VIDEOS_TAB_TITLE) return true;
+      return renderer.endpoint?.commandMetadata?.webCommandMetadata?.url?.includes(YOUTUBE_URLS.VIDEOS_PATH);
     });
 
     const gridItems =
@@ -829,14 +935,14 @@ export async function getChannelLatestVideoIdUnofficial(
 
     return {
       videos: [],
-      error: "No videos found for this channel",
+      error: ERROR_MESSAGES.NO_VIDEOS_FOUND,
     };
   } catch (error) {
     console.error("Get channel latest video unofficial error:", error);
     return {
       videos: [],
       error:
-        error instanceof Error ? error.message : "Failed to fetch latest video",
+        error instanceof Error ? error.message : ERROR_MESSAGES.FETCH_LATEST_VIDEO_FAILED,
     };
   }
 }
