@@ -11,6 +11,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Shuffle,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import {
   buildCustomIntentQuery,
   getIntentByName,
@@ -64,6 +66,13 @@ export function IntentDetailSection() {
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
   const updatePlaylist = usePlaylistStore((state) => state.updatePlaylist);
 
+  const gradientOverrides = useCustomIntentsStore(
+    (state) => state.gradientOverrides
+  );
+  const setGradientOverride = useCustomIntentsStore(
+    (state) => state.setGradientOverride
+  );
+
   const [isAdding, setIsAdding] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
@@ -85,8 +94,13 @@ export function IntentDetailSection() {
       ? (shuffleOrder[currentTrackIndex] ?? currentTrackIndex)
       : currentTrackIndex;
 
-  // Get gradient
-  const intentGradient = activeIntent?.gradientClassName;
+  // Get gradient (check for overrides first, then fall back to intent default)
+  const intentGradient = React.useMemo(() => {
+    if (!activePlaylistId) return activeIntent?.gradientClassName;
+    return (
+      gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
+    );
+  }, [activePlaylistId, gradientOverrides, activeIntent?.gradientClassName]);
 
   // Get minimum duration
   const minDuration = 20;
@@ -123,7 +137,11 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      if (typeof window !== "undefined" && window.umami) {
+      if (
+        typeof window !== "undefined" &&
+        window.umami &&
+        process.env.NODE_ENV === "production"
+      ) {
         window.umami.track("youtube-api-search-videos", {
           context: "intent-add-track",
           intent: activePlaylist.name,
@@ -253,8 +271,10 @@ export function IntentDetailSection() {
   ]);
 
   const handleSwitchGradient = React.useCallback(() => {
-    // This functionality has been removed - all intents use their default gradients
-  }, []);
+    if (!activePlaylistId) return;
+    const newGradient = getRandomGradient();
+    setGradientOverride(activePlaylistId, newGradient);
+  }, [activePlaylistId, setGradientOverride]);
 
   if (!activePlaylist) return null;
 
@@ -346,6 +366,13 @@ export function IntentDetailSection() {
                 >
                   <Pencil className="h-4 w-4" />
                   Edit Intent
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleSwitchGradient}
+                  disabled={!activePlaylistId}
+                >
+                  <Shuffle className="h-4 w-4" />
+                  Random Gradient
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleDelete}
