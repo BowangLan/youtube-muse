@@ -442,7 +442,7 @@ const PlayerControls = () => {
         label={isPlaying ? "Pause" : "Play"}
         icon={<Icons.Play />}
         variant="play"
-        disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
+        disabled={isLoadingNewVideo || !apiReady}
         aria-pressed={isPlaying}
       >
         {!apiReady || isLoadingNewVideo ? (

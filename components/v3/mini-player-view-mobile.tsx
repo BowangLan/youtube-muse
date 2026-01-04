@@ -44,6 +44,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 // =============================================================================
 // Constants
@@ -370,9 +371,7 @@ const ProgressSection = ({ isHovered }: { isHovered: boolean }) => (
 
 const PlayerControls = () => {
   const {
-    isPlaying,
     isLoadingNewVideo,
-    pendingPlayState,
     apiReady,
     canPlayNext,
     isVideoEnabled,
@@ -381,6 +380,8 @@ const PlayerControls = () => {
     onPlayNext,
     onToggleVideo,
   } = useMiniPlayerContext();
+
+  const isPlaying = useIsPlaying();
 
   const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
     usePlaylistStore();
@@ -429,15 +430,15 @@ const PlayerControls = () => {
 
         <PlayerIconButton
           onClick={handleButtonClick(onTogglePlay)}
-          label={isPlaying || pendingPlayState !== null ? "Pause" : "Play"}
+          label={isPlaying ? "Pause" : "Play"}
           icon={<Icons.Play />}
           variant="play"
-          disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
-          aria-pressed={isPlaying || pendingPlayState !== null}
+          disabled={isLoadingNewVideo || !apiReady}
+          aria-pressed={isPlaying}
         >
           {!apiReady || isLoadingNewVideo ? (
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-          ) : isPlaying || pendingPlayState !== null ? (
+          ) : isPlaying ? (
             <Icons.Pause />
           ) : (
             <Icons.Play />
@@ -711,7 +712,7 @@ const ExpandedStateView = ({
 export function MiniPlayerViewMobile() {
   const reduceMotion = useReducedMotion();
   const track = usePlaylistStore((state) => state.getCurrentTrack());
-
+  const isPlaying = useIsPlaying();
   const [isOpen, setIsOpen] = React.useState(false);
 
   // Extract colors from thumbnail for glow effect
@@ -782,7 +783,7 @@ export function MiniPlayerViewMobile() {
             isOpen
               ? "border-zinc-900/50"
               : "border-zinc-500/10 border rounded-xl trans",
-            "animate-container-glow"
+            isPlaying && "animate-container-glow"
           )}
           style={
             isOpen ? {} : { ...glowStyle, ...(reduceMotion ? {} : beatStyle) }
