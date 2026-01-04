@@ -243,7 +243,6 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
 
   return (
     <motion.div
-      layoutId="track-cover"
       className="relative aspect-video h-10 shrink-0 overflow-visible rounded-md"
       transition={{
         duration: reduceMotion ? 0 : COLLAPSE_DURATION,
@@ -272,7 +271,6 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
 
   return (
     <motion.div
-      layoutId="track-cover"
       className="relative shrink-0 overflow-visible rounded-lg flex-none h-full aspect-video self-center"
       transition={{
         duration: reduceMotion ? 0 : EXPAND_DURATION,
@@ -295,7 +293,7 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
 
 export const TrackAuthorCollapsed = ({ track }: { track: Track }) => {
   return (
-    <motion.div layoutId="track-author">
+    <motion.div>
       <Link
         href={track.authorUrl ?? ""}
         target="_blank"
@@ -312,7 +310,7 @@ export const TrackAuthorCollapsed = ({ track }: { track: Track }) => {
 
 export const TrackAuthorExpanded = ({ track }: { track: Track }) => {
   return (
-    <motion.div layoutId="track-author">
+    <motion.div>
       <Link
         href={track.authorUrl ?? ""}
         target="_blank"
@@ -372,26 +370,12 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
   );
 };
 
-const ProgressSection = ({ isExpanded }: { isExpanded: boolean }) => {
-  const reduceMotion = useReducedMotion();
-
+const ProgressSection = () => {
   return (
-    <motion.div
-      className="flex flex-col gap-2 mt-6 flex-none"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{
-        opacity: isExpanded ? 1 : 0,
-        y: isExpanded ? 0 : 10,
-      }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.3,
-        ease: [0.4, 0, 0.2, 1],
-        delay: isExpanded && !reduceMotion ? 0.15 : 0,
-      }}
-    >
+    <div className="flex flex-col gap-2 mt-6 flex-none">
       <ProgressBar />
       <TimeDisplay />
-    </motion.div>
+    </div>
   );
 };
 
@@ -553,12 +537,30 @@ const CollapsedStateView = ({
   return (
     <motion.div
       className="absolute inset-0 z-10 flex items-center gap-4 p-3"
-      initial={false}
-      animate={{
-        opacity: isExpanded ? 0 : 1,
-        pointerEvents: isExpanded ? "none" : "auto",
+      initial={{
+        opacity: 0,
+        pointerEvents: "none",
+        filter: "blur(10px)",
       }}
-      transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.4, 0, 0.2, 1] }}
+      animate={{
+        opacity: 1,
+        pointerEvents: "auto",
+        filter: "blur(0px)",
+        transition: {
+          duration: reduceMotion ? 0 : EXPAND_DURATION,
+          ease: EASING_EASE_OUT,
+          delay: 0.15,
+        },
+      }}
+      exit={{
+        opacity: 0,
+        pointerEvents: "none",
+        filter: "blur(10px)",
+        transition: {
+          duration: reduceMotion ? 0 : EXPAND_DURATION,
+          ease: EASING_EASE_OUT,
+        },
+      }}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <TrackCoverCollapsed glowStyle={glowStyle} />
@@ -581,22 +583,36 @@ const ExpandedStateView = ({
   glowStyle: React.CSSProperties;
 }) => {
   const reduceMotion = useReducedMotion();
-  const { track, isExpanded, onToggleExpanded } = useMiniPlayerContext();
+  const { track } = useMiniPlayerContext();
 
   if (!track) return null;
 
   return (
     <motion.div
       className="absolute inset-0 z-10 flex flex-row"
-      initial={false}
-      animate={{
-        opacity: isExpanded ? 1 : 0,
-        pointerEvents: isExpanded ? "auto" : "none",
+      initial={{
+        opacity: 0,
+        pointerEvents: "none",
+        filter: "blur(10px)",
       }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.2,
-        ease: [0.4, 0, 0.2, 1],
-        delay: isExpanded && !reduceMotion ? 0.1 : 0,
+      animate={{
+        opacity: 1,
+        pointerEvents: "auto",
+        filter: "blur(0px)",
+        transition: {
+          duration: reduceMotion ? 0 : EXPAND_DURATION,
+          ease: EASING_EASE_OUT,
+          delay: 0.15,
+        },
+      }}
+      exit={{
+        opacity: 0,
+        pointerEvents: "none",
+        filter: "blur(10px)",
+        transition: {
+          duration: reduceMotion ? 0 : EXPAND_DURATION,
+          ease: EASING_EASE_OUT,
+        },
       }}
       style={{
         padding: EXPANDED_PADDING,
@@ -609,7 +625,7 @@ const ExpandedStateView = ({
         <div className="flex items-start justify-between gap-4 flex-none">
           <TrackInfo variant="expanded" />
         </div>
-        <ProgressSection isExpanded={isExpanded} />
+        <ProgressSection />
         <PlayerControls />
       </div>
     </motion.div>
@@ -625,7 +641,7 @@ export const BackgroundOverlay = () => (
     aria-hidden="true"
     className="absolute inset-0 z-0 pointer-events-none bg-glass"
     initial={false}
-    transition={{ duration: 0.3, ease: EASING_EASE_OUT }}
+    transition={{ duration: EXPAND_DURATION, ease: EASING_EASE_OUT }}
   />
 );
 
@@ -679,7 +695,6 @@ export function MiniPlayerViewDesktop() {
         <motion.div
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          layout
           className={cn(
             "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
             isExpanded ? "border-zinc-500/20" : "border-zinc-500/20",
@@ -692,9 +707,14 @@ export function MiniPlayerViewDesktop() {
         >
           <BackgroundOverlay />
 
-          <CollapsedStateView glowStyle={glowStyle} />
+          {isExpanded ? (
+            <ExpandedStateView glowStyle={glowStyle} />
+          ) : (
+            <CollapsedStateView glowStyle={glowStyle} />
+          )}
 
-          <ExpandedStateView glowStyle={glowStyle} />
+          {/* <CollapsedStateView glowStyle={glowStyle} />
+          <ExpandedStateView glowStyle={glowStyle} /> */}
         </motion.div>
       </MiniPlayerProvider>
     </div>
