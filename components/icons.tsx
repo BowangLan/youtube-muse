@@ -6,6 +6,11 @@ import {
   IoChevronUp,
   IoShuffle,
   IoRepeat,
+  IoPlayForwardSharp,
+  IoPlayBackSharp,
+  IoVolumeHigh,
+  IoVolumeMute,
+  IoVolumeOff,
 } from "react-icons/io5";
 
 export const Icons = {
@@ -15,4 +20,8 @@ export const Icons = {
   Pause: IoPause,
   ChevronUp: IoChevronUp,
   Shuffle: IoShuffle,
+  SeekForward: IoPlayForwardSharp,
+  SeekBack: IoPlayBackSharp,
+  Volume: IoVolumeHigh,
+  Mute: IoVolumeMute,
 } as const;

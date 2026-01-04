@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { usePlayerStore } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
+import { useKeyboardFeedbackStore } from "@/lib/store/keyboard-feedback-store"
 import { INTENTS } from "@/lib/intents"
 
 declare global {
@@ -46,11 +47,12 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      const { dispatch, volume, duration } = usePlayerStore.getState()
+      const { dispatch, volume, duration, isPlaying } = usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
       const { customIntents, hiddenBuiltInIntents } =
         useCustomIntentsStore.getState()
+      const { showFeedback } = useKeyboardFeedbackStore.getState()
 
       // Handle different key combinations
       const key = e.key.toLowerCase()
@@ -71,27 +73,48 @@ export function useKeyboardShortcuts() {
 
       // Playback controls
       if (key === " " || key === "k") {
+        const willPlay = !isPlaying
         dispatch({ type: "UserTogglePlay" })
+        showFeedback({
+          label: willPlay ? "Play" : "Pause",
+          icon: willPlay ? "play" : "pause",
+        })
         return
       }
 
       if (key === "arrowright" || key === "l") {
         dispatch({ type: "UserSkipForward" })
+        showFeedback({
+          label: "Skip +10s",
+          icon: "seek-forward",
+        })
         return
       }
 
       if (key === "arrowleft" || key === "j") {
         dispatch({ type: "UserSkipBackward" })
+        showFeedback({
+          label: "Skip -10s",
+          icon: "seek-backward",
+        })
         return
       }
 
       if (key === "n" && !ctrl) {
         dispatch({ type: "UserNextTrack" })
+        showFeedback({
+          label: "Next Track",
+          icon: "next",
+        })
         return
       }
 
       if (key === "p" && !ctrl) {
         dispatch({ type: "UserPreviousTrack" })
+        showFeedback({
+          label: "Previous Track",
+          icon: "previous",
+        })
         return
       }
 
@@ -99,12 +122,20 @@ export function useKeyboardShortcuts() {
       if (key === "arrowup") {
         const newVolume = Math.min(100, volume + 5)
         dispatch({ type: "UserSetVolume", volume: newVolume })
+        showFeedback({
+          label: `Volume ${newVolume}%`,
+          icon: "volume",
+        })
         return
       }
 
       if (key === "arrowdown") {
         const newVolume = Math.max(0, volume - 5)
         dispatch({ type: "UserSetVolume", volume: newVolume })
+        showFeedback({
+          label: `Volume ${newVolume}%`,
+          icon: newVolume === 0 ? "mute" : "volume",
+        })
         return
       }
 
@@ -116,10 +147,18 @@ export function useKeyboardShortcuts() {
           dispatch({ type: "UserSetVolume", volume: 0 })
           // Store the previous volume for unmuting
           window.__previousVolume = currentVolume
+          showFeedback({
+            label: "Muted",
+            icon: "mute",
+          })
         } else {
           // Unmute to previous volume or default to 100
           const previousVolume = window.__previousVolume || 100
           dispatch({ type: "UserSetVolume", volume: previousVolume })
+          showFeedback({
+            label: `Volume ${previousVolume}%`,
+            icon: "volume",
+          })
         }
         return
       }
@@ -155,6 +194,10 @@ export function useKeyboardShortcuts() {
           const selectedPlaylist = allIntents[intentIndex]
           setCurrentPlaylist(selectedPlaylist.id)
           setCurrentTrackIndex(0)
+          showFeedback({
+            label: selectedPlaylist.name,
+            icon: "play",
+          })
         }
         return
       }

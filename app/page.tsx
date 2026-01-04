@@ -45,6 +45,7 @@ import {
 import type { GridTab as GridTabType } from "@/lib/store/app-state-store";
 import { StreamDataLoader } from "@/components/data-loaders/stream-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
+import { KeyboardFeedback } from "@/components/keyboard-feedback";
 
 const INTENT_HELP_STEPS = [
   {
@@ -166,6 +167,9 @@ export default function Home() {
 
       {/* Keyboard shortcuts help dialog */}
       <KeyboardShortcutsDialog />
+
+      {/* Keyboard feedback overlay */}
+      <KeyboardFeedback />
 
       <div className="mx-auto flex min-h-screen w-full max-w-4xl space-y-8 md:space-y-10 flex-col px-4 pb-16 pt-8 sm:px-6 z-10 isolate">
         <AppHeader />
