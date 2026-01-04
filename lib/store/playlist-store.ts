@@ -208,6 +208,7 @@ interface PlaylistActions {
 
   // Track management
   addTrackToPlaylist: (playlistId: string, track: Omit<Track, "addedAt">) => void
+  moveTrackToPlaylist: (sourcePlaylistId: string, trackId: string, targetPlaylistId: string) => void
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void
   moveTrack: (playlistId: string, fromIndex: number, toIndex: number) => void
   updateTrackInfo: (
@@ -236,6 +237,18 @@ interface PlaylistActions {
 
 const generateId = () => {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+}
+
+const buildShuffleOrder = (trackCount: number, currentIndex: number) => {
+  const indices = Array.from({ length: trackCount }, (_, i) => i)
+    .filter((i) => i !== currentIndex)
+
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+      ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+
+  return [currentIndex, ...indices]
 }
 
 export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
@@ -344,6 +357,95 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
           }
 
           return { playlists }
+        })
+      },
+
+      moveTrackToPlaylist: (sourcePlaylistId, trackId, targetPlaylistId) => {
+        set((state) => {
+          const sourcePlaylist = state.playlists.find((p) => p.id === sourcePlaylistId)
+          const targetPlaylist = state.playlists.find((p) => p.id === targetPlaylistId)
+          if (!sourcePlaylist || !targetPlaylist) return state
+
+          const sourceTrackIndex = sourcePlaylist.tracks.findIndex((t) => t.id === trackId)
+          if (sourceTrackIndex === -1) return state
+
+          const { addedAt: _addedAt, ...trackPayload } =
+            sourcePlaylist.tracks[sourceTrackIndex]
+          const newTargetTracks = [
+            ...targetPlaylist.tracks,
+            { ...trackPayload, addedAt: Date.now() },
+          ]
+          const newSourceTracks = sourcePlaylist.tracks.filter((t) => t.id !== trackId)
+
+          let currentPlaylistId = state.currentPlaylistId
+          let currentTrackIndex = state.currentTrackIndex
+          let shuffleOrder = state.shuffleOrder
+
+          if (state.currentPlaylistId === sourcePlaylistId) {
+            const currentActualIndex =
+              state.isShuffleEnabled && state.shuffleOrder.length > 0
+                ? state.shuffleOrder[state.currentTrackIndex] ?? state.currentTrackIndex
+                : state.currentTrackIndex
+            const currentTrack = sourcePlaylist.tracks[currentActualIndex]
+
+            if (currentTrack?.id === trackId) {
+              currentPlaylistId = targetPlaylistId
+              const newCurrentIndex = newTargetTracks.length - 1
+
+              if (state.isShuffleEnabled) {
+                shuffleOrder = buildShuffleOrder(newTargetTracks.length, newCurrentIndex)
+                currentTrackIndex = 0
+              } else {
+                currentTrackIndex = newCurrentIndex
+              }
+            } else if (currentTrack) {
+              const nextIndex = newSourceTracks.findIndex(
+                (track) => track.id === currentTrack.id
+              )
+
+              if (nextIndex >= 0) {
+                if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+                  shuffleOrder = buildShuffleOrder(newSourceTracks.length, nextIndex)
+                  currentTrackIndex = 0
+                } else {
+                  currentTrackIndex = nextIndex
+                }
+              } else {
+                currentTrackIndex = 0
+                shuffleOrder = state.isShuffleEnabled ? [] : shuffleOrder
+              }
+            }
+          } else if (state.currentPlaylistId === targetPlaylistId) {
+            if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+              const newTrackIndex = newTargetTracks.length - 1
+              shuffleOrder = state.shuffleOrder.includes(newTrackIndex)
+                ? state.shuffleOrder
+                : [...state.shuffleOrder, newTrackIndex]
+            }
+          }
+
+          return {
+            playlists: state.playlists.map((playlist) => {
+              if (playlist.id === sourcePlaylistId) {
+                return {
+                  ...playlist,
+                  tracks: newSourceTracks,
+                  updatedAt: Date.now(),
+                }
+              }
+              if (playlist.id === targetPlaylistId) {
+                return {
+                  ...playlist,
+                  tracks: newTargetTracks,
+                  updatedAt: Date.now(),
+                }
+              }
+              return playlist
+            }),
+            currentPlaylistId,
+            currentTrackIndex,
+            shuffleOrder,
+          }
         })
       },
 

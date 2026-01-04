@@ -839,8 +839,8 @@ export async function getChannelLatestVideoIdUnofficial(
 ): Promise<{ videos: YouTubeUnofficialVideoRenderer[]; error?: string }> {
   try {
     const url = channelId.startsWith("@")
-      ? `${YOUTUBE_URLS.BASE}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`
-      : `${YOUTUBE_URLS.BASE}${YOUTUBE_URLS.CHANNEL_PATH}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`;
+      ? `${YOUTUBE_URLS.BASE}/${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`
+      : `${YOUTUBE_URLS.BASE}/${YOUTUBE_URLS.CHANNEL_PATH}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`;
 
     console.log(`[getChannelLatestVideoIdUnofficial] Fetching URL: ${url}`);
 

@@ -1,14 +1,34 @@
 "use client";
 
-import { usePlayerStore } from "@/lib/store/player-store";
+import * as React from "react";
+import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/youtube";
 import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { INTENTS } from "@/lib/intents";
+import {
+  ArrowRightLeft,
+  Check,
+  Copy,
+  MoreVertical,
+  Trash2,
+} from "lucide-react";
 import { useIsPlaying } from "@/hooks/use-is-playing";
+import { toast } from "sonner";
 
 export function TrackItemSmall({
   track,
@@ -25,6 +45,80 @@ export function TrackItemSmall({
 }) {
   // Use selectors to only subscribe to specific properties
   const isPlaying = useIsPlaying();
+  const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
+  const playlists = usePlaylistStore((state) => state.playlists);
+  const addTrackToPlaylist = usePlaylistStore(
+    (state) => state.addTrackToPlaylist
+  );
+  const moveTrackToPlaylist = usePlaylistStore(
+    (state) => state.moveTrackToPlaylist
+  );
+  const customIntents = useCustomIntentsStore((state) => state.customIntents);
+  const hiddenBuiltInIntents = useCustomIntentsStore(
+    (state) => state.hiddenBuiltInIntents
+  );
+
+  const intentPlaylists = React.useMemo(() => {
+    const intentNames = new Set(INTENTS.map((intent) => intent.name));
+    const hiddenNames = new Set(hiddenBuiltInIntents);
+    return playlists
+      .filter(
+        (playlist) =>
+          intentNames.has(playlist.name) && !hiddenNames.has(playlist.name)
+      )
+      .sort(
+        (a, b) =>
+          INTENTS.findIndex((intent) => intent.name === a.name) -
+          INTENTS.findIndex((intent) => intent.name === b.name)
+      );
+  }, [playlists, hiddenBuiltInIntents]);
+
+  const customIntentPlaylists = React.useMemo(() => {
+    const customPlaylistIds = new Set(
+      customIntents.map((intent) => intent.playlistId)
+    );
+    return playlists.filter((playlist) => customPlaylistIds.has(playlist.id));
+  }, [playlists, customIntents]);
+
+  const activePlaylist = React.useMemo(() => {
+    if (!activePlaylistId) return null;
+    return (
+      playlists.find((playlist) => playlist.id === activePlaylistId) ?? null
+    );
+  }, [activePlaylistId, playlists]);
+
+  const trackIdSetsByPlaylist = React.useMemo(() => {
+    return new Map(
+      playlists.map((playlist) => [
+        playlist.id,
+        new Set(playlist.tracks.map((playlistTrack) => playlistTrack.id)),
+      ])
+    );
+  }, [playlists]);
+
+  const otherIntentPlaylists = React.useMemo(() => {
+    return [...intentPlaylists, ...customIntentPlaylists].filter(
+      (playlist) => playlist.id !== activePlaylistId
+    );
+  }, [intentPlaylists, customIntentPlaylists, activePlaylistId]);
+
+  const handleCopyToIntent = React.useCallback(
+    (playlistId: string, playlistName: string) => {
+      const { addedAt: _addedAt, ...trackPayload } = track;
+      addTrackToPlaylist(playlistId, trackPayload);
+      toast.success(`Copied to ${playlistName}`);
+    },
+    [addTrackToPlaylist, track]
+  );
+
+  const handleMoveToIntent = React.useCallback(
+    (playlistId: string, playlistName: string) => {
+      if (!activePlaylistId) return;
+      moveTrackToPlaylist(activePlaylistId, track.id, playlistId);
+      toast.success(`Moved to ${playlistName}`);
+    },
+    [activePlaylistId, moveTrackToPlaylist, track.id]
+  );
 
   return (
     <motion.div
@@ -86,19 +180,98 @@ export function TrackItemSmall({
       </div>
 
       <div className="flex items-center gap-2 justify-end ml-2">
-        {onRemove && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-zinc-200 opacity-0 group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="text-zinc-200 opacity-0 group-hover:opacity-100"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <MoreVertical className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Copy className="h-3.5 w-3.5" />
+                Copy to intent
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
+                {otherIntentPlaylists.length > 0 ? (
+                  otherIntentPlaylists.map((playlist) => {
+                    const isAlreadyAdded = trackIdSetsByPlaylist
+                      .get(playlist.id)
+                      ?.has(track.id);
+                    return (
+                      <DropdownMenuItem
+                        key={playlist.id}
+                        disabled={isAlreadyAdded}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAlreadyAdded) return;
+                          handleCopyToIntent(playlist.id, playlist.name);
+                        }}
+                      >
+                        {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
+                        {playlist.name}
+                      </DropdownMenuItem>
+                    );
+                  })
+                ) : (
+                  <DropdownMenuItem disabled>No other intents</DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                Move to intent
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
+                {otherIntentPlaylists.length > 0 ? (
+                  otherIntentPlaylists.map((playlist) => {
+                    const isAlreadyAdded = trackIdSetsByPlaylist
+                      .get(playlist.id)
+                      ?.has(track.id);
+                    return (
+                      <DropdownMenuItem
+                        key={playlist.id}
+                        disabled={isAlreadyAdded}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAlreadyAdded) return;
+                          handleMoveToIntent(playlist.id, playlist.name);
+                        }}
+                      >
+                        {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
+                        {playlist.name}
+                      </DropdownMenuItem>
+                    );
+                  })
+                ) : (
+                  <DropdownMenuItem disabled>No other intents</DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={!onRemove}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove?.();
+                if (activePlaylist?.name) {
+                  toast.success(`Deleted from ${activePlaylist.name}`);
+                } else {
+                  toast.success("Deleted from intent");
+                }
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.div>
   );
