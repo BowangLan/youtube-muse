@@ -8,6 +8,7 @@ import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Trash2, User } from "lucide-react";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 /**
  * Format published date as relative time or absolute date
@@ -69,9 +70,7 @@ export function TrackItemMedium({
   onRemove: () => void;
 }) {
   // Use selectors to only subscribe to specific properties
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
 
   return (
     <motion.div
@@ -107,7 +106,7 @@ export function TrackItemMedium({
                 transition={{ duration: 0.2 }}
                 className="absolute top-1/2 -translate-y-1/2 right-1/2 z-20 translate-x-1/2 group-hover:hidden"
               >
-                <PlayingIndicatorSmall isPlaying={_isPlaying} />
+                <PlayingIndicatorSmall isPlaying={isPlaying} />
               </motion.div>
             </>
           )}
@@ -143,7 +142,9 @@ export function TrackItemMedium({
           {track.publishedAt && (
             <>
               <span className="shrink-0">•</span>
-              <span className="shrink-0">{formatPublishedDate(track.publishedAt)}</span>
+              <span className="shrink-0">
+                {formatPublishedDate(track.publishedAt)}
+              </span>
             </>
           )}
         </div>

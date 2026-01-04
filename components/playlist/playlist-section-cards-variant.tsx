@@ -11,6 +11,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import { formatTime } from "@/lib/utils/youtube";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 const CARD_OVERLAP = 170;
 const FOLLOWING_CARD_SHIFT = 100;
@@ -177,9 +178,7 @@ function TrackItem({
   hoveredIndex,
   onHoverChange,
 }: TrackItemProps) {
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
   const baseTranslate = index * CARD_OVERLAP;
   const hoverShift =
     hoveredIndex !== null && index > hoveredIndex ? FOLLOWING_CARD_SHIFT : 0;
@@ -234,13 +233,13 @@ function TrackItem({
             <Trash2 className="h-4 w-4" />
           </Button>
           {isCurrentTrack && (
-            <CurrentTrackOverlay isPlaying={_isPlaying} onAction={onClick} />
+            <CurrentTrackOverlay isPlaying={isPlaying} onAction={onClick} />
           )}
 
           <TrackHoverOverlay
             track={track}
             isCurrentTrack={isCurrentTrack}
-            isPlaying={_isPlaying}
+            isPlaying={isPlaying}
             onAction={onClick}
           />
         </div>

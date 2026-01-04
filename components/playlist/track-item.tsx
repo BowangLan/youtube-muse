@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 export function TrackItem({
   track,
@@ -21,9 +22,7 @@ export function TrackItem({
   onRemove: () => void;
 }) {
   // Use selectors to only subscribe to specific properties
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
 
   return (
     <motion.div
@@ -52,7 +51,7 @@ export function TrackItem({
           sizes="44px"
           className="object-cover"
         />
-        {isCurrentTrack && <PlayingIndicator isPlaying={_isPlaying} />}
+        {isCurrentTrack && <PlayingIndicator isPlaying={isPlaying} />}
       </motion.div>
 
       <div className="min-w-0 flex-1">

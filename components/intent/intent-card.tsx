@@ -11,6 +11,7 @@ import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "../icons";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 interface IntentCardProps {
   playlist: Playlist;
@@ -19,8 +20,6 @@ interface IntentCardProps {
 
 export function IntentCard({ playlist, intent }: IntentCardProps) {
   const reduceMotion = useReducedMotion();
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
   const dispatch = usePlayerStore((state) => state.dispatch);
   const openIntent = useAppStateStore((state) => state.openIntent);
   const trackCount = playlist.tracks.length;
@@ -37,11 +36,11 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
     (state) => state.gradientOverrides
   );
 
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
 
   const isActive = currentPlaylistId === playlist.id;
 
-  const isCurrentlyPlaying = isActive && _isPlaying;
+  const isCurrentlyPlaying = isActive && isPlaying;
 
   // Get gradient - check for override first, then use intent's default
   const gradientClassName =

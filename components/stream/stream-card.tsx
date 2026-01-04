@@ -10,6 +10,7 @@ import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "../icons";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 interface StreamCardProps {
   playlist: Playlist;
@@ -18,8 +19,6 @@ interface StreamCardProps {
 
 export function StreamCard({ playlist, stream }: StreamCardProps) {
   const reduceMotion = useReducedMotion();
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
   const dispatch = usePlayerStore((state) => state.dispatch);
   const openStream = useAppStateStore((state) => state.openStream);
   const trackCount = playlist.tracks.length;
@@ -33,11 +32,11 @@ export function StreamCard({ playlist, stream }: StreamCardProps) {
     (state) => state.currentPlaylistId
   );
 
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
 
   const isActive = currentPlaylistId === playlist.id;
 
-  const isCurrentlyPlaying = isActive && _isPlaying;
+  const isCurrentlyPlaying = isActive && isPlaying;
 
   // Get first channel's thumbnail for background
   const channelThumbnailUrl = stream.channels[0]?.thumbnailUrl;

@@ -33,6 +33,7 @@ import {
   useMiniPlayerContext,
 } from "./mini-player-context";
 import { FEATURE_FLAGS } from "@/lib/constants";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 // =============================================================================
 // PlayerIconButton Component
@@ -381,7 +382,6 @@ const ProgressSection = () => {
 
 const PlayerControls = () => {
   const {
-    isPlaying,
     isLoadingNewVideo,
     pendingPlayState,
     apiReady,
@@ -393,8 +393,12 @@ const PlayerControls = () => {
     onToggleVideo,
   } = useMiniPlayerContext();
 
-  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
-    usePlaylistStore();
+  const isShuffleEnabled = usePlaylistStore((state) => state.isShuffleEnabled);
+  const toggleShuffle = usePlaylistStore((state) => state.toggleShuffle);
+  const repeatMode = usePlaylistStore((state) => state.repeatMode);
+  const cycleRepeatMode = usePlaylistStore((state) => state.cycleRepeatMode);
+
+  const isPlaying = useIsPlaying();
 
   const repeatLabel =
     repeatMode === "one"
@@ -435,15 +439,15 @@ const PlayerControls = () => {
       />
       <PlayerIconButton
         onClick={onTogglePlay}
-        label={isPlaying || pendingPlayState !== null ? "Pause" : "Play"}
+        label={isPlaying ? "Pause" : "Play"}
         icon={<Icons.Play />}
         variant="play"
         disabled={isLoadingNewVideo || pendingPlayState !== null || !apiReady}
-        aria-pressed={isPlaying || pendingPlayState !== null}
+        aria-pressed={isPlaying}
       >
         {!apiReady || isLoadingNewVideo ? (
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-        ) : isPlaying || pendingPlayState !== null ? (
+        ) : isPlaying ? (
           <Icons.Pause />
         ) : (
           <Icons.Play />
@@ -657,6 +661,8 @@ export function MiniPlayerViewDesktop() {
   const [isPinned, setIsPinned] = React.useState(false);
   const isExpanded = isHovered || isPinned;
 
+  const isPlaying = useIsPlaying();
+
   // Extract colors from thumbnail for glow effect
   const thumbnailUrl = track
     ? getThumbnailUrl(track.id, "mqdefault")
@@ -698,7 +704,7 @@ export function MiniPlayerViewDesktop() {
           className={cn(
             "relative rounded-xl mx-auto w-full max-w-4xl overflow-hidden border bg-zinc-500/10 text-white backdrop-blur-xl",
             isExpanded ? "border-zinc-500/20" : "border-zinc-500/20",
-            "animate-container-glow"
+            isPlaying && "animate-container-glow"
           )}
           style={{ ...glowStyle, ...(reduceMotion ? {} : beatStyle) }}
           variants={containerVariants}

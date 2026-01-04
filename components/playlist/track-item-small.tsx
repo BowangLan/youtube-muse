@@ -8,6 +8,7 @@ import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 export function TrackItemSmall({
   track,
@@ -23,9 +24,7 @@ export function TrackItemSmall({
   align?: "left" | "right";
 }) {
   // Use selectors to only subscribe to specific properties
-  const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const _isPlaying = isPlaying || pendingPlayState !== null;
+  const isPlaying = useIsPlaying();
 
   return (
     <motion.div
@@ -59,7 +58,7 @@ export function TrackItemSmall({
                 transition={{ duration: 0.2 }}
                 className="absolute top-1/2 -translate-y-1/2 right-1/2 z-20 translate-x-1/2"
               >
-                <PlayingIndicatorSmall isPlaying={_isPlaying} />
+                <PlayingIndicatorSmall isPlaying={isPlaying} />
               </motion.div>
             </>
           )}
