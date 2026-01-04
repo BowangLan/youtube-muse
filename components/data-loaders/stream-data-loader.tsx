@@ -6,6 +6,20 @@ import { syncChannelLatestVideo } from "@/app/actions/youtube-channels-sync";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import type { Track } from "@/lib/types/playlist";
 
+type StreamVideo = {
+  id?: string;
+  videoId: string;
+  title: string;
+  channelId: string;
+  channelTitle?: string;
+  channelThumbnailUrl?: string;
+  duration?: number;
+  thumbnailUrl?: string;
+  publishedAt?: string;
+  publishedAtMs?: number;
+  publishedTimeText?: string;
+};
+
 export function StreamDataLoader({ stream }: { stream: Stream }) {
   // console.log(
   //   `[StreamDataLoader] Stream info: ${JSON.stringify(stream, null, 2)}`
@@ -103,7 +117,7 @@ export function StreamDataLoader({ stream }: { stream: Stream }) {
       if (playlist) {
         try {
           // Convert videos to tracks (similar to refreshStream logic)
-          const convertToTrack = (video: any): Track => {
+          const convertToTrack = (video: StreamVideo): Track => {
             // Convert publishedAt to a valid date string
             let publishedAt: string | undefined;
             if (video.publishedAtMs) {

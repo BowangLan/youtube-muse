@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { Playlist } from "@/lib/types/playlist";
-import type { IntentDefinition } from "@/lib/intents";
+import type { IntentMetadata } from "@/lib/store/custom-intents-store";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useAppStateStore } from "@/lib/store/app-state-store";
@@ -15,7 +15,7 @@ import { useIsPlaying } from "@/hooks/use-is-playing";
 
 interface IntentCardProps {
   playlist: Playlist;
-  intent: IntentDefinition | undefined;
+  intent: IntentMetadata | undefined;
 }
 
 export function IntentCard({ playlist, intent }: IntentCardProps) {

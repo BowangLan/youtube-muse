@@ -2,11 +2,7 @@
 
 import * as React from "react";
 import type { Playlist } from "@/lib/types/playlist";
-import { getIntentByName } from "@/lib/intents";
-import {
-  useCustomIntentsStore,
-  type CustomIntent,
-} from "@/lib/store/custom-intents-store";
+import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { IntentCard } from "./intent-card";
 import { CreateIntentDialog } from "./create-intent-dialog";
 import { cn } from "@/lib/utils";
@@ -15,29 +11,19 @@ import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 export function IntentGridSection({
   intentPlaylists,
-  customIntentPlaylists = [],
 }: {
   intentPlaylists: Playlist[];
-  customIntentPlaylists?: Playlist[];
 }) {
   const reduceMotion = useReducedMotion();
-  const customIntents = useCustomIntentsStore((state) => state.customIntents);
-
-  // Get custom intent definition for a playlist
-  const getCustomIntent = (playlist: Playlist): CustomIntent | undefined => {
-    return customIntents.find((ci) => ci.playlistId === playlist.id);
-  };
-
-  // Combine built-in and custom playlists
-  const allPlaylists = [...intentPlaylists, ...customIntentPlaylists];
+  const intentMetadataByPlaylistId = useCustomIntentsStore(
+    (state) => state.intentMetadataByPlaylistId
+  );
 
   return (
     <section aria-label="Intent Grid" className="space-y-6 md:space-y-8">
       <div className={cn("grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4")}>
-        {allPlaylists.map((playlist, index) => {
-          // First try built-in intent, then custom intent
-          const intent =
-            getIntentByName(playlist.name) ?? getCustomIntent(playlist);
+        {intentPlaylists.map((playlist, index) => {
+          const intent = intentMetadataByPlaylistId[playlist.id];
 
           return (
             <motion.div
@@ -68,7 +54,7 @@ export function IntentGridSection({
           key="create-intent"
           style={
             {
-              "--motion-delay": `${allPlaylists.length * 100}ms`,
+              "--motion-delay": `${intentPlaylists.length * 100}ms`,
             } as React.CSSProperties
           }
           layout

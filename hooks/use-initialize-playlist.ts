@@ -48,59 +48,80 @@ export function useInitializePlaylist() {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    // Get hidden intents from the custom intents store
-    const hiddenIntents = new Set(useCustomIntentsStore.getState().hiddenBuiltInIntents);
-    
-    // Filter out hidden intents
-    const visibleIntents = INTENTS.filter((i) => !hiddenIntents.has(i.name));
-    const intentNames = visibleIntents.map((i) => i.name);
-    const intentNameSet = new Set(intentNames);
+    const ensureIntentMetadata = (seedBuiltIns: boolean) => {
+      const playlistState = usePlaylistStore.getState();
+      const { playlists } = playlistState;
+      const customState = useCustomIntentsStore.getState();
 
-    const repairIntentPlaylists = () => {
-      const state = usePlaylistStore.getState();
-      const playlists = state.playlists;
-      const currentHidden = new Set(useCustomIntentsStore.getState().hiddenBuiltInIntents);
-
-      const byIntentName = new Map<string, typeof playlists>();
-      for (const p of playlists) {
-        if (!intentNameSet.has(p.name)) continue;
-        const list = byIntentName.get(p.name) ?? [];
-        list.push(p);
-        byIntentName.set(p.name, list);
-      }
-
-      const missingNames = intentNames.filter(
-        (name) => !currentHidden.has(name) && (byIntentName.get(name)?.length ?? 0) === 0
+      const customIntentsByPlaylistId = new Map(
+        customState.customIntents.map((intent) => [intent.playlistId, intent])
       );
 
-      const renamePool = intentNames.flatMap((name) => {
-        const list = [...(byIntentName.get(name) ?? [])].sort(
-          (a, b) => a.createdAt - b.createdAt
-        );
-        return list.slice(1);
-      });
+      for (const playlist of playlists) {
+        const existing = customState.intentMetadataByPlaylistId[playlist.id];
+        const customIntent = customIntentsByPlaylistId.get(playlist.id);
+        const builtInIntent = seedBuiltIns
+          ? INTENTS.find((intent) => intent.name === playlist.name)
+          : undefined;
 
-      // If a prior bug created many playlists with the same intent name (e.g. all "Deep Focus"),
-      // reclaim duplicates to fill in missing intent names.
-      for (let i = 0; i < Math.min(missingNames.length, renamePool.length); i++) {
-        const targetName = missingNames[i]!;
-        const targetIntent = visibleIntents.find((intent) => intent.name === targetName);
-        if (!targetIntent) continue;
+        if (customIntent && (!existing || !existing.isCustom)) {
+          customState.setIntentMetadata(playlist.id, {
+            playlistId: playlist.id,
+            name: customIntent.name,
+            description: customIntent.description,
+            keywords: [...customIntent.keywords],
+            gradientClassName: customIntent.gradientClassName,
+            minDuration: customIntent.minDuration,
+            isCustom: true,
+          });
+        } else if (builtInIntent && !existing) {
+          const keywords =
+            customState.keywordOverrides[playlist.id] ?? builtInIntent.keywords;
+          const description =
+            customState.descriptionOverrides[playlist.id] ??
+            builtInIntent.description;
+          const minDuration =
+            customState.minDurationOverrides[playlist.id] ?? 20;
 
-        updatePlaylist(renamePool[i]!.id, {
-          name: targetIntent.name,
-          description: targetIntent.description,
-        });
+          customState.setIntentMetadata(playlist.id, {
+            playlistId: playlist.id,
+            name: builtInIntent.name,
+            description,
+            keywords: [...keywords],
+            gradientClassName: builtInIntent.gradientClassName,
+            minDuration,
+            isCustom: false,
+          });
+        }
+
+        if (existing) {
+          if (playlist.name !== existing.name) {
+            customState.updateIntentMetadata(playlist.id, { name: playlist.name });
+          }
+        }
       }
 
-      // Create any still-missing intent playlists (do not delete user data).
-      // Skip hidden intents.
-      const latest = usePlaylistStore.getState().playlists;
-      const latestNames = new Set(latest.map((p) => p.name));
-      for (const intent of visibleIntents) {
-        if (!latestNames.has(intent.name) && !currentHidden.has(intent.name)) {
-          createPlaylist(intent.name, intent.description, []);
+      const nextOrder =
+        customState.intentPlaylistOrder.length > 0
+          ? [...customState.intentPlaylistOrder]
+          : playlists
+              .filter((playlist) => customState.intentMetadataByPlaylistId[playlist.id])
+              .map((playlist) => playlist.id);
+
+      for (const playlist of playlists) {
+        if (
+          customState.intentMetadataByPlaylistId[playlist.id] &&
+          !nextOrder.includes(playlist.id)
+        ) {
+          nextOrder.push(playlist.id);
         }
+      }
+
+      if (
+        nextOrder.length > 0 &&
+        nextOrder.length !== customState.intentPlaylistOrder.length
+      ) {
+        customState.setIntentPlaylistOrder(nextOrder);
       }
     };
 
@@ -109,6 +130,10 @@ export function useInitializePlaylist() {
     const currentPlaylistId = state.currentPlaylistId;
 
     if (playlists.length === 0) {
+      const customState = useCustomIntentsStore.getState();
+      const hiddenIntents = new Set(customState.hiddenBuiltInIntents);
+      const visibleIntents = INTENTS.filter((i) => !hiddenIntents.has(i.name));
+
       // Create intent playlists (empty for now, then seed via YouTube search).
       // Skip hidden intents.
       for (const intent of visibleIntents) {
@@ -129,6 +154,8 @@ export function useInitializePlaylist() {
         } else if (newlyCreatedPlaylists[0]) {
           setCurrentPlaylist(newlyCreatedPlaylists[0].id);
         }
+
+        ensureIntentMetadata(true);
 
         void (async () => {
           await Promise.allSettled(
@@ -178,7 +205,10 @@ export function useInitializePlaylist() {
         })();
       }, 0);
     } else {
-      repairIntentPlaylists();
+      const customState = useCustomIntentsStore.getState();
+      const hasIntentMetadata =
+        Object.keys(customState.intentMetadataByPlaylistId).length > 0;
+      ensureIntentMetadata(!hasIntentMetadata);
 
       // Ensure we have a selected playlist.
       const nextState = usePlaylistStore.getState();
@@ -188,7 +218,5 @@ export function useInitializePlaylist() {
     }
   }, [hasHydrated, createPlaylist, updatePlaylist, setCurrentPlaylist, addTrackToPlaylist]);
 }
-
-
 
 

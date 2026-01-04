@@ -18,7 +18,6 @@ import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { AnimatedBackground } from "@/components/player/animated-background";
 import { useHasMounted } from "@/hooks/use-has-mounted";
-import { INTENTS } from "@/lib/intents";
 import { IntentGridSection } from "@/components/intent/intent-grid-section";
 import { IntentDetailSection } from "@/components/intent/intent-detail-section";
 import { StreamGridSection } from "@/components/stream/stream-grid-section";
@@ -102,7 +101,12 @@ export default function Home() {
   const view = useAppStateStore((state) => state.view);
   const gridTab = useAppStateStore((state) => state.gridTab);
   const setGridTab = useAppStateStore((state) => state.setGridTab);
-  const customIntents = useCustomIntentsStore((state) => state.customIntents);
+  const intentMetadataByPlaylistId = useCustomIntentsStore(
+    (state) => state.intentMetadataByPlaylistId
+  );
+  const intentPlaylistOrder = useCustomIntentsStore(
+    (state) => state.intentPlaylistOrder
+  );
   const hiddenBuiltInIntents = useCustomIntentsStore(
     (state) => state.hiddenBuiltInIntents
   );
@@ -118,22 +122,17 @@ export default function Home() {
   }, [view, setGridTab]);
 
   const intentPlaylists = React.useMemo(() => {
-    const intentNames = new Set(INTENTS.map((i) => i.name));
     const hiddenNames = new Set(hiddenBuiltInIntents);
-    return playlists
-      .filter((p) => intentNames.has(p.name) && !hiddenNames.has(p.name))
-      .sort(
-        (a, b) =>
-          INTENTS.findIndex((i) => i.name === a.name) -
-          INTENTS.findIndex((i) => i.name === b.name)
-      );
-  }, [playlists, hiddenBuiltInIntents]);
-
-  // Get playlists for custom intents
-  const customIntentPlaylists = React.useMemo(() => {
-    const customPlaylistIds = new Set(customIntents.map((ci) => ci.playlistId));
-    return playlists.filter((p) => customPlaylistIds.has(p.id));
-  }, [playlists, customIntents]);
+    const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+    return intentPlaylistOrder.flatMap((playlistId) => {
+      const playlist = playlistById.get(playlistId);
+      if (!playlist) return [];
+      const intent = intentMetadataByPlaylistId[playlistId];
+      if (!intent) return [];
+      if (!intent.isCustom && hiddenNames.has(intent.name)) return [];
+      return [playlist];
+    });
+  }, [playlists, hiddenBuiltInIntents, intentMetadataByPlaylistId, intentPlaylistOrder]);
 
   // Get playlists for streams
   const streamPlaylists = React.useMemo(() => {
@@ -235,7 +234,6 @@ export default function Home() {
                   </Accordion>
                   <IntentGridSection
                     intentPlaylists={intentPlaylists}
-                    customIntentPlaylists={customIntentPlaylists}
                   />
                 </div>
               </TabsContent>

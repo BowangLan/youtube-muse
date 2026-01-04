@@ -25,11 +25,7 @@ import { useAppStateStore } from "@/lib/store/app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
-import {
-  buildCustomIntentQuery,
-  getIntentByName,
-  getRandomGradient,
-} from "@/lib/intents";
+import { buildCustomIntentQuery, getRandomGradient } from "@/lib/intents";
 import { searchYouTubeUnofficial } from "@/app/actions/youtube-search-unofficial";
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
@@ -72,6 +68,9 @@ export function IntentDetailSection() {
   const setGradientOverride = useCustomIntentsStore(
     (state) => state.setGradientOverride
   );
+  const intentMetadataByPlaylistId = useCustomIntentsStore(
+    (state) => state.intentMetadataByPlaylistId
+  );
 
   const [isAdding, setIsAdding] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -83,10 +82,10 @@ export function IntentDetailSection() {
     return playlists.find((p) => p.id === activePlaylistId);
   }, [activePlaylistId, playlists]);
 
-  // Derive active intent from playlist name
   const activeIntent = React.useMemo(() => {
-    return getIntentByName(activePlaylist?.name);
-  }, [activePlaylist?.name]);
+    if (!activePlaylistId) return undefined;
+    return intentMetadataByPlaylistId[activePlaylistId];
+  }, [activePlaylistId, intentMetadataByPlaylistId]);
 
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =
@@ -97,13 +96,11 @@ export function IntentDetailSection() {
   // Get gradient (check for overrides first, then fall back to intent default)
   const intentGradient = React.useMemo(() => {
     if (!activePlaylistId) return activeIntent?.gradientClassName;
-    return (
-      gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
-    );
+    return gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName;
   }, [activePlaylistId, gradientOverrides, activeIntent?.gradientClassName]);
 
   // Get minimum duration
-  const minDuration = 20;
+  const minDuration = activeIntent?.minDuration ?? 20;
 
   const handleTrackClick = React.useCallback(
     (index: number) => {

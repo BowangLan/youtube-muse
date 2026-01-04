@@ -77,10 +77,10 @@ export function CreateIntentDialog({
   );
 
   React.useEffect(() => {
-    if (keywords.length > 0 && (!nameOverwritten || !name.trim())) {
+    if (keywords.length > 0 && !nameOverwritten) {
       setName(generateNameFromKeywords(keywords));
     }
-  }, [keywords, nameOverwritten, name, generateNameFromKeywords]);
+  }, [keywords, nameOverwritten, generateNameFromKeywords]);
 
   const resetForm = () => {
     setName("");
@@ -272,8 +272,9 @@ export function CreateIntentDialog({
             <Input
               value={name}
               onChange={(e) => {
-                setName(e.target.value);
-                setNameOverwritten(true);
+                const nextValue = e.target.value;
+                setName(nextValue);
+                setNameOverwritten(nextValue.trim().length > 0);
                 setError(null);
               }}
               placeholder="Auto-generated"

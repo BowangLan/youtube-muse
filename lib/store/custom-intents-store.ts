@@ -12,11 +12,23 @@ export interface CustomIntent extends IntentDefinition {
   minDuration?: number // Minimum video duration in minutes (default: 20)
 }
 
+export type IntentMetadata = {
+  playlistId: string
+  name: string
+  description?: string
+  keywords: string[]
+  gradientClassName: GradientClassName
+  minDuration?: number
+  isCustom: boolean
+}
+
 // Keyword override type for built-in intents
 export type KeywordsOverride = [string] | [string, string] | [string, string, string]
 
 interface CustomIntentsState {
   customIntents: CustomIntent[]
+  intentMetadataByPlaylistId: Record<string, IntentMetadata>
+  intentPlaylistOrder: string[]
   // Gradient overrides for any playlist (built-in or custom) - keyed by playlist ID
   gradientOverrides: Record<string, GradientClassName>
   // Keyword overrides for built-in intents - keyed by playlist ID
@@ -36,6 +48,13 @@ interface CustomIntentsActions {
   getCustomIntent: (id: string) => CustomIntent | undefined
   getCustomIntentByPlaylistId: (playlistId: string) => CustomIntent | undefined
   getCustomIntentByName: (name: string) => CustomIntent | undefined
+  setIntentMetadata: (playlistId: string, metadata: IntentMetadata) => void
+  updateIntentMetadata: (playlistId: string, updates: Partial<IntentMetadata>) => void
+  removeIntentMetadata: (playlistId: string) => void
+  getIntentMetadataByPlaylistId: (playlistId: string) => IntentMetadata | undefined
+  getIntentMetadataByName: (name: string) => IntentMetadata | undefined
+  setIntentPlaylistOrder: (order: string[]) => void
+  addIntentToOrder: (playlistId: string) => void
   // Gradient override methods
   setGradientOverride: (playlistId: string, gradient: GradientClassName) => void
   getGradientOverride: (playlistId: string) => GradientClassName | undefined
@@ -66,6 +85,8 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
   persist(
     (set, get) => ({
       customIntents: [],
+      intentMetadataByPlaylistId: {},
+      intentPlaylistOrder: [],
       gradientOverrides: {},
       keywordOverrides: {},
       descriptionOverrides: {},
@@ -84,22 +105,70 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
 
         set((state) => ({
           customIntents: [...state.customIntents, newIntent],
+          intentMetadataByPlaylistId: {
+            ...state.intentMetadataByPlaylistId,
+            [newIntent.playlistId]: {
+              playlistId: newIntent.playlistId,
+              name: newIntent.name,
+              description: newIntent.description,
+              keywords: [...newIntent.keywords],
+              gradientClassName: newIntent.gradientClassName,
+              minDuration: newIntent.minDuration,
+              isCustom: true,
+            },
+          },
+          intentPlaylistOrder: state.intentPlaylistOrder.includes(newIntent.playlistId)
+            ? state.intentPlaylistOrder
+            : [...state.intentPlaylistOrder, newIntent.playlistId],
         }))
 
         return newIntent
       },
 
       removeCustomIntent: (id) => {
+        const intent = get().customIntents.find((i) => i.id === id)
         set((state) => ({
           customIntents: state.customIntents.filter((i) => i.id !== id),
+          intentMetadataByPlaylistId: intent
+            ? Object.fromEntries(
+                Object.entries(state.intentMetadataByPlaylistId).filter(
+                  ([playlistId]) => playlistId !== intent.playlistId
+                )
+              )
+            : state.intentMetadataByPlaylistId,
+          intentPlaylistOrder: intent
+            ? state.intentPlaylistOrder.filter((playlistId) => playlistId !== intent.playlistId)
+            : state.intentPlaylistOrder,
         }))
       },
 
       updateCustomIntent: (id, updates) => {
+        const current = get().customIntents.find((i) => i.id === id)
         set((state) => ({
           customIntents: state.customIntents.map((i) =>
             i.id === id ? { ...i, ...updates } : i
           ),
+          intentMetadataByPlaylistId: current
+            ? {
+                ...state.intentMetadataByPlaylistId,
+                [current.playlistId]: {
+                  ...state.intentMetadataByPlaylistId[current.playlistId],
+                  ...updates,
+                  playlistId: current.playlistId,
+                  name: updates.name ?? current.name,
+                  keywords: updates.keywords ? [...updates.keywords] : state.intentMetadataByPlaylistId[current.playlistId]?.keywords ?? current.keywords,
+                  gradientClassName:
+                    updates.gradientClassName ??
+                    state.intentMetadataByPlaylistId[current.playlistId]?.gradientClassName ??
+                    current.gradientClassName,
+                  minDuration:
+                    updates.minDuration ??
+                    state.intentMetadataByPlaylistId[current.playlistId]?.minDuration ??
+                    current.minDuration,
+                  isCustom: true,
+                },
+              }
+            : state.intentMetadataByPlaylistId,
         }))
       },
 
@@ -113,6 +182,84 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
 
       getCustomIntentByName: (name) => {
         return get().customIntents.find((i) => i.name === name)
+      },
+
+      setIntentMetadata: (playlistId, metadata) => {
+        set((state) => ({
+          intentMetadataByPlaylistId: {
+            ...state.intentMetadataByPlaylistId,
+            [playlistId]: metadata,
+          },
+          intentPlaylistOrder: state.intentPlaylistOrder.includes(playlistId)
+            ? state.intentPlaylistOrder
+            : [...state.intentPlaylistOrder, playlistId],
+        }))
+      },
+
+      updateIntentMetadata: (playlistId, updates) => {
+        set((state) => {
+          const current = state.intentMetadataByPlaylistId[playlistId]
+          if (!current) return { intentMetadataByPlaylistId: state.intentMetadataByPlaylistId }
+
+          const next = {
+            ...current,
+            ...updates,
+            playlistId: current.playlistId,
+          }
+
+          return {
+            intentMetadataByPlaylistId: {
+              ...state.intentMetadataByPlaylistId,
+              [playlistId]: next,
+            },
+            customIntents: current.isCustom
+              ? state.customIntents.map((intent) =>
+                  intent.playlistId === playlistId
+                    ? {
+                        ...intent,
+                        name: next.name,
+                        description: next.description,
+                        keywords: next.keywords as KeywordsOverride,
+                        gradientClassName: next.gradientClassName,
+                        minDuration: next.minDuration,
+                      }
+                    : intent
+                )
+              : state.customIntents,
+          }
+        })
+      },
+
+      removeIntentMetadata: (playlistId) => {
+        set((state) => {
+          const { [playlistId]: _, ...rest } = state.intentMetadataByPlaylistId
+          return {
+            intentMetadataByPlaylistId: rest,
+            intentPlaylistOrder: state.intentPlaylistOrder.filter((id) => id !== playlistId),
+          }
+        })
+      },
+
+      getIntentMetadataByPlaylistId: (playlistId) => {
+        return get().intentMetadataByPlaylistId[playlistId]
+      },
+
+      getIntentMetadataByName: (name) => {
+        return Object.values(get().intentMetadataByPlaylistId).find((intent) => intent.name === name)
+      },
+
+      setIntentPlaylistOrder: (order) => {
+        set(() => ({
+          intentPlaylistOrder: order,
+        }))
+      },
+
+      addIntentToOrder: (playlistId) => {
+        set((state) => ({
+          intentPlaylistOrder: state.intentPlaylistOrder.includes(playlistId)
+            ? state.intentPlaylistOrder
+            : [...state.intentPlaylistOrder, playlistId],
+        }))
       },
 
       // Gradient override methods
@@ -221,7 +368,31 @@ export const useCustomIntentsStore = create<CustomIntentsState & CustomIntentsAc
     {
       name: "custom-intents-storage",
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: (persistedState, version) => {
+        const state = persistedState as CustomIntentsState | undefined
+        if (!state || version >= 2) return state as CustomIntentsState
+
+        const intentMetadataByPlaylistId: Record<string, IntentMetadata> = {}
+
+        for (const intent of state.customIntents ?? []) {
+          intentMetadataByPlaylistId[intent.playlistId] = {
+            playlistId: intent.playlistId,
+            name: intent.name,
+            description: intent.description,
+            keywords: [...intent.keywords],
+            gradientClassName: intent.gradientClassName,
+            minDuration: intent.minDuration,
+            isCustom: true,
+          }
+        }
+
+        return {
+          ...state,
+          intentMetadataByPlaylistId,
+          intentPlaylistOrder: (state.customIntents ?? []).map((intent) => intent.playlistId),
+        }
+      },
     }
   )
 )
-

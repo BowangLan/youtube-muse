@@ -9,7 +9,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "./icons";
 
-const iconMap: Record<KeyboardFeedbackIcon, React.ComponentType<any>> = {
+const iconMap: Record<
+  KeyboardFeedbackIcon,
+  React.ComponentType<React.SVGProps<SVGSVGElement>>
+> = {
   play: Icons.Play,
   pause: Icons.Pause,
   "skip-forward": Icons.SkipForward,

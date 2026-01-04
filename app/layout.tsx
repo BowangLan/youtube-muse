@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import "./intent-styles.css";
 import { StructuredData } from "@/components/seo/structured-data";
@@ -126,17 +127,18 @@ export default function RootLayout({
       <head>
         <StructuredData />
         {process.env.NODE_ENV === "development" && (
-          <script
+          <Script
             crossOrigin="anonymous"
             src="//unpkg.com/react-scan/dist/auto.global.js"
+            strategy="afterInteractive"
           />
         )}
         {process.env.NODE_ENV === "production" && (
-          <script
-            defer
+          <Script
             src="https://umami-production-252d.up.railway.app/script.js"
             data-website-id="0550256b-75b5-4806-b0d9-f9caf6c80488"
-          ></script>
+            strategy="afterInteractive"
+          />
         )}
       </head>
       <body

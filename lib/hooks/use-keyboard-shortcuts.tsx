@@ -3,7 +3,6 @@ import { usePlayerStore } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
 import { useKeyboardFeedbackStore } from "@/lib/store/keyboard-feedback-store"
-import { INTENTS, getIntentByName } from "@/lib/intents"
 
 declare global {
   interface Window {
@@ -50,8 +49,12 @@ export function useKeyboardShortcuts() {
       const { dispatch, volume, duration, isPlaying } = usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
-      const { customIntents, hiddenBuiltInIntents, gradientOverrides } =
-        useCustomIntentsStore.getState()
+      const {
+        hiddenBuiltInIntents,
+        gradientOverrides,
+        intentMetadataByPlaylistId,
+        intentPlaylistOrder,
+      } = useCustomIntentsStore.getState()
       const { showFeedback } = useKeyboardFeedbackStore.getState()
 
       // Handle different key combinations
@@ -166,27 +169,17 @@ export function useKeyboardShortcuts() {
       // Intent selection with number keys (1-9)
       const numKey = parseInt(key)
       if (!isNaN(numKey) && numKey >= 1 && numKey <= 9) {
-        // Get all intent playlists in order (built-in + custom)
-        const intentNames = new Set(INTENTS.map((i) => i.name))
         const hiddenNames = new Set(hiddenBuiltInIntents)
+        const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]))
 
-        // Get built-in intents (not hidden)
-        const intentPlaylists = playlists
-          .filter((p) => intentNames.has(p.name) && !hiddenNames.has(p.name))
-          .sort(
-            (a, b) =>
-              INTENTS.findIndex((i) => i.name === a.name) -
-              INTENTS.findIndex((i) => i.name === b.name)
-          )
-
-        // Get custom intent playlists
-        const customPlaylistIds = new Set(customIntents.map((ci) => ci.playlistId))
-        const customIntentPlaylists = playlists.filter((p) =>
-          customPlaylistIds.has(p.id)
-        )
-
-        // Combine all intents
-        const allIntents = [...intentPlaylists, ...customIntentPlaylists]
+        const allIntents = intentPlaylistOrder.flatMap((playlistId) => {
+          const playlist = playlistById.get(playlistId)
+          if (!playlist) return []
+          const intent = intentMetadataByPlaylistId[playlistId]
+          if (!intent) return []
+          if (!intent.isCustom && hiddenNames.has(intent.name)) return []
+          return [playlist]
+        })
 
         // Select intent by number (1-indexed)
         const intentIndex = numKey - 1
@@ -196,8 +189,7 @@ export function useKeyboardShortcuts() {
           setCurrentTrackIndex(0)
 
           // Get gradient for feedback
-          const intent = getIntentByName(selectedPlaylist.name) ??
-            customIntents.find((ci) => ci.playlistId === selectedPlaylist.id)
+          const intent = intentMetadataByPlaylistId[selectedPlaylist.id]
           const gradientClassName = gradientOverrides[selectedPlaylist.id] ?? intent?.gradientClassName
 
           showFeedback({

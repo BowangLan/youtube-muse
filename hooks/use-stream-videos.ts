@@ -4,7 +4,19 @@ import type { Stream } from "@/lib/types/stream"
 import type { Track } from "@/lib/types/playlist"
 
 // Transform database video to Track format
-function transformVideoToTrack(video: any): Track {
+type StreamVideo = {
+  videoId: string
+  title: string
+  channelId: string
+  channelTitle?: string
+  channelThumbnailUrl?: string
+  duration?: number
+  thumbnailUrl?: string
+  publishedAt?: string
+  publishedAtMs?: number
+}
+
+function transformVideoToTrack(video: StreamVideo): Track {
   return {
     id: video.videoId,
     title: video.title,

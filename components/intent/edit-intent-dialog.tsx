@@ -14,7 +14,6 @@ import {
 import { Loader2, Pencil } from "lucide-react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
-import { getIntentByName } from "@/lib/intents";
 import { KeywordSelector } from "./keyword-selector";
 
 interface EditIntentDialogProps {
@@ -37,27 +36,11 @@ export function EditIntentDialog({
   const playlists = usePlaylistStore((state) => state.playlists);
   const updatePlaylist = usePlaylistStore((state) => state.updatePlaylist);
 
-  const customIntents = useCustomIntentsStore((state) => state.customIntents);
-  const updateCustomIntent = useCustomIntentsStore(
-    (state) => state.updateCustomIntent
+  const intentMetadataByPlaylistId = useCustomIntentsStore(
+    (state) => state.intentMetadataByPlaylistId
   );
-  const keywordOverrides = useCustomIntentsStore(
-    (state) => state.keywordOverrides
-  );
-  const descriptionOverrides = useCustomIntentsStore(
-    (state) => state.descriptionOverrides
-  );
-  const minDurationOverrides = useCustomIntentsStore(
-    (state) => state.minDurationOverrides
-  );
-  const setKeywordOverride = useCustomIntentsStore(
-    (state) => state.setKeywordOverride
-  );
-  const setDescriptionOverride = useCustomIntentsStore(
-    (state) => state.setDescriptionOverride
-  );
-  const setMinDurationOverride = useCustomIntentsStore(
-    (state) => state.setMinDurationOverride
+  const updateIntentMetadata = useCustomIntentsStore(
+    (state) => state.updateIntentMetadata
   );
 
   // Find the playlist and custom intent
@@ -66,73 +49,33 @@ export function EditIntentDialog({
     [playlists, playlistId]
   );
 
-  const customIntent = React.useMemo(
-    () => customIntents.find((ci) => ci.playlistId === playlistId),
-    [customIntents, playlistId]
+  const intentMetadata = React.useMemo(
+    () => intentMetadataByPlaylistId[playlistId],
+    [intentMetadataByPlaylistId, playlistId]
   );
 
-  // Check if this is a built-in intent
-  const builtInIntent = React.useMemo(
-    () => getIntentByName(playlist?.name),
-    [playlist?.name]
-  );
-
-  const isCustomIntent = !!customIntent;
-  const isBuiltInIntent = !!builtInIntent;
+  const isCustomIntent = !!intentMetadata?.isCustom;
+  const isBuiltInIntent = !!intentMetadata && !intentMetadata.isCustom;
 
   // Get the current keywords (from override, custom intent, or built-in intent)
   const currentKeywords = React.useMemo(() => {
-    if (isCustomIntent && customIntent) {
-      return customIntent.keywords;
-    }
-    if (isBuiltInIntent) {
-      return keywordOverrides[playlistId] ?? builtInIntent.keywords;
-    }
-    return [];
+    return intentMetadata?.keywords ?? [];
   }, [
-    isCustomIntent,
-    customIntent,
-    isBuiltInIntent,
-    keywordOverrides,
-    playlistId,
-    builtInIntent,
+    intentMetadata?.keywords,
   ]);
 
   // Get the current description
   const currentDescription = React.useMemo(() => {
-    if (isCustomIntent && customIntent) {
-      return customIntent.description || "";
-    }
-    if (isBuiltInIntent) {
-      return (
-        descriptionOverrides[playlistId] ?? builtInIntent.description ?? ""
-      );
-    }
-    return "";
+    return intentMetadata?.description ?? "";
   }, [
-    isCustomIntent,
-    customIntent,
-    isBuiltInIntent,
-    descriptionOverrides,
-    playlistId,
-    builtInIntent,
+    intentMetadata?.description,
   ]);
 
   // Get the current minimum duration
   const currentMinDuration = React.useMemo(() => {
-    if (isCustomIntent && customIntent) {
-      return customIntent.minDuration ?? 20;
-    }
-    if (isBuiltInIntent) {
-      return minDurationOverrides[playlistId] ?? 20;
-    }
-    return 20;
+    return intentMetadata?.minDuration ?? 20;
   }, [
-    isCustomIntent,
-    customIntent,
-    isBuiltInIntent,
-    minDurationOverrides,
-    playlistId,
+    intentMetadata?.minDuration,
   ]);
 
   // Initialize form when dialog opens or intent changes
@@ -170,21 +113,11 @@ export function EditIntentDialog({
         | [string, string]
         | [string, string, string];
 
-      if (isCustomIntent && customIntent) {
-        // Update the custom intent in the store (keywords, description, and minDuration)
-        updateCustomIntent(customIntent.id, {
-          keywords: keywordsTyped,
-          description: description || undefined,
-          minDuration,
-        });
-      } else if (isBuiltInIntent) {
-        // For built-in intents, store as overrides
-        setKeywordOverride(playlistId, keywordsTyped);
-        if (description) {
-          setDescriptionOverride(playlistId, description);
-        }
-        setMinDurationOverride(playlistId, minDuration);
-      }
+      updateIntentMetadata(playlistId, {
+        keywords: keywordsTyped,
+        description: description || undefined,
+        minDuration,
+      });
 
       // Update the playlist description if changed
       if (playlist && description !== (playlist.description || "")) {

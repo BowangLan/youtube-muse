@@ -19,7 +19,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { INTENTS } from "@/lib/intents";
 import {
   ArrowRightLeft,
   Check,
@@ -53,32 +52,33 @@ export function TrackItemSmall({
   const moveTrackToPlaylist = usePlaylistStore(
     (state) => state.moveTrackToPlaylist
   );
-  const customIntents = useCustomIntentsStore((state) => state.customIntents);
+  const intentMetadataByPlaylistId = useCustomIntentsStore(
+    (state) => state.intentMetadataByPlaylistId
+  );
+  const intentPlaylistOrder = useCustomIntentsStore(
+    (state) => state.intentPlaylistOrder
+  );
   const hiddenBuiltInIntents = useCustomIntentsStore(
     (state) => state.hiddenBuiltInIntents
   );
 
   const intentPlaylists = React.useMemo(() => {
-    const intentNames = new Set(INTENTS.map((intent) => intent.name));
     const hiddenNames = new Set(hiddenBuiltInIntents);
-    return playlists
-      .filter(
-        (playlist) =>
-          intentNames.has(playlist.name) && !hiddenNames.has(playlist.name)
-      )
-      .sort(
-        (a, b) =>
-          INTENTS.findIndex((intent) => intent.name === a.name) -
-          INTENTS.findIndex((intent) => intent.name === b.name)
-      );
-  }, [playlists, hiddenBuiltInIntents]);
-
-  const customIntentPlaylists = React.useMemo(() => {
-    const customPlaylistIds = new Set(
-      customIntents.map((intent) => intent.playlistId)
-    );
-    return playlists.filter((playlist) => customPlaylistIds.has(playlist.id));
-  }, [playlists, customIntents]);
+    const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+    return intentPlaylistOrder.flatMap((playlistId) => {
+      const playlist = playlistById.get(playlistId);
+      if (!playlist) return [];
+      const intent = intentMetadataByPlaylistId[playlistId];
+      if (!intent) return [];
+      if (!intent.isCustom && hiddenNames.has(intent.name)) return [];
+      return [playlist];
+    });
+  }, [
+    playlists,
+    hiddenBuiltInIntents,
+    intentMetadataByPlaylistId,
+    intentPlaylistOrder,
+  ]);
 
   const activePlaylist = React.useMemo(() => {
     if (!activePlaylistId) return null;
@@ -97,10 +97,8 @@ export function TrackItemSmall({
   }, [playlists]);
 
   const otherIntentPlaylists = React.useMemo(() => {
-    return [...intentPlaylists, ...customIntentPlaylists].filter(
-      (playlist) => playlist.id !== activePlaylistId
-    );
-  }, [intentPlaylists, customIntentPlaylists, activePlaylistId]);
+    return intentPlaylists.filter((playlist) => playlist.id !== activePlaylistId);
+  }, [intentPlaylists, activePlaylistId]);
 
   const handleCopyToIntent = React.useCallback(
     (playlistId: string, playlistName: string) => {
