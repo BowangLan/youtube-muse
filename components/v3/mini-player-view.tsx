@@ -374,7 +374,7 @@ const TrackInfo = ({ variant }: TrackInfoProps) => {
 
 const ProgressSection = () => {
   return (
-    <div className="flex flex-col gap-2 mt-6 flex-none">
+    <div className="flex flex-col gap-2 flex-none">
       <ProgressBar />
       <TimeDisplay />
     </div>
@@ -409,7 +409,7 @@ const PlayerControls = () => {
         : "Repeat off";
 
   return (
-    <div className="flex flex-wrap items-center gap-2 lg:gap-3 xl:gap-4 mt-auto text-foreground relative">
+    <div className="flex flex-wrap items-center gap-2 lg:gap-3 xl:gap-4 text-foreground relative">
       <StickyTooltip
         content={isShuffleEnabled ? "Shuffle: On" : "Shuffle: Off"}
       >
@@ -626,9 +626,10 @@ const ExpandedStateView = ({
     >
       <TrackCoverExpanded glowStyle={glowStyle} />
 
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 justify-between">
         <div className="flex items-start justify-between gap-4 flex-none">
           <TrackInfo variant="expanded" />
+
           {onToggleExpanded && (
             <StickyTooltip content={isPinned ? "Unpin player" : "Pin player"}>
               <PlayerIconButton
@@ -651,6 +652,7 @@ const ExpandedStateView = ({
             </StickyTooltip>
           )}
         </div>
+
         <ProgressSection />
         <PlayerControls />
       </div>
