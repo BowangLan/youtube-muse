@@ -1,7 +1,7 @@
 import { Stream } from "@/lib/types/stream";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { syncChannelLatestVideo } from "@/app/actions/youtube-channels-sync";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import type { Track } from "@/lib/types/playlist";
@@ -40,6 +40,7 @@ export function StreamDataLoader({ stream }: { stream: Stream }) {
         : null,
     [videos]
   );
+  const lastAppliedHashRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (channelIds.length === 0) return;
@@ -90,6 +91,10 @@ export function StreamDataLoader({ stream }: { stream: Stream }) {
   useEffect(() => {
     // sync convex videos to playlist tracks
     if (videos) {
+      if (videosHash && lastAppliedHashRef.current === videosHash) {
+        return;
+      }
+
       const playlistStore = usePlaylistStore.getState();
       const playlist = playlistStore.playlists.find(
         (p) => p.id === stream.playlistId
@@ -130,15 +135,8 @@ export function StreamDataLoader({ stream }: { stream: Stream }) {
 
           const newTracks = videos.map(convertToTrack);
 
-          // Remove all existing tracks
-          playlist.tracks.forEach((track) => {
-            playlistStore.removeTrackFromPlaylist(stream.playlistId, track.id);
-          });
-
-          // Add all new tracks
-          newTracks.forEach((track) => {
-            playlistStore.addTrackToPlaylist(stream.playlistId, track);
-          });
+          playlistStore.setPlaylistTracks(stream.playlistId, newTracks);
+          lastAppliedHashRef.current = videosHash ?? null;
 
           console.debug(
             `[StreamDataLoader] Updated playlist ${stream.playlistId} with ${newTracks.length} tracks`

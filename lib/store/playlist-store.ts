@@ -204,6 +204,7 @@ interface PlaylistActions {
   createPlaylist: (name: string, description?: string, initialTracks?: Track[]) => void
   deletePlaylist: (playlistId: string) => void
   updatePlaylist: (playlistId: string, updates: Partial<Omit<Playlist, "id" | "tracks" | "createdAt">>) => void
+  setPlaylistTracks: (playlistId: string, tracks: Track[]) => void
 
   // Track management
   addTrackToPlaylist: (playlistId: string, track: Omit<Track, "addedAt">) => void
@@ -279,6 +280,34 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
               : p
           ),
         }))
+      },
+
+      setPlaylistTracks: (playlistId, tracks) => {
+        set((state) => {
+          const playlist = state.playlists.find((p) => p.id === playlistId)
+          if (!playlist) return state
+
+          const playlists = state.playlists.map((p) =>
+            p.id === playlistId
+              ? { ...p, tracks, updatedAt: Date.now() }
+              : p
+          )
+
+          if (state.currentPlaylistId !== playlistId) {
+            return { playlists }
+          }
+
+          const maxIndex = Math.max(0, tracks.length - 1)
+          const nextTrackIndex = Math.min(state.currentTrackIndex, maxIndex)
+          const needsShuffleReset =
+            state.isShuffleEnabled && state.shuffleOrder.length !== tracks.length
+
+          return {
+            playlists,
+            currentTrackIndex: nextTrackIndex,
+            shuffleOrder: needsShuffleReset ? [] : state.shuffleOrder,
+          }
+        })
       },
 
       // Track management
