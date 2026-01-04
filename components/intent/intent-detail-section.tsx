@@ -182,7 +182,7 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      if (typeof window !== "undefined" && window.umami) {
+      if (typeof window !== "undefined" && window.umami && process.env.NODE_ENV === "production") {
         window.umami.track("youtube-api-search-videos", {
           context: "intent-refresh",
           intent: activePlaylist.name,
