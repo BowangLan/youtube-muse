@@ -247,7 +247,7 @@ export function YouTubePlayerContainer() {
         <VideoPlaybackOverlay videoMode={videoMode} />
       </motion.div>
 
-      {videoMode === "fullscreen" && <FullscreenPlayerControls />}
+      {videoMode === "fullscreen" && !isMobile && <FullscreenPlayerControls />}
     </motion.div>
   );
 

@@ -7,15 +7,22 @@ import { usePlayerStore } from "@/lib/store/player-store";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ProgressBar, TimeDisplay, VolumeControl } from "./player-controls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface VideoPlaybackOverlayProps {
   videoMode: "hidden" | "floating" | "fullscreen";
 }
 
 export function VideoPlaybackOverlay({ videoMode }: VideoPlaybackOverlayProps) {
+  const isMobile = useIsMobile();
   const isPlaying = useIsPlaying();
   const dispatch = usePlayerStore((state) => state.dispatch);
   const [isHovering, setIsHovering] = useState(false);
+
+  if (isMobile) {
+    // Not implemented for mobile yet
+    return null;
+  }
 
   return (
     <div
@@ -28,7 +35,7 @@ export function VideoPlaybackOverlay({ videoMode }: VideoPlaybackOverlayProps) {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {videoMode === "fullscreen" && (
+      {videoMode === "fullscreen" && !isMobile && (
         // mode="wait" ensures exit animation completes before enter animation starts
         <AnimatePresence mode="wait">
           {!isPlaying && (
