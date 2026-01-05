@@ -6,26 +6,46 @@ export function isYouTubeShort(url: string): boolean {
 }
 
 /**
- * Extract YouTube video ID from various URL formats
+ * Extract YouTube video ID from URL formats only
  * Returns null for YouTube Shorts URLs to exclude them
  */
-export function extractVideoId(url: string): string | null {
-  // Reject YouTube Shorts URLs
+export function extractVideoIdFromUrl(url: string): string | null {
   if (isYouTubeShort(url)) {
     return null
   }
 
+  const trimmed = url.trim()
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /^([a-zA-Z0-9_-]{11})$/, // Direct video ID
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+    /youtu\.be\/([^&\n?#]+)/,
+    /youtube\.com\/embed\/([^&\n?#]+)/,
+    /youtube\.com\/v\/([^&\n?#]+)/,
+    /youtube\.com\/live\/([^&\n?#]+)/,
   ]
 
   for (const pattern of patterns) {
-    const match = url.match(pattern)
+    const match = trimmed.match(pattern)
     if (match) return match[1]
   }
 
   return null
+}
+
+/**
+ * Extract YouTube video ID from various URL formats
+ * Returns null for YouTube Shorts URLs to exclude them
+ */
+export function extractVideoId(url: string): string | null {
+  if (isYouTubeShort(url)) {
+    return null
+  }
+
+  const urlMatch = extractVideoIdFromUrl(url)
+  if (urlMatch) return urlMatch
+
+  const trimmed = url.trim()
+  const directId = trimmed.match(/^([a-zA-Z0-9_-]{11})$/)
+  return directId ? directId[1] : null
 }
 
 /**

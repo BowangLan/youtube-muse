@@ -46,6 +46,7 @@ import {
 import { StreamDataLoader } from "@/components/data-loaders/stream-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
+import { PlayUrlDialog } from "@/components/player/play-url-dialog";
 
 const INTENT_HELP_STEPS = [
   {
@@ -186,14 +187,20 @@ export default function Home() {
               onValueChange={setGridTab}
               className="w-full"
             >
-              <TabsList className="w-full justify-start sm:w-fit">
-                <TabsTrigger value="intents" className="sm:flex-none">
-                  Intents
-                </TabsTrigger>
-                <TabsTrigger value="streams" className="sm:flex-none">
-                  Streams
-                </TabsTrigger>
-              </TabsList>
+              <div className="flex items-center justify-between">
+                <TabsList className="w-full justify-start sm:w-fit">
+                  <TabsTrigger value="intents" className="sm:flex-none">
+                    Intents
+                  </TabsTrigger>
+                  <TabsTrigger value="streams" className="sm:flex-none">
+                    Streams
+                  </TabsTrigger>
+                </TabsList>
+
+                <div>
+                  <PlayUrlDialog />
+                </div>
+              </div>
               <TabsContent value="intents">
                 <div className="mt-2 space-y-4">
                   <Accordion
