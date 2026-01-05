@@ -28,6 +28,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["P"], description: "Previous track" },
       { keys: ["→", "L"], description: "Skip forward 10s" },
       { keys: ["←", "J"], description: "Skip backward 10s" },
+      { keys: ["Shift + →"], description: "Hold to play at 2x speed" },
     ],
   },
   {
@@ -113,9 +114,13 @@ export function KeyboardShortcutsDialog() {
                     <div className="flex flex-wrap gap-1">
                       {shortcut.keys.map((key, keyIdx) => (
                         <React.Fragment key={keyIdx}>
-                          <kbd className="inline-flex items-center justify-center rounded border border-white/20 bg-white/5 px-2 py-1 font-mono text-xs text-white/90">
-                            {key}
-                          </kbd>
+                          {key.split(" + ").map((keyPart, keyPartIdx) => (
+                            <React.Fragment key={keyPartIdx}>
+                              <kbd className="inline-flex items-center justify-center rounded border border-white/20 bg-white/5 px-2 py-1 font-mono text-xs text-white/90">
+                                {keyPart}
+                              </kbd>
+                            </React.Fragment>
+                          ))}
                           {keyIdx < shortcut.keys.length - 1 && (
                             <span className="text-white/40 self-center">
                               or

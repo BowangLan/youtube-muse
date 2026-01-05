@@ -11,6 +11,7 @@ YouTube Muse supports comprehensive keyboard shortcuts for efficient playback co
 | `P` | Previous track |
 | `→` or `L` | Skip forward 10s |
 | `←` or `J` | Skip backward 10s |
+| `Shift` + `→` | Hold for 2x speed |
 
 ## Volume
 

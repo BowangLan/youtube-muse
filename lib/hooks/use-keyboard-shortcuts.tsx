@@ -36,6 +36,15 @@ declare global {
  */
 export function useKeyboardShortcuts() {
   useEffect(() => {
+    const speedBoostActive = { current: false }
+
+    const setPlaybackRate = (rate: number) => {
+      const { getPlayer } = useYouTubePlayerInstanceStore.getState()
+      const player = getPlayer()
+      if (!player?.setPlaybackRate) return
+      player.setPlaybackRate(rate)
+    }
+
     const handleKeyPress = (e: KeyboardEvent) => {
       // Don't trigger shortcuts when typing in inputs or textareas
       const target = e.target as HTMLElement
@@ -84,6 +93,14 @@ export function useKeyboardShortcuts() {
           label: willPlay ? "Play" : "Pause",
           icon: willPlay ? "play" : "pause",
         })
+        return
+      }
+
+      if (key === "arrowright" && e.shiftKey) {
+        if (!speedBoostActive.current) {
+          speedBoostActive.current = true
+          setPlaybackRate(2)
+        }
         return
       }
 
@@ -222,12 +239,31 @@ export function useKeyboardShortcuts() {
       }
     }
 
+    const handleKeyRelease = (e: KeyboardEvent) => {
+      if (!speedBoostActive.current) return
+      const key = e.key.toLowerCase()
+      if (key === "arrowright" || key === "shift") {
+        speedBoostActive.current = false
+        setPlaybackRate(1)
+      }
+    }
+
+    const handleWindowBlur = () => {
+      if (!speedBoostActive.current) return
+      speedBoostActive.current = false
+      setPlaybackRate(1)
+    }
+
     // Add event listener
     window.addEventListener("keydown", handleKeyPress)
+    window.addEventListener("keyup", handleKeyRelease)
+    window.addEventListener("blur", handleWindowBlur)
 
     // Cleanup
     return () => {
       window.removeEventListener("keydown", handleKeyPress)
+      window.removeEventListener("keyup", handleKeyRelease)
+      window.removeEventListener("blur", handleWindowBlur)
     }
   }, [])
 }
