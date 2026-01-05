@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { KeywordSelector } from "./keyword-selector";
@@ -134,20 +134,33 @@ export function EditIntentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full sm:max-w-4xl rounded-2xl border border-white/10 bg-[#050505] p-0 text-white motion-preset-slide-up-sm max-h-[90vh] overflow-hidden">
-        <div className="space-y-3 p-4 sm:space-y-4 sm:p-6 overflow-y-auto max-h-[90vh] flex flex-col">
-          <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold sm:text-xl">
-              <Pencil className="h-4 w-4 shrink-0 text-purple-400 sm:h-5 sm:w-5" />
+      <DialogContent className="w-[92vw] max-h-[85vh] overflow-hidden rounded-3xl border border-white/10 bg-[#070707] p-0 text-white motion-preset-slide-up-sm sm:max-w-xl">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.08),transparent_40%)]"
+        />
+        <div className="relative flex max-h-[85vh] flex-col gap-6 overflow-y-auto p-6 sm:p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-white">
               Edit Intent
             </DialogTitle>
-            <DialogDescription className="text-xs text-zinc-500 sm:text-sm">
+            <DialogDescription>
               Customize the keywords and description for &quot;{playlist.name}
               &quot;
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 sm:space-y-6 flex-1">
+          <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto">
+            {/* Intent Name */}
+            <div className="space-y-2 shrink-0">
+              <Label>Intent Name</Label>
+              <Input
+                value={playlist?.name || ""}
+                disabled
+                className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+              />
+            </div>
+
             {/* Keywords */}
             <KeywordSelector
               keywords={keywords}
@@ -158,7 +171,7 @@ export function EditIntentDialog({
             />
 
             {/* Minimum Duration */}
-            <div className="space-y-1.5 sm:space-y-2">
+            <div className="space-y-2 shrink-0">
               <Label>Minimum Duration (minutes)</Label>
               <Input
                 id="intent-min-duration"
@@ -173,47 +186,40 @@ export function EditIntentDialog({
                     setMinDuration(value);
                   }
                 }}
-                className="h-10 w-full rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 sm:h-11 sm:max-w-xs sm:text-base"
+                className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
                 disabled={isSaving}
               />
-              <p className="text-[11px] text-zinc-500 sm:text-xs">
+              <p className="text-xs text-zinc-400">
                 Only fetch videos at least this long
               </p>
             </div>
 
-            {/* Description - hidden on mobile */}
-            <div className="space-y-1.5 sm:space-y-2 hidden sm:block">
+            {/* Description */}
+            <div className="space-y-2">
               <Label>
-                Description <span className="text-zinc-500">(optional)</span>
+                Description <span className="text-zinc-400">(optional)</span>
               </Label>
               <Textarea
                 id="intent-description"
                 placeholder="Describe the vibe or purpose of this intent..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="min-h-20 rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 resize-none sm:text-base"
+                className="min-h-20 rounded-xl border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 resize-none"
                 disabled={isSaving}
               />
             </div>
 
-            {error && (
-              <p className="text-xs text-red-400 sm:text-sm">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
 
-          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-end">
-            <Button
-              variant="ghost"
-              onClick={handleClose}
-              disabled={isSaving}
-              className="h-10 w-full rounded-full px-4 text-white hover:bg-white/10 sm:h-auto sm:w-auto"
-            >
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="ghost" onClick={handleClose} disabled={isSaving}>
               Cancel
             </Button>
+            <div className="flex-1"></div>
             <Button
               onClick={handleSave}
               disabled={keywords.length === 0 || isSaving}
-              className="h-10 w-full rounded-full bg-white text-black hover:bg-white/90 sm:h-auto sm:w-auto"
             >
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes

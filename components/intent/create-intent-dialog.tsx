@@ -280,12 +280,12 @@ export function CreateIntentDialog({
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.08),transparent_40%)]"
         />
         <div className="relative flex max-h-[85vh] flex-col gap-6 overflow-y-auto p-6 sm:p-8">
-          <DialogHeader className="space-y-2 text-left motion-preset-blur-up-lg">
+          <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-white">
               Build your intent.
             </DialogTitle>
-            <DialogDescription className="text-sm text-zinc-400">
-              Select or type keywords. The name is generated automatically.
+            <DialogDescription>
+              Select or type keywords. The name will be generated automatically.
             </DialogDescription>
           </DialogHeader>
 

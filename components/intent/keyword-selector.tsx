@@ -134,7 +134,7 @@ export function KeywordSelector({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 shrink-0">
       <div className="space-y-2">
         <Label>Keywords</Label>
         <Input
