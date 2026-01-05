@@ -37,8 +37,6 @@ export function VideoPlaybackOverlay({ videoMode }: VideoPlaybackOverlayProps) {
     >
       {videoMode === "fullscreen" && !isMobile && (
         <>
-          // mode="wait" ensures exit animation completes before enter animation
-          starts
           <AnimatePresence mode="wait">
             {!isPlaying && (
               <motion.div
