@@ -240,13 +240,21 @@ const GlowLayer = ({ glowStyle, variant }: GlowLayerProps) => {
 
 const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
   const reduceMotion = useReducedMotion();
-  const { track } = useMiniPlayerContext();
+  const { track, videoMode, onToggleVideo } = useMiniPlayerContext();
+  const isVideoHidden = videoMode === "hidden";
 
   if (!track) return null;
 
   return (
-    <motion.div
-      className="relative aspect-video h-10 shrink-0 overflow-visible rounded-md"
+    <motion.button
+      type="button"
+      onClick={isVideoHidden ? onToggleVideo : undefined}
+      aria-label={isVideoHidden ? "Enable video" : "Video enabled"}
+      aria-disabled={!isVideoHidden}
+      className={cn(
+        "relative aspect-video h-10 shrink-0 overflow-visible rounded-md border-0 p-0 bg-transparent",
+        isVideoHidden && "group cursor-pointer"
+      )}
       transition={{
         duration: reduceMotion ? 0 : COLLAPSE_DURATION,
         ease: [0.4, 0, 0.2, 1],
@@ -261,20 +269,35 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
           className="object-cover"
         />
       </div>
+      {isVideoHidden && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-md bg-black/50 opacity-0 transition-all duration-300 ease-out group-hover:opacity-100">
+          <div className="flex items-center justify-center size-8 rounded-full bg-white/10">
+            <MonitorPlay className="size-4 text-white" />
+          </div>
+        </div>
+      )}
       <GlowLayer glowStyle={glowStyle} variant="collapsed" />
-    </motion.div>
+    </motion.button>
   );
 };
 
 const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
   const reduceMotion = useReducedMotion();
-  const { track } = useMiniPlayerContext();
+  const { track, videoMode, onToggleVideo } = useMiniPlayerContext();
+  const isVideoHidden = videoMode === "hidden";
 
   if (!track) return null;
 
   return (
-    <motion.div
-      className="relative shrink-0 overflow-visible rounded-lg flex-none h-full aspect-video self-center"
+    <motion.button
+      type="button"
+      onClick={isVideoHidden ? onToggleVideo : undefined}
+      aria-label={isVideoHidden ? "Enable video" : "Video enabled"}
+      aria-disabled={!isVideoHidden}
+      className={cn(
+        "relative shrink-0 overflow-visible rounded-lg flex-none h-full aspect-video self-center border-0 p-0 bg-transparent",
+        isVideoHidden && "group cursor-pointer"
+      )}
       transition={{
         duration: reduceMotion ? 0 : EXPAND_DURATION,
         ease: [0.4, 0, 0.2, 1],
@@ -292,8 +315,15 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
           className="object-cover"
         />
       </div>
+      {isVideoHidden && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-lg bg-black/50 opacity-0 transition-all duration-300 ease-out group-hover:opacity-100">
+          <div className="flex items-center justify-center size-10 rounded-full bg-white/10">
+            <MonitorPlay className="size-5 text-white" />
+          </div>
+        </div>
+      )}
       <GlowLayer glowStyle={glowStyle} variant="expanded" />
-    </motion.div>
+    </motion.button>
   );
 };
 

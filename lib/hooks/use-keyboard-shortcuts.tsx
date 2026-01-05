@@ -194,8 +194,13 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      if (key === "f" && videoMode !== "hidden") {
-        const nextMode = videoMode === "fullscreen" ? "floating" : "fullscreen"
+      if (key === "f") {
+        const nextMode =
+          videoMode === "hidden"
+            ? "fullscreen"
+            : videoMode === "fullscreen"
+              ? "floating"
+              : "fullscreen"
         setVideoMode(nextMode)
         showFeedback({
           label: nextMode === "fullscreen" ? "Fullscreen" : "Video Floating",
