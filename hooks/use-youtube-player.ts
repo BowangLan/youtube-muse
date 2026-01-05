@@ -187,6 +187,25 @@ export function useYouTubePlayer() {
   }, [dispatch, isPlaying])
 
   const lastTrackIdRef = React.useRef<string | null>(null)
+  const hasHadUserInteractionRef = React.useRef(false)
+
+  // Track user interactions to enable autoplay after first interaction
+  React.useEffect(() => {
+    const markUserInteraction = () => {
+      hasHadUserInteractionRef.current = true
+    }
+
+    // Listen for any user interaction
+    window.addEventListener("click", markUserInteraction, { once: true })
+    window.addEventListener("keydown", markUserInteraction, { once: true })
+    window.addEventListener("touchstart", markUserInteraction, { once: true })
+
+    return () => {
+      window.removeEventListener("click", markUserInteraction)
+      window.removeEventListener("keydown", markUserInteraction)
+      window.removeEventListener("touchstart", markUserInteraction)
+    }
+  }, [])
 
   React.useEffect(() => {
     const nextTrackId = currentTrack?.id ?? null
@@ -194,8 +213,12 @@ export function useYouTubePlayer() {
       return
     }
     lastTrackIdRef.current = nextTrackId
-    dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: true })
-  }, [currentTrack?.id, dispatch])
+
+    // Only autoplay if user has interacted with the page (to comply with browser autoplay policies)
+    // OR if we're already playing (track transition)
+    const shouldAutoplay = hasHadUserInteractionRef.current || isPlaying
+    dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: shouldAutoplay })
+  }, [currentTrack?.id, dispatch, isPlaying])
 
   return undefined
 }
