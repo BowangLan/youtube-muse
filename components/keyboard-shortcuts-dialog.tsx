@@ -42,6 +42,13 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     title: "Navigation",
     shortcuts: [{ keys: ["1-9"], description: "Play intent card 1-9" }],
   },
+  {
+    title: "Video",
+    shortcuts: [
+      { keys: ["V"], description: "Toggle video mode" },
+      { keys: ["F"], description: "Fullscreen video" },
+    ],
+  },
 ];
 
 export function KeyboardShortcutsDialog() {

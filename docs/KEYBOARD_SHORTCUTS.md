@@ -26,6 +26,13 @@ YouTube Muse supports comprehensive keyboard shortcuts for efficient playback co
 |-----|--------|
 | `1-9` | Play intent card 1-9 |
 
+## Video
+
+| Key | Action |
+|-----|--------|
+| `V` | Toggle video mode |
+| `F` | Fullscreen video |
+
 ## Help
 
 | Key | Action |

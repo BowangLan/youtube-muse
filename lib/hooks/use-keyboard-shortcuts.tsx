@@ -3,6 +3,7 @@ import { usePlayerStore } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
 import { useKeyboardFeedbackStore } from "@/lib/store/keyboard-feedback-store"
+import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store"
 
 declare global {
   interface Window {
@@ -49,6 +50,7 @@ export function useKeyboardShortcuts() {
       const { dispatch, volume, duration, isPlaying } = usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
+      const { videoMode, setVideoMode } = useYouTubePlayerInstanceStore.getState()
       const {
         hiddenBuiltInIntents,
         gradientOverrides,
@@ -65,7 +67,7 @@ export function useKeyboardShortcuts() {
       const shouldPreventDefault = () => {
         if (key === " " || key === "k") return true
         if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) return true
-        if (["j", "l", "n", "p", "m"].includes(key)) return true
+        if (["f", "j", "l", "m", "n", "p", "v"].includes(key)) return true
         if (!isNaN(Number(key))) return true
         return false
       }
@@ -163,6 +165,24 @@ export function useKeyboardShortcuts() {
             icon: "volume",
           })
         }
+        return
+      }
+
+      if (key === "v") {
+        const nextMode = videoMode === "hidden" ? "floating" : "hidden"
+        setVideoMode(nextMode)
+        showFeedback({
+          label: nextMode === "hidden" ? "Video Hidden" : "Video Floating",
+        })
+        return
+      }
+
+      if (key === "f" && videoMode !== "hidden") {
+        const nextMode = videoMode === "fullscreen" ? "floating" : "fullscreen"
+        setVideoMode(nextMode)
+        showFeedback({
+          label: nextMode === "fullscreen" ? "Fullscreen" : "Video Floating",
+        })
         return
       }
 
