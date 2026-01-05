@@ -374,7 +374,7 @@ const PlayerControls = () => {
     isLoadingNewVideo,
     apiReady,
     canPlayNext,
-    isVideoEnabled,
+    videoMode,
     onTogglePlay,
     onSkipBackward,
     onPlayNext,
@@ -478,11 +478,11 @@ const PlayerControls = () => {
         {/* {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
           <PlayerIconButton
             onClick={handleButtonClick(onToggleVideo)}
-            label={isVideoEnabled ? "Disable video" : "Enable video"}
+            label={videoMode !== "hidden" ? "Disable video" : "Enable video"}
             icon={<MonitorPlay />}
             variant="control"
-            className={isVideoEnabled ? "bg-white/15 text-white" : ""}
-            aria-pressed={isVideoEnabled}
+            className={videoMode !== "hidden" ? "bg-white/15 text-white" : ""}
+            aria-pressed={videoMode !== "hidden"}
           />
         )} */}
       </div>
@@ -653,7 +653,7 @@ const ExpandedStateView = ({
 }: {
   glowStyle: React.CSSProperties;
 }) => {
-  const { track, isExpanded, onClose, isVideoEnabled } = useMiniPlayerContext();
+  const { track, isExpanded, onClose, videoMode } = useMiniPlayerContext();
 
   if (!track) return null;
 
@@ -676,11 +676,11 @@ const ExpandedStateView = ({
 
       {/* TopNav Spacer  */}
       <div className="h-14 flex-none"></div>
-      {isVideoEnabled && FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK ? (
+      {videoMode !== "hidden" && FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK ? (
         <div className="py-10 flex-none w-full">
           <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-2xl">
             <VideoPlayerSlot
-              active={isVideoEnabled}
+              active={videoMode !== "hidden"}
               className="yt-video-host absolute inset-0"
             />
           </div>

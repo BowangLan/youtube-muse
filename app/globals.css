@@ -261,3 +261,8 @@
 .bg-glass {
   @apply rounded-xl backdrop-blur-3xl border border-white/10 bg-white/5 dark:bg-black/20;
 }
+
+
+.youtube-player-container {
+  @apply h-full w-full rounded-lg overflow-hidden;
+}

@@ -25,6 +25,8 @@ import { StreamDetailSection } from "@/components/stream/stream-detail-section";
 import { MiniPlayerViewDesktop } from "@/components/v3/mini-player-view";
 import { MiniPlayerViewMobile } from "@/components/v3/mini-player-view-mobile";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { YouTubePlayerContainer } from "@/components/player/youtube-player-container";
+import { FloatingPlayerPlaceholder } from "@/components/player/floating-player-placeholder";
 import { AnimatePresence } from "motion/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -41,7 +43,6 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import type { GridTab as GridTabType } from "@/lib/store/app-state-store";
 import { StreamDataLoader } from "@/components/data-loaders/stream-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
@@ -123,7 +124,9 @@ export default function Home() {
 
   const intentPlaylists = React.useMemo(() => {
     const hiddenNames = new Set(hiddenBuiltInIntents);
-    const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+    const playlistById = new Map(
+      playlists.map((playlist) => [playlist.id, playlist])
+    );
     return intentPlaylistOrder.flatMap((playlistId) => {
       const playlist = playlistById.get(playlistId);
       if (!playlist) return [];
@@ -132,7 +135,12 @@ export default function Home() {
       if (!intent.isCustom && hiddenNames.has(intent.name)) return [];
       return [playlist];
     });
-  }, [playlists, hiddenBuiltInIntents, intentMetadataByPlaylistId, intentPlaylistOrder]);
+  }, [
+    playlists,
+    hiddenBuiltInIntents,
+    intentMetadataByPlaylistId,
+    intentPlaylistOrder,
+  ]);
 
   // Get playlists for streams
   const streamPlaylists = React.useMemo(() => {
@@ -156,10 +164,7 @@ export default function Home() {
         <StreamDataLoader key={stream.id} stream={stream} />
       ))}
 
-      {/* Hidden YouTube player */}
-      <div className="absolute left-[-9999px] h-px w-px" aria-hidden="true">
-        <div id="youtube-player" />
-      </div>
+      <YouTubePlayerContainer />
 
       {/* Mini Player View - bottom of the screen */}
       {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />}
@@ -232,9 +237,7 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                  <IntentGridSection
-                    intentPlaylists={intentPlaylists}
-                  />
+                  <IntentGridSection intentPlaylists={intentPlaylists} />
                 </div>
               </TabsContent>
               <TabsContent value="streams">
@@ -293,6 +296,8 @@ export default function Home() {
 
         {isMobile ? <AppFooterMobileBottom /> : <AppFooterFixed />}
         <div className="h-3 w-full"></div>
+
+        <FloatingPlayerPlaceholder />
       </div>
     </main>
   );

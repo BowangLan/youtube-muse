@@ -78,5 +78,5 @@ export const DEFAULT_PLAYLIST_TRACKS = [
 ]
 
 export const FEATURE_FLAGS = {
-  ENABLE_VIDEO_PLAYBACK: false,
+  ENABLE_VIDEO_PLAYBACK: true,
 }

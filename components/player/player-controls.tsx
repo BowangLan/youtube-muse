@@ -43,24 +43,9 @@ function PlayerToggleButton({
 }
 
 export function PlayerControls() {
-  const dispatch = usePlayerStore((state) => state.dispatch);
-  const {
-    playlists,
-    currentPlaylistId,
-    currentTrackIndex,
-    isShuffleEnabled,
-    toggleShuffle,
-    repeatMode,
-    cycleRepeatMode,
-  } = usePlaylistStore();
+  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
+    usePlaylistStore();
 
-  const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
-  const canPlayPrevious = currentTrackIndex > 0;
-  const canPlayNext =
-    !!currentPlaylist &&
-    (repeatMode === "playlist"
-      ? currentPlaylist.tracks.length > 0
-      : currentTrackIndex < currentPlaylist.tracks.length - 1);
   const repeatLabel =
     repeatMode === "one"
       ? "Repeat one"
@@ -76,42 +61,13 @@ export function PlayerControls() {
             "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[80px] motion-scale-in-75"
           )}
         >
-          <button
-            className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
-              "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
-            )}
-            onClick={() => dispatch({ type: "UserPreviousTrack" })}
-            disabled={!canPlayPrevious}
-            title="Previous"
-            type="button"
-          >
-            <SkipBack className="h-5 w-5" />
-          </button>
+          <PreviousButton />
         </div>
         <div
           className={cn(
             "motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
           )}
         >
-          {/* <button
-            className={cn(
-              "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer",
-              "bg-white text-black disabled:opacity-40"
-            )}
-            onClick={togglePlay}
-            disabled={isLoadingNewVideo || !apiReady}
-            title={isPlaying ? "Pause" : "Play"}
-            type="button"
-          >
-            {!apiReady || isLoadingNewVideo ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : isPlaying || pendingPlayState !== null ? (
-              <Pause className="h-6 w-6" />
-            ) : (
-              <Play className="h-6 w-6 translate-x-[1px]" />
-            )}
-          </button> */}
           <PlayPauseButton />
         </div>
         <div
@@ -119,18 +75,7 @@ export function PlayerControls() {
             "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[-80px] motion-scale-in-75"
           )}
         >
-          <button
-            className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
-              "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10"
-            )}
-            onClick={() => dispatch({ type: "UserNextTrack" })}
-            disabled={!canPlayNext}
-            title="Next"
-            type="button"
-          >
-            <SkipForward className="h-5 w-5" />
-          </button>
+          <NextButton />
         </div>
       </div>
 
@@ -284,7 +229,7 @@ export const VolumeControl = React.memo(
               <Volume2 className="h-4 w-4" />
             )}
           </button>
-          <div className="relative h-1.5 w-[50vw] md:w-16 lg:w-32 rounded-full bg-white/10 ml-4 md:ml-2">
+          <div className="relative h-1.5 w-[50vw] md:w-16 lg:w-32 rounded-full bg-white/10 ml-4 md:ml-3">
             <div
               className="absolute inset-y-0 left-0 rounded-full bg-white/60 transition-none"
               style={{ width: `${volume}%` }}
@@ -305,7 +250,7 @@ export const VolumeControl = React.memo(
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
-          <span className="text-xs font-mono tracking-wider block md:hidden lg:block ml-5 md:ml-3">
+          <span className="text-xs font-mono tracking-wider w-6 text-right block md:hidden lg:block ml-5 md:ml-3">
             {Math.round(volume ?? 0)}%
           </span>
         </div>
@@ -315,6 +260,68 @@ export const VolumeControl = React.memo(
 );
 
 VolumeControl.displayName = "VolumeControl";
+
+export const PreviousButton = React.memo(
+  ({ className }: { className?: string }) => {
+    const dispatch = usePlayerStore((state) => state.dispatch);
+    const { playlists, currentPlaylistId, currentTrackIndex } =
+      usePlaylistStore();
+
+    const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
+    const canPlayPrevious = currentTrackIndex > 0;
+
+    return (
+      <button
+        className={cn(
+          "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
+          "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10",
+          className
+        )}
+        onClick={() => dispatch({ type: "UserPreviousTrack" })}
+        disabled={!canPlayPrevious}
+        title="Previous"
+        type="button"
+      >
+        <SkipBack className="h-5 w-5" />
+      </button>
+    );
+  }
+);
+
+PreviousButton.displayName = "PreviousButton";
+
+export const NextButton = React.memo(
+  ({ className }: { className?: string }) => {
+    const dispatch = usePlayerStore((state) => state.dispatch);
+    const { playlists, currentPlaylistId, currentTrackIndex, repeatMode } =
+      usePlaylistStore();
+
+    const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
+    const canPlayNext =
+      !!currentPlaylist &&
+      (repeatMode === "playlist"
+        ? currentPlaylist.tracks.length > 0
+        : currentTrackIndex < currentPlaylist.tracks.length - 1);
+
+    return (
+      <button
+        className={cn(
+          "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
+          "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10",
+          className
+        )}
+        onClick={() => dispatch({ type: "UserNextTrack" })}
+        disabled={!canPlayNext}
+        title="Next"
+        type="button"
+      >
+        <SkipForward className="h-5 w-5" />
+      </button>
+    );
+  }
+);
+
+NextButton.displayName = "NextButton";
 
 export const PlayPauseButton = React.memo(
   ({
@@ -338,7 +345,7 @@ export const PlayPauseButton = React.memo(
       <motion.button
         // layoutId="play-pause-button"
         className={cn(
-          "flex h-14 w-14 items-center justify-center rounded-full hover:scale-110 active:scale-95 trans cursor-pointer bg-white",
+          "flex h-14 w-14 items-center justify-center rounded-full hover:scale-105 active:scale-95 trans cursor-pointer bg-white",
           variant === "ghost" && "bg-transparent hover:bg-white/10",
           variant === "default" && "bg-white",
           className
@@ -362,7 +369,7 @@ export const PlayPauseButton = React.memo(
         ) : (
           <Icons.Play
             className={cn(
-              "h-6 w-6 translate-x-[1px] text-black trans",
+              "h-6 w-6 translate-x-px text-black trans",
               variant === "ghost" && "text-white",
               iconClassName
             )}

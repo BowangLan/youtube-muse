@@ -35,6 +35,7 @@ import {
 import { FEATURE_FLAGS } from "@/lib/constants";
 import { useIsPlaying } from "@/hooks/use-is-playing";
 import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 
 // =============================================================================
 // PlayerIconButton Component
@@ -68,7 +69,7 @@ export const PlayerIconButton = React.forwardRef<
     ref
   ) => {
     const baseClasses =
-      "flex items-center justify-center rounded-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80";
+      "flex items-center justify-center rounded-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80 group/icon-button";
 
     const variantClasses = {
       control:
@@ -279,7 +280,10 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
         ease: [0.4, 0, 0.2, 1],
       }}
     >
-      <div className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl">
+      <div
+        className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl"
+        data-video-anchor="mini-player-cover"
+      >
         <Image
           src={track.thumbnailUrl}
           alt={track.title}
@@ -387,7 +391,7 @@ const PlayerControls = () => {
     pendingPlayState,
     apiReady,
     canPlayNext,
-    isVideoEnabled,
+    videoMode,
     onTogglePlay,
     onSkipBackward,
     onPlayNext,
@@ -462,14 +466,27 @@ const PlayerControls = () => {
         disabled={!canPlayNext}
       />
       {FEATURE_FLAGS.ENABLE_VIDEO_PLAYBACK && (
-        <PlayerIconButton
-          onClick={onToggleVideo}
-          label={isVideoEnabled ? "Disable video" : "Enable video"}
-          icon={<MonitorPlay />}
-          variant="control"
-          className={isVideoEnabled ? "bg-white/15 text-white" : ""}
-          aria-pressed={isVideoEnabled}
-        />
+        <StickyTooltip
+          content={videoMode !== "hidden" ? "Disable video" : "Enable video"}
+        >
+          <PlayerIconButton
+            onClick={onToggleVideo}
+            label={videoMode !== "hidden" ? "Disable video" : "Enable video"}
+            icon={
+              <MonitorPlay
+                className={cn(
+                  "size-4.5",
+                  videoMode !== "hidden"
+                    ? "text-foreground"
+                    : "text-foreground/50 group-hover/icon-button:text-foreground"
+                )}
+              />
+            }
+            variant="control"
+            className={videoMode !== "hidden" ? "bg-white/15 text-white" : ""}
+            aria-pressed={videoMode !== "hidden"}
+          />
+        </StickyTooltip>
       )}
 
       <StickyTooltip content={repeatLabel}>
@@ -686,7 +703,8 @@ export function MiniPlayerViewDesktop() {
   );
 
   const [isHovered, setIsHovered] = React.useState(false);
-  const isExpanded = isHovered || isPinned;
+  const videoMode = useYouTubePlayerInstanceStore((state) => state.videoMode);
+  const isExpanded = isHovered || isPinned || videoMode !== "hidden";
 
   const isPlaying = useIsPlaying();
 

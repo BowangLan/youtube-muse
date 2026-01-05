@@ -4,6 +4,7 @@ import * as React from "react"
 import type { YTPlayer, YTPlayerEvent } from "@/lib/types/youtube"
 import { usePlayerStore, setPlayerCommandRunner } from "@/lib/store/player-store"
 import { usePlaylistStore } from "@/lib/store/playlist-store"
+import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store"
 import { runPlayerCommands } from "@/lib/player-shell/cmd-runner"
 import { createPlaylistQueueAdapter } from "@/lib/player-shell/queue-adapter"
 import {
@@ -19,7 +20,7 @@ export function useYouTubePlayer() {
 
   const currentTrack = usePlaylistStore((state) => state.getCurrentTrack())
 
-  const playerRef = React.useRef<YTPlayer | null>(null)
+  const { setPlayer, getPlayer } = useYouTubePlayerInstanceStore()
   const queueAdapter = React.useMemo(() => createPlaylistQueueAdapter(), [])
 
   const syncTrackMetadataFromPlayer = React.useCallback(
@@ -44,12 +45,12 @@ export function useYouTubePlayer() {
   const runCommands = React.useCallback(
     (commands: Parameters<typeof runPlayerCommands>[0]) => {
       runPlayerCommands(commands, {
-        getPlayer: () => playerRef.current,
+        getPlayer,
         dispatch,
         queueAdapter,
       })
     },
-    [dispatch, queueAdapter]
+    [dispatch, queueAdapter, getPlayer]
   )
 
   // Load YouTube IFrame API
@@ -105,27 +106,18 @@ export function useYouTubePlayer() {
   React.useEffect(() => {
     setPlayerCommandRunner(runCommands)
     return () => {
-      setPlayerCommandRunner(() => {})
+      setPlayerCommandRunner(() => { })
     }
   }, [runCommands])
 
   // Initialize player
   React.useEffect(() => {
-    if (!apiReady || playerRef.current) {
+    if (!apiReady || getPlayer()) {
       return
     }
 
     // Create the player element
     ensureYouTubePlayerElement()
-
-    // Move it to the audio dock immediately (before YouTube API initializes)
-    const audioDock = document.getElementById("audio-dock")
-    if (audioDock) {
-      const playerElement = document.getElementById("youtube-player")
-      if (playerElement) {
-        audioDock.appendChild(playerElement)
-      }
-    }
 
     const player = new window.YT.Player("youtube-player", {
       height: "100%",
@@ -173,8 +165,9 @@ export function useYouTubePlayer() {
       },
     })
 
-    playerRef.current = player
-  }, [apiReady, dispatch, syncTrackMetadataFromPlayer])
+    setPlayer(player)
+  }, [apiReady, dispatch, syncTrackMetadataFromPlayer, setPlayer])
+
 
   // Update current time
   React.useEffect(() => {
@@ -183,8 +176,9 @@ export function useYouTubePlayer() {
     }
 
     const interval = setInterval(() => {
-      if (playerRef.current) {
-        const time = playerRef.current.getCurrentTime()
+      const player = getPlayer()
+      if (player) {
+        const time = player.getCurrentTime()
         dispatch({ type: "TimeTick", currentTime: time })
       }
     }, 250)
