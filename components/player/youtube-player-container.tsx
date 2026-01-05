@@ -79,6 +79,10 @@ export function YouTubePlayerContainer() {
   const isMobile = useIsMobile();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const iframeContainerRef = React.useRef<HTMLDivElement>(null);
+  const wheelSeekStateRef = React.useRef({
+    accumulatedDelta: 0,
+    rafId: 0 as number | null,
+  });
   const [floatingStyle, setFloatingStyle] = React.useState<React.CSSProperties>(
     getFloatingFallbackStyles()
   );
@@ -103,6 +107,61 @@ export function YouTubePlayerContainer() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [setVideoMode, videoMode]);
+
+  React.useEffect(() => {
+    if (isMobile || videoMode !== "fullscreen") return;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaX === 0) return;
+      event.preventDefault();
+
+      const dominantDelta = -event.deltaX;
+      const deltaMultiplier =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? window.innerHeight
+            : 1;
+
+      const state = wheelSeekStateRef.current;
+      state.accumulatedDelta += dominantDelta * deltaMultiplier;
+
+      if (state.rafId !== null) return;
+
+      state.rafId = window.requestAnimationFrame(() => {
+        const { currentTime, duration, dispatch } = usePlayerStore.getState();
+        const secondsPerPixel = 0.05;
+        const deltaSeconds = state.accumulatedDelta * secondsPerPixel;
+        const nextTime = Math.min(
+          duration,
+          Math.max(0, currentTime + deltaSeconds)
+        );
+
+        if (
+          duration > 0 &&
+          Math.abs(deltaSeconds) > 0.01 &&
+          nextTime !== currentTime
+        ) {
+          dispatch({ type: "UserSeek", seconds: nextTime });
+        }
+
+        state.accumulatedDelta = 0;
+        state.rafId = null;
+      });
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      const { rafId } = wheelSeekStateRef.current;
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        wheelSeekStateRef.current.rafId = null;
+      }
+      wheelSeekStateRef.current.accumulatedDelta = 0;
+    };
+  }, [isMobile, videoMode]);
 
   React.useEffect(() => {
     const iframe = player?.getIframe?.();
