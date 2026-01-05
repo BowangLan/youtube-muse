@@ -680,7 +680,7 @@ const ExpandedStateView = ({
         <div className="py-10 flex-none w-full">
           <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-2xl">
             <VideoPlayerSlot
-              active={videoMode !== "hidden"}
+              active={true}
               className="yt-video-host absolute inset-0"
             />
           </div>

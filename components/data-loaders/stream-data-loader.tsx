@@ -132,7 +132,7 @@ export function StreamDataLoader({ stream }: { stream: Stream }) {
             }
 
             return {
-              id: video.videoId || video.id,
+              id: video.videoId || video.id || "",
               title: video.title,
               author: video.channelTitle || "Unknown Artist",
               authorUrl: `https://www.youtube.com/channel/${video.channelId || ""}`,

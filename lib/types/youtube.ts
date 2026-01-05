@@ -11,6 +11,9 @@ export interface YTPlayer {
   cueVideoById?: (videoId: string, startSeconds?: number) => void;
   getVideoData: () => { title: string; video_id: string; author: string };
   getIframe?: () => HTMLIFrameElement;
+  setPlaybackRate: (rate: number) => void;
+  getPlaybackRate?: () => number;
+  getAvailablePlaybackRates?: () => number[];
 }
 
 export interface YTPlayerEvent {

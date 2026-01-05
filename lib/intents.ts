@@ -1,18 +1,3 @@
-export type IntentDefinition = {
-  name: string
-  description?: string
-  /**
-   * Subtle per-intent gradient tint (used in the intent grid / header).
-   * Keep opacity low so the UI stays calm.
-   */
-  gradientClassName: string
-  /**
-   * 1–3 keywords used to construct a YouTube search query.
-   * Keep them short and "mood-first" per UX docs.
-   */
-  keywords: [string] | [string, string] | [string, string, string]
-}
-
 /**
  * All available gradient class names (1-22)
  * Used for custom intent creation
@@ -43,6 +28,21 @@ export const GRADIENT_CLASS_NAMES = [
 ] as const
 
 export type GradientClassName = (typeof GRADIENT_CLASS_NAMES)[number]
+
+export type IntentDefinition = {
+  name: string
+  description?: string
+  /**
+   * Subtle per-intent gradient tint (used in the intent grid / header).
+   * Keep opacity low so the UI stays calm.
+   */
+  gradientClassName: GradientClassName
+  /**
+   * 1–3 keywords used to construct a YouTube search query.
+   * Keep them short and "mood-first" per UX docs.
+   */
+  keywords: [string] | [string, string] | [string, string, string]
+}
 
 export const INTENTS: IntentDefinition[] = [
   {
