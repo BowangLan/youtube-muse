@@ -80,3 +80,5 @@ export const DEFAULT_PLAYLIST_TRACKS = [
 export const FEATURE_FLAGS = {
   ENABLE_VIDEO_PLAYBACK: true,
 }
+
+export const INTENT_DEFAULT_MAX_TRACKS = 10;

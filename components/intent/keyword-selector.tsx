@@ -3,159 +3,38 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
 
-// 30+ built-in keyword suggestions for music intents
+// Built-in keyword suggestions for music intents
 export const MOOD_ENERGY_KEYWORDS = [
   "chill",
-  "upbeat",
-  "calm",
-  "energetic",
   "relaxing",
-  "intense",
+  "upbeat",
   "mellow",
-  "peaceful",
-  "happy",
-  "joyful",
-  "playful",
-  "optimistic",
-  "bright",
-  "warm",
-  "romantic",
-  "dreamy",
-  "nostalgic",
-  "sentimental",
-  "emotional",
-  "melancholic",
-  "sad",
-  "dark",
-  "moody",
-  "brooding",
-  "mysterious",
-  "eerie",
-  "tense",
-  "dramatic",
-  "aggressive",
-  "angry",
-  "raw",
-  "powerful",
-  "epic",
-  "uplifting",
-  "inspiring",
-  "motivational",
-  "focused",
-  "contemplative",
-  "meditative",
-  "hypnotic",
-  "laid-back",
-  "smooth",
+  "calm",
 ];
 
 export const GENRE_STYLE_KEYWORDS = [
   "ambient",
   "lo-fi",
-  "electronic",
   "acoustic",
   "jazz",
-  "classical",
-  "indie",
-  "synthwave",
-  "retro",
-  "groove",
   "rock",
-  "alternative",
-  "punk",
-  "metal",
-  "folk",
-  "blues",
-  "soul",
-  "funk",
   "hip hop",
-  "rap",
-  "r&b",
   "pop",
-  "dance",
-  "house",
-  "techno",
-  "trance",
-  "dubstep",
-  "drum and bass",
-  "experimental",
-  "industrial",
-  "noise",
-  "soundtrack",
-  "cinematic",
-  "orchestral",
-  "world",
-  "latin",
-  "reggae",
-  "ska",
-  "afrobeat",
-  "country",
-  "americana",
-  "bluegrass",
-  "gospel",
-  "ambient pop",
-  "dream pop",
-  "shoegaze",
-  "post-rock",
-  "math rock",
-  "progressive",
-  "psychedelic",
-  "new wave",
-  "darkwave",
-  "chillout",
-  "downtempo",
-  "vaporwave",
+  "dark ambient",
 ];
 
 export const ACTIVITY_PURPOSE_KEYWORDS = [
-  "focus",
   "study",
-  "work",
-  "meditation",
+  "focus",
   "sleep",
   "workout",
-  "coding",
-  "creative",
   "reading",
-  "writing",
-  "brainstorming",
-  "deep work",
-  "background listening",
-  "stress management",
-  "yoga",
-  "mindfulness practice",
-  "breathing exercises",
-  "commuting",
-  "traveling",
-  "gaming",
-  "streaming",
-  "presenting",
-  "reflection",
 ];
 
-export const ATMOSPHERE_KEYWORDS = [
-  "minimalist",
-  "natural",
-  "nocturnal",
-  "dawn",
-  "intimate",
-  "spacious",
-  "airy",
-  "cinematic space",
-  "ethereal texture",
-  "urban setting",
-  "futuristic setting",
-  "retro aesthetic",
-  "organic texture",
-  "analog feel",
-  "digital feel",
-  "immersive",
-  "environmental",
-  "abstract",
-  "textural",
-  "atmospheric layers",
-];
+export const ATMOSPHERE_KEYWORDS = ["instrumental", "piano", "guitar", "vocal"];
 
 export const SUGGESTED_KEYWORDS = [
   ...MOOD_ENERGY_KEYWORDS,
@@ -257,66 +136,65 @@ export function KeywordSelector({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
+        <Label>Keywords</Label>
         <Input
           placeholder="Type a keyword and press Enter"
           value={searchTerm}
           onChange={handleSearchChange}
           onKeyDown={handleAddCustomKeyword}
-          className="h-11 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-0 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+          className="h-11 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
           disabled={disabled || keywords.length >= maxKeywords}
         />
-        <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+        {/* <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
           Selected
-        </div>
-        <div className="h-24 overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-white/5 p-3">
-          {keywords.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {keywords.map((keyword) => (
-                <button
-                  key={keyword}
-                  type="button"
-                  onClick={() => handleToggleKeyword(keyword)}
-                  disabled={disabled}
-                  className={cn(
-                    "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
-                    "transition-all duration-200 border",
-                    getKeywordColorClasses(keyword)
-                  )}
-                >
-                  {keyword}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="text-xs text-white/40">
-              Add keywords to define the intent.
-            </div>
-          )}
-        </div>
+        </div> */}
+      </div>
+
+      <div>
+        {keywords.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword) => (
+              <Button
+                key={keyword}
+                onClick={() => handleToggleKeyword(keyword)}
+                disabled={disabled}
+                size="sm"
+                variant={"secondary"}
+                className={cn()}
+              >
+                {keyword}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-white/40">
+            Add keywords to define the intent.
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+        {/* <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
           Suggested
-        </div>
+        </div> */}
         <div className="h-40 overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-white/5 p-3">
           {filteredKeywords.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {filteredKeywords.map((keyword) => (
-                <button
+                <Button
                   key={keyword}
-                  type="button"
                   onClick={() => handleSelectSearchResult(keyword)}
                   disabled={disabled || keywords.length >= maxKeywords}
+                  size="sm"
+                  variant="secondary"
                   className={cn(
-                    "inline-flex items-center rounded-full border border-white/10 bg-white/3 px-3 py-1.5 text-xs text-white/70",
-                    "transition-all duration-200 hover:bg-white/10 hover:text-white",
+                    "opacity-70",
                     keywords.length >= maxKeywords &&
                       "cursor-not-allowed opacity-40"
                   )}
                 >
                   {keyword}
-                </button>
+                </Button>
               ))}
             </div>
           ) : (

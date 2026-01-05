@@ -15,6 +15,7 @@ import { Loader2, Pencil } from "lucide-react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { KeywordSelector } from "./keyword-selector";
+import { Label } from "../ui/label";
 
 interface EditIntentDialogProps {
   playlistId: string;
@@ -60,23 +61,17 @@ export function EditIntentDialog({
   // Get the current keywords (from override, custom intent, or built-in intent)
   const currentKeywords = React.useMemo(() => {
     return intentMetadata?.keywords ?? [];
-  }, [
-    intentMetadata?.keywords,
-  ]);
+  }, [intentMetadata?.keywords]);
 
   // Get the current description
   const currentDescription = React.useMemo(() => {
     return intentMetadata?.description ?? "";
-  }, [
-    intentMetadata?.description,
-  ]);
+  }, [intentMetadata?.description]);
 
   // Get the current minimum duration
   const currentMinDuration = React.useMemo(() => {
     return intentMetadata?.minDuration ?? 20;
-  }, [
-    intentMetadata?.minDuration,
-  ]);
+  }, [intentMetadata?.minDuration]);
 
   // Initialize form when dialog opens or intent changes
   React.useEffect(() => {
@@ -152,33 +147,19 @@ export function EditIntentDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 sm:space-y-4 flex-1">
+          <div className="space-y-4 sm:space-y-6 flex-1">
             {/* Keywords */}
-            <div className="space-y-1.5 sm:space-y-2">
-              <div>
-                <label className="text-xs font-medium text-white/70 sm:text-sm">
-                  Keywords <span className="text-zinc-500">(max 10)</span>
-                </label>
-              </div>
-              <KeywordSelector
-                keywords={keywords}
-                onChange={setKeywords}
-                maxKeywords={10}
-                disabled={isSaving}
-                onError={setError}
-              />
-            </div>
+            <KeywordSelector
+              keywords={keywords}
+              onChange={setKeywords}
+              maxKeywords={10}
+              disabled={isSaving}
+              onError={setError}
+            />
 
             {/* Minimum Duration */}
             <div className="space-y-1.5 sm:space-y-2">
-              <div>
-                <label
-                  htmlFor="intent-min-duration"
-                  className="text-xs font-medium text-white/70 sm:text-sm"
-                >
-                  Minimum Duration (minutes)
-                </label>
-              </div>
+              <Label>Minimum Duration (minutes)</Label>
               <Input
                 id="intent-min-duration"
                 type="number"
@@ -202,14 +183,9 @@ export function EditIntentDialog({
 
             {/* Description - hidden on mobile */}
             <div className="space-y-1.5 sm:space-y-2 hidden sm:block">
-              <div>
-                <label
-                  htmlFor="intent-description"
-                  className="text-xs font-medium text-white/70 sm:text-sm"
-                >
-                  Description <span className="text-zinc-500">(optional)</span>
-                </label>
-              </div>
+              <Label>
+                Description <span className="text-zinc-500">(optional)</span>
+              </Label>
               <Textarea
                 id="intent-description"
                 placeholder="Describe the vibe or purpose of this intent..."

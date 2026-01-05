@@ -11,14 +11,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, SparkleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { searchYouTubeUnofficial } from "@/app/actions/youtube-search-unofficial";
 import { buildCustomIntentQuery } from "@/lib/intents";
-import { KeywordSelector } from "./keyword-selector";
+import { KeywordSelector, SUGGESTED_KEYWORDS } from "./keyword-selector";
 import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
+import { INTENT_DEFAULT_MAX_TRACKS } from "@/lib/constants";
+import { Label } from "../ui/label";
 
 interface CreateIntentDialogProps {
   trigger?: React.ReactNode;
@@ -38,6 +40,7 @@ export function CreateIntentDialog({
   const [error, setError] = React.useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = React.useState<string>("");
   const [nameOverwritten, setNameOverwritten] = React.useState(false);
+  const skipAutoNameRef = React.useRef(false);
 
   const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
   const addTrackToPlaylist = usePlaylistStore(
@@ -78,9 +81,26 @@ export function CreateIntentDialog({
 
   React.useEffect(() => {
     if (keywords.length > 0 && !nameOverwritten) {
+      if (skipAutoNameRef.current) {
+        skipAutoNameRef.current = false;
+        return;
+      }
       setName(generateNameFromKeywords(keywords));
     }
   }, [keywords, nameOverwritten, generateNameFromKeywords]);
+
+  const handleRandomIntent = React.useCallback(() => {
+    const pool = [...SUGGESTED_KEYWORDS];
+    const count = Math.min(5, Math.max(2, Math.floor(Math.random() * 4) + 2));
+    const shuffled = pool.sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, count);
+
+    skipAutoNameRef.current = true;
+    setKeywords(selected);
+    setName(generateNameFromKeywords(selected));
+    setNameOverwritten(false);
+    setError(null);
+  }, [generateNameFromKeywords]);
 
   const resetForm = () => {
     setName("");
@@ -180,13 +200,17 @@ export function CreateIntentDialog({
         setLoadingStatus("Adding tracks...");
 
         const existingIds = new Set<string>();
-        const toAdd = results.filter((r) => {
-          // Check if this is a video result and has videoId
-          if (!r || !("videoId" in r) || !r.videoId) return false;
-          if (existingIds.has(r.videoId)) return false;
-          existingIds.add(r.videoId);
-          return true;
-        });
+        const toAdd = results
+          .filter((r) => {
+            // Check if this is a video result and has videoId
+            // this shouldn't be needed via "video" argument to searchYouTubeUnofficial
+            // but just in case & for type safety
+            if (!r || !("videoId" in r) || !r.videoId) return false;
+            if (existingIds.has(r.videoId)) return false;
+            existingIds.add(r.videoId);
+            return true;
+          })
+          .slice(0, INTENT_DEFAULT_MAX_TRACKS);
 
         for (const result of toAdd) {
           if (!("videoId" in result)) continue;
@@ -266,9 +290,7 @@ export function CreateIntentDialog({
           </DialogHeader>
 
           <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
-              Intent Name
-            </div>
+            <Label>Intent Name</Label>
             <Input
               value={name}
               onChange={(e) => {
@@ -278,7 +300,7 @@ export function CreateIntentDialog({
                 setError(null);
               }}
               placeholder="Auto-generated"
-              className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-0 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+              className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
               disabled={isLoading}
             />
           </div>
@@ -301,18 +323,21 @@ export function CreateIntentDialog({
           )}
 
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              variant="ghost"
-              onClick={handleClose}
-              disabled={isLoading}
-              className="h-10 w-full rounded-full px-5 text-white/70 hover:bg-white/10 hover:text-white sm:w-auto"
-            >
+            <Button variant="ghost" onClick={handleClose} disabled={isLoading}>
               Cancel
+            </Button>
+            <div className="flex-1"></div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleRandomIntent}
+              disabled={isLoading}
+            >
+              <SparkleIcon />
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || keywords.length === 0 || isLoading}
-              className="h-11 w-full rounded-full bg-white px-6 text-sm font-semibold text-black hover:bg-white/90 sm:w-auto"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Intent
