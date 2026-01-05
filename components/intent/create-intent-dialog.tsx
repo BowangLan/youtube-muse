@@ -313,6 +313,8 @@ export function CreateIntentDialog({
             onError={setError}
           />
 
+          {/* TODO: min duration selector */}
+
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           {loadingStatus && (

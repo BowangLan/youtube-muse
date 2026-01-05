@@ -173,6 +173,7 @@ export function EditIntentDialog({
             {/* Minimum Duration */}
             <div className="space-y-2 shrink-0">
               <Label>Minimum Duration (minutes)</Label>
+              {/* TODO: Make this a single select using actual options from the unoffical youtube search api */}
               <Input
                 id="intent-min-duration"
                 type="number"
