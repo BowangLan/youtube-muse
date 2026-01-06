@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import { getThumbnailUrl, parseDuration } from "@/lib/utils/youtube";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
@@ -30,6 +31,7 @@ import { searchYouTubeUnofficial } from "@/app/actions/youtube-search-unofficial
 import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { EditIntentDialog } from "./edit-intent-dialog";
+import { AddTrackByUrlDialog } from "./add-track-by-url-dialog";
 
 export function IntentDetailSection() {
   const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
@@ -96,7 +98,9 @@ export function IntentDetailSection() {
   // Get gradient (check for overrides first, then fall back to intent default)
   const intentGradient = React.useMemo(() => {
     if (!activePlaylistId) return activeIntent?.gradientClassName;
-    return gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName;
+    return (
+      gradientOverrides[activePlaylistId] ?? activeIntent?.gradientClassName
+    );
   }, [activePlaylistId, gradientOverrides, activeIntent?.gradientClassName]);
 
   // Get minimum duration
@@ -146,7 +150,9 @@ export function IntentDetailSection() {
       }
       const { results } = await searchYouTubeUnofficial(query, "video", "long");
       const existing = new Set(activePlaylist.tracks.map((t) => t.id));
-      const next = results.find((r) => r && "videoId" in r && !existing.has(r.videoId));
+      const next = results.find(
+        (r) => r && "videoId" in r && !existing.has(r.videoId)
+      );
       if (!next || !("videoId" in next)) return;
 
       const thumb = getThumbnailUrl(next.videoId, "hqdefault");
@@ -174,7 +180,11 @@ export function IntentDetailSection() {
     try {
       const query = buildCustomIntentQuery([...activeIntent.keywords]);
 
-      if (typeof window !== "undefined" && window.umami && process.env.NODE_ENV === "production") {
+      if (
+        typeof window !== "undefined" &&
+        window.umami &&
+        process.env.NODE_ENV === "production"
+      ) {
         window.umami.track("youtube-api-search-videos", {
           context: "intent-refresh",
           intent: activePlaylist.name,
@@ -264,6 +274,14 @@ export function IntentDetailSection() {
     setGradientOverride(activePlaylistId, newGradient);
   }, [activePlaylistId, setGradientOverride]);
 
+  const handleAddTrackByUrl = React.useCallback(
+    (track: Track) => {
+      if (!activePlaylistId) return;
+      addTrackToPlaylist(activePlaylistId, track);
+    },
+    [activePlaylistId, addTrackToPlaylist]
+  );
+
   if (!activePlaylist) return null;
 
   return (
@@ -276,9 +294,12 @@ export function IntentDetailSection() {
     >
       <div
         className={cn(
-          "relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/3 p-2 md:p-3",
+          // Layout & spacing
+          "relative flex flex-col gap-3 h-[60vh] overflow-y-auto overflow-hidden rounded-2xl p-2 md:p-3",
+          // Border & background
+          "border border-white/10 bg-white/3",
+          // Gradients & layer effects
           "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90",
-          "h-[60vh] overflow-y-auto",
           intentGradient
         )}
       >
@@ -327,6 +348,13 @@ export function IntentDetailSection() {
                 <Plus className="h-4 w-4" />
               )}
             </Button>
+
+            {activePlaylistId && (
+              <AddTrackByUrlDialog
+                playlistId={activePlaylistId}
+                onTrackAdd={handleAddTrackByUrl}
+              />
+            )}
 
             <Button
               onClick={handleRefreshTracks}

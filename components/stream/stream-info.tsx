@@ -10,10 +10,16 @@ import { AddChannelPopover } from "./add-channel-popover";
 interface StreamInfoProps {
   stream: Stream;
   playlist: Playlist;
-  onAddChannel?: (channel: Omit<import("@/lib/types/stream").Channel, "id">) => void;
+  onAddChannel?: (
+    channel: Omit<import("@/lib/types/stream").Channel, "id">
+  ) => void;
 }
 
-export function StreamInfo({ stream, playlist, onAddChannel }: StreamInfoProps) {
+export function StreamInfo({
+  stream,
+  playlist,
+  onAddChannel,
+}: StreamInfoProps) {
   const getChannelUrl = React.useCallback(
     (customUrl: string | undefined, id: string) => {
       if (customUrl) {
@@ -39,12 +45,12 @@ export function StreamInfo({ stream, playlist, onAddChannel }: StreamInfoProps) 
   );
 
   return (
-    <div className="relative z-10 mx-auto mt-6 max-w-5xl space-y-3 sm:mt-10 sm:space-y-5">
-      <div className="text-[10px]/[12px] uppercase tracking-[0.32em] text-white/60 md:text-xs">
+    <div className="relative z-10 mx-auto mt-3 max-w-5xl space-y-3 sm:space-y-3 px-3">
+      <div className="text-[10px]/[12px] uppercase tracking-[0.32em] text-muted-foreground md:text-xs">
         Stream
       </div>
       <motion.h1
-        className="text-2xl font-bold text-white sm:text-3xl md:text-4xl lg:text-5xl"
+        className="text-2xl font-medium text-foreground sm:text-3xl md:text-4xl"
         layout="position"
         transition={{
           duration: EASING_DURATION_CARD,
@@ -54,7 +60,7 @@ export function StreamInfo({ stream, playlist, onAddChannel }: StreamInfoProps) 
         {stream.name}
       </motion.h1>
       {stream.description && (
-        <p className="max-w-2xl text-sm text-white/70 sm:text-base">
+        <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
           {stream.description}
         </p>
       )}

@@ -34,9 +34,13 @@ export function StreamDetailHeader({
   return (
     <div
       className={cn(
-        "relative px-4 sm:px-6 md:px-8 py-6 rounded-xl",
+        // Layout & spacing
+        // "relative px-4 sm:px-6 md:px-8 py-6 rounded-xl",
+        "relative gap-3 overflow-hidden rounded-2xl p-2 md:p-3",
+        // Layer effects & background gradients
         "before:absolute before:inset-0 before:bg-linear-to-b before:from-black/60 before:via-black/30 before:to-transparent",
         "after:absolute after:inset-0 after:bg-linear-to-br after:opacity-90",
+        // Overflow & positioning
         "overflow-hidden",
         streamGradient && streamGradient
       )}

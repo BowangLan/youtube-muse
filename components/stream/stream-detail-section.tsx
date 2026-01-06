@@ -169,7 +169,7 @@ export function StreamDetailSection() {
   }
 
   return (
-    <section className="relative flex min-h-screen h-full flex-col motion-preset-slide-up-sm">
+    <section className="relative flex min-h-screen h-full flex-col motion-preset-blur-up-sm">
       <StreamDetailHeader
         stream={activeStream}
         playlist={activePlaylist}
