@@ -349,9 +349,10 @@ export function IntentDetailSection() {
               )}
             </Button>
 
-            {activePlaylistId && (
+            {activePlaylistId && activePlaylist && (
               <AddTrackByUrlDialog
                 playlistId={activePlaylistId}
+                currentTracks={activePlaylist.tracks}
                 onTrackAdd={handleAddTrackByUrl}
               />
             )}
