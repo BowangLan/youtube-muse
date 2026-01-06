@@ -11,6 +11,7 @@ import {
   ensureYouTubePlayerElement,
   setYouTubePlayerElement,
 } from "@/components/player/youtube-player-element"
+import { useVideoQuality } from "@/hooks/use-video-quality"
 import "@/lib/types/youtube"
 
 export function useYouTubePlayer() {
@@ -22,6 +23,9 @@ export function useYouTubePlayer() {
 
   const { setPlayer, getPlayer } = useYouTubePlayerInstanceStore()
   const queueAdapter = React.useMemo(() => createPlaylistQueueAdapter(), [])
+
+  // Enable automatic video quality management
+  useVideoQuality()
 
   const syncTrackMetadataFromPlayer = React.useCallback(
     (playerInstance: YTPlayer, metadata?: { duration?: number }) => {
@@ -138,6 +142,14 @@ export function useYouTubePlayer() {
             setYouTubePlayerElement(iframe)
           }
           const dur = event.target.getDuration()
+
+          // Set initial quality to "small" (240p) for hidden/floating modes
+          try {
+            event.target.setPlaybackQuality("small")
+          } catch (error) {
+            console.error("Failed to set initial quality:", error)
+          }
+
           dispatch({ type: "PlayerReady", duration: dur })
         },
         onStateChange: (event: YTPlayerEvent) => {
