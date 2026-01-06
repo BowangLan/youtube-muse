@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils/youtube";
 import { Button } from "../ui/button";
 import { Minimize2 } from "lucide-react";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
+import Link from "next/link";
 
 export function FullscreenPlayerControls() {
   const currentTrack = usePlaylistStore((state) => state.getCurrentTrack());
@@ -37,26 +38,23 @@ export function FullscreenPlayerControls() {
 
   return (
     <>
-      {/* <div
-        className="mt-6 mx-auto w-full max-w-5xl z-20 hidden"
+      {/* Track Info Section */}
+      <div
+        className="mt-6 mx-auto w-full max-w-5xl z-20"
         onClick={(e) => e.stopPropagation()}
       >
-        <TimeDisplay />
-        <ProgressBar className="mt-2" />
-        <div className="flex mt-6 gap-2">
-          <PlayPauseButton className="h-10 w-10" iconClassName="size-5" />
-          <div className="flex-1"></div>
-          <VolumeControl />
-        </div>
-      </div> */}
-
-      {/* Track Info Section */}
-      <div className="mt-6 mx-auto w-full max-w-5xl z-20">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-white inline-flex flex-1 text-xl font-medium leading-tight line-clamp-2">
-              {currentTrack.title}
-            </h1>
+            <Link
+              href={`https://www.youtube.com/watch?v=${currentTrack.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 transition-colors hover:underline"
+            >
+              <h1 className="text-white text-xl font-medium leading-tight line-clamp-2 transition-colors">
+                {currentTrack.title}
+              </h1>
+            </Link>
 
             {/* TODO: Minimize button */}
             <Button
@@ -83,7 +81,7 @@ export function FullscreenPlayerControls() {
               href={currentTrack.authorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              className="text-foreground/80 hover:text-foreground transition-colors hover:underline"
             >
               {currentTrack.author}
             </a>

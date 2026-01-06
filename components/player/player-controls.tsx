@@ -16,6 +16,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { motion } from "motion/react";
 import { Icons } from "@/components/icons";
+import { useIsPlaying } from "@/hooks/use-is-playing";
 
 type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
@@ -184,7 +185,13 @@ export const TimeDisplay = React.memo(
 TimeDisplay.displayName = "TimeDisplay";
 
 export const VolumeControl = React.memo(
-  ({ className }: { className?: string }) => {
+  ({
+    className,
+    innerClassName,
+  }: {
+    className?: string;
+    innerClassName?: string;
+  }) => {
     const volume = usePlayerStore((state) => state.volume);
     const dispatch = usePlayerStore((state) => state.dispatch);
     const isMuted = volume === 0;
@@ -215,7 +222,12 @@ export const VolumeControl = React.memo(
           className
         )}
       >
-        <div className="flex h-10 w-auto px-4 md:px-3 items-center justify-center rounded-full text-inherit hover:bg-white/10 trans">
+        <div
+          className={cn(
+            "flex h-10 w-auto px-4 md:px-3 items-center justify-center rounded-full text-inherit hover:bg-white/10 trans",
+            innerClassName
+          )}
+        >
           <button
             onClick={toggleMute}
             aria-label={isMuted ? "Unmute" : "Mute"}
@@ -250,7 +262,7 @@ export const VolumeControl = React.memo(
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
-          <span className="text-xs font-mono tracking-wider w-6 text-right block md:hidden lg:block ml-5 md:ml-3">
+          <span className="text-xs font-mono tracking-wider w-7 text-right block md:hidden lg:block ml-5 md:ml-3">
             {Math.round(volume ?? 0)}%
           </span>
         </div>
@@ -333,13 +345,12 @@ export const PlayPauseButton = React.memo(
     iconClassName?: string;
     variant?: "default" | "ghost";
   }) => {
-    const isPlaying = usePlayerStore((state) => state.isPlaying);
+    const isPlaying = useIsPlaying();
     const dispatch = usePlayerStore((state) => state.dispatch);
     const isLoadingNewVideo = usePlayerStore(
       (state) => state.isLoadingNewVideo
     );
     const apiReady = usePlayerStore((state) => state.apiReady);
-    const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
 
     return (
       <motion.button
@@ -357,7 +368,7 @@ export const PlayPauseButton = React.memo(
         }}
         disabled={isLoadingNewVideo || !apiReady}
       >
-        {isPlaying || pendingPlayState !== null ? (
+        {isPlaying ? (
           <Icons.Pause
             className={cn(
               "h-6 w-6 text-black trans",

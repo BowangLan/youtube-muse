@@ -6,8 +6,105 @@ import { useIsPlaying } from "@/hooks/use-is-playing";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ProgressBar, TimeDisplay, VolumeControl } from "./player-controls";
+import { ProgressBar, VolumeControl } from "./player-controls";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatTime } from "@/lib/utils/youtube";
+import { cn } from "@/lib/utils";
+
+const BottomControlItemContainer = ({
+  children,
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  className?: string;
+} & React.HTMLAttributes<HTMLDivElement>) => {
+  return (
+    <div
+      className={cn(
+        "rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all duration-200 ease-out active:bg-white/20 px-3 h-10 select-none",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+const BottomPlayPauseButton = () => {
+  const isPlaying = useIsPlaying();
+  const dispatch = usePlayerStore((state) => state.dispatch);
+
+  return (
+    <BottomControlItemContainer
+      className="cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        dispatch({ type: "UserTogglePlay" });
+      }}
+    >
+      {isPlaying ? (
+        <Icons.Pause className="h-6 w-6 text-foreground trans" />
+      ) : (
+        <Icons.Play className="h-6 w-6 translate-x-px text-foreground trans" />
+      )}
+    </BottomControlItemContainer>
+  );
+};
+
+const BottomTimeDisplay = () => {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const duration = usePlayerStore((state) => state.duration);
+
+  return (
+    <BottomControlItemContainer className="flex items-center justify-between text-base font-mono gap-1">
+      <span className="text-foreground">{formatTime(currentTime)}</span>
+      <span className="text-foreground/50">/</span>
+      <span className="text-foreground/50">{formatTime(duration)}</span>
+    </BottomControlItemContainer>
+  );
+};
+
+const BottomControls = ({ isHovering }: { isHovering: boolean }) => {
+  return (
+    <div
+      className="absolute bottom-0 inset-x-0 z-20"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="group-hover/iframe-container:bg-linear-to-t group-hover/iframe-container:from-black/70 group-hover/iframe-container:to-transparent bg-transparent transition-all duration-200 ease-out absolute inset-0"></div>
+      <div className="px-4 relative z-10">
+        <motion.div
+          layout="position"
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <ProgressBar className="my-3 group-hover/iframe-container:opacity-100 opacity-50 transition-opacity duration-200 ease-out" />
+        </motion.div>
+
+        <AnimatePresence>
+          {isHovering && (
+            <motion.div
+              layout="position"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <div className="flex items-center gap-2 pb-3">
+                <BottomPlayPauseButton />
+                <BottomTimeDisplay />
+                <VolumeControl innerClassName="bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-lg" />
+                <div className="flex-1"></div>
+              </div>
+            </motion.div>
+          )}
+          {/* Row */}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
 
 interface VideoPlaybackOverlayProps {
   videoMode: "hidden" | "floating" | "fullscreen";
@@ -51,33 +148,8 @@ export function VideoPlaybackOverlay({ videoMode }: VideoPlaybackOverlayProps) {
               </motion.div>
             )}
           </AnimatePresence>
-          <div
-            className="absolute bottom-0 inset-x-0 z-20"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="group-hover/iframe-container:bg-linear-to-t group-hover/iframe-container:from-black/70 group-hover/iframe-container:to-transparent bg-transparent transition-all duration-200 ease-out absolute inset-0"></div>
-            <div className="p-6 relative z-10">
-              <AnimatePresence mode="wait">
-                {isHovering && (
-                  <motion.div
-                    key="time-display"
-                    layout
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    <TimeDisplay className="text-foreground" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <ProgressBar className="mt-2 group-hover/iframe-container:opacity-100 opacity-50 transition-opacity duration-200 ease-out" />
-              {/* <div className="flex mt-6 gap-2">
-          <div className="flex-1"></div>
-          <VolumeControl />
-        </div> */}
-            </div>
-          </div>
+
+          <BottomControls isHovering={isHovering} />
         </>
       )}
     </div>
