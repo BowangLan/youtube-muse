@@ -2,14 +2,17 @@
 
 import { motion } from "motion/react";
 import { Icons } from "../icons";
+import { Minimize2 } from "lucide-react";
 import { useIsPlaying } from "@/hooks/use-is-playing";
 import { usePlayerStore } from "@/lib/store/player-store";
+import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ProgressBar, VolumeControl } from "./player-controls";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatTime } from "@/lib/utils/youtube";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const BottomControlItemContainer = ({
   children,
@@ -22,7 +25,7 @@ const BottomControlItemContainer = ({
   return (
     <div
       className={cn(
-        "rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all duration-200 ease-out active:bg-white/20 px-3 h-10 select-none",
+        "rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/1 transition-all duration-200 ease-out active:bg-white/25 px-3 h-10 select-none",
         className
       )}
       {...props}
@@ -32,13 +35,38 @@ const BottomControlItemContainer = ({
   );
 };
 
+const BottomControlItemWithTooltip = ({
+  children,
+  className,
+  tooltip,
+  ...props
+}: {
+  children: React.ReactNode;
+  className?: string;
+  tooltip?: string;
+} & React.HTMLAttributes<HTMLDivElement>) => {
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <BottomControlItemContainer className={className} {...props}>
+          {children}
+        </BottomControlItemContainer>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6} className="z-[99]">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 const BottomPlayPauseButton = () => {
   const isPlaying = useIsPlaying();
   const dispatch = usePlayerStore((state) => state.dispatch);
 
   return (
-    <BottomControlItemContainer
-      className="cursor-pointer"
+    <BottomControlItemWithTooltip
+      className="cursor-pointer aspect-square px-0 w-10"
+      tooltip={isPlaying ? "Pause" : "Play"}
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -50,7 +78,7 @@ const BottomPlayPauseButton = () => {
       ) : (
         <Icons.Play className="h-6 w-6 translate-x-px text-foreground trans" />
       )}
-    </BottomControlItemContainer>
+    </BottomControlItemWithTooltip>
   );
 };
 
@@ -59,11 +87,30 @@ const BottomTimeDisplay = () => {
   const duration = usePlayerStore((state) => state.duration);
 
   return (
-    <BottomControlItemContainer className="flex items-center justify-between text-base font-mono gap-1">
+    <BottomControlItemContainer className="flex items-center justify-between text-sm font-mono gap-1">
       <span className="text-foreground">{formatTime(currentTime)}</span>
       <span className="text-foreground/50">/</span>
       <span className="text-foreground/50">{formatTime(duration)}</span>
     </BottomControlItemContainer>
+  );
+};
+
+const BottomMinimizeButton = () => {
+  const setVideoMode = useYouTubePlayerInstanceStore(
+    (state) => state.setVideoMode
+  );
+
+  return (
+    <BottomControlItemWithTooltip
+      className="cursor-pointer aspect-square px-0 w-10"
+      tooltip="Exit fullscreen"
+      onClick={(e) => {
+        e.stopPropagation();
+        setVideoMode("floating");
+      }}
+    >
+      <Minimize2 className="h-4 w-4 text-foreground" />
+    </BottomControlItemWithTooltip>
   );
 };
 
@@ -96,6 +143,7 @@ const BottomControls = ({ isHovering }: { isHovering: boolean }) => {
                 <BottomTimeDisplay />
                 <VolumeControl innerClassName="bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-lg" />
                 <div className="flex-1"></div>
+                <BottomMinimizeButton />
               </div>
             </motion.div>
           )}

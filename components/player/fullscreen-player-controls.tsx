@@ -9,7 +9,6 @@ import {
 } from "@/components/player/player-controls";
 import { formatDate } from "@/lib/utils/youtube";
 import { Button } from "../ui/button";
-import { Minimize2 } from "lucide-react";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import Link from "next/link";
 
@@ -22,7 +21,7 @@ export function FullscreenPlayerControls() {
   if (!currentTrack) {
     return (
       <div
-        className="mt-6 mx-auto w-full max-w-4xl z-20"
+        className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <TimeDisplay />
@@ -40,7 +39,7 @@ export function FullscreenPlayerControls() {
     <>
       {/* Track Info Section */}
       <div
-        className="mt-6 mx-auto w-full max-w-5xl z-20"
+        className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="space-y-1">
@@ -55,19 +54,6 @@ export function FullscreenPlayerControls() {
                 {currentTrack.title}
               </h1>
             </Link>
-
-            {/* TODO: Minimize button */}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="text-white/80"
-              onClick={(e) => {
-                e.stopPropagation();
-                setVideoMode("floating");
-              }}
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
           </div>
           <div className="flex items-center gap-3 text-sm text-white/80">
             {currentTrack.authorThumbnail && (

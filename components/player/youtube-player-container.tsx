@@ -299,7 +299,7 @@ export function YouTubePlayerContainer() {
           videoMode === "floating" &&
             "h-full w-full relative rounded-lg overflow-hidden",
           videoMode === "fullscreen" &&
-            "w-full aspect-video max-w-5xl mx-auto rounded-2xl overflow-hidden relative"
+            "w-full aspect-video max-w-6xl mx-auto rounded-2xl overflow-hidden relative"
         )}
         onClick={(e) => e.stopPropagation()}
       >
