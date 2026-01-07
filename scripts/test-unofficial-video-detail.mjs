@@ -211,6 +211,26 @@ function findChannelCanonicalBaseUrl(obj, path = []) {
   return null;
 }
 
+// Traverse object to find chapters
+function findChapters(obj, path = []) {
+  if (!obj || typeof obj !== "object") return null;
+
+  // Check if this object has a chapters property
+  if (obj.chapters) {
+    return obj.chapters;
+  }
+
+  // Recursively search nested objects
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const result = findChapters(obj[key], [...path, key]);
+      if (result) return result;
+    }
+  }
+
+  return null;
+}
+
 // Field scrapers configuration
 const FIELD_SCRAPERS = {
   // Basic video info from videoDetails
@@ -361,6 +381,21 @@ const FIELD_SCRAPERS = {
   url: {
     source: "static",
     extract: () => url,
+  },
+
+  // Chapters from ytInitialData
+  chapters: {
+    source: "combined",
+    extract: (data) => {
+      if (data.ytInitialData) {
+        return (findChapters(data.ytInitialData) ?? []).map((ch) => ({
+          title: ch.chapterRenderer.title.simpleText,
+          startTimeSeconds: ch.chapterRenderer.timeRangeStartMillis,
+          thumbnail: ch.chapterRenderer.thumbnail.thumbnails[0].url,
+        }));
+      }
+      return [];
+    },
   },
 };
 
@@ -525,6 +560,23 @@ Return format: Single video detail object
   "description": "The one-person business is changing.\n\nEden – The AI canvas & drive: https://eden.so/dan-yt\n\nRead my letters on similar topics here: https://letters.thedankoe.com\n\n2 Hour Content Ecosystem: https://letters.thedankoe.com/p/how-to-build-a-world-the-2-hour-content\n\nThe One-Person Business Launchpad: https://letters.thedankoe.com/p/full-course-the-one-person-business\n\nExample prompt: https://letters.thedankoe.com/p/a-prompt-to-reset-your-life-in-30\n\nIf you'd rather watch these on Spotify: https://open.spotify.com/show/3lZRG3LCFZxKkQVSsCwoyN\n\nHow I use AI better than 99% of people: https://youtu.be/xgpLjLHB5sA\n\n––– My Books –––\n\nThe Art of Focus: https://theartoffocusbook.com\n\nPurpose & Profit: https://thedankoe.com/purpose\n\n––– Socials –––\n\nTwitter: https://twitter.com/thedankoe\nInstagram: https://instagram.com/thedankoe\nYouTube: https://youtube.com/c/DanKoeTalks\nLinkedIn: https://linkedin.com/in/thedankoe\n\n––– Chapters –––\n\n0:00 Everything is changing\n1:54 I – The one-person business model is evolving\n6:58 II – Why info products are dying\n11:43 III – The future of education products\n14:19 IV – How this actually works\n21:29 V – How to build a micro SaaS (non-exhaustive)\n25:36 VI – How to actually build the software\n\n#onepersonbusiness #selfimprovement #skillacquisition",
   "durationSeconds": 1862,
   "thumbnail": "https://i.ytimg.com/vi/VyR8nqD3sQ8/maxresdefault.jpg",
-  "url": "https://www.youtube.com/watch?v=VyR8nqD3sQ8"
+  "url": "https://www.youtube.com/watch?v=VyR8nqD3sQ8",
+  "chapters": [
+      {
+        "title": "Everything is changing",
+        "startTimeSeconds": 0,
+        "thumbnail": "https://i.ytimg.com/vi/VyR8nqD3sQ8/hqdefault.jpg"
+      },
+      {
+        "title": "I – The one-person business model is evolving",
+        "startTimeSeconds": 114,
+        "thumbnail": "https://i.ytimg.com/vi/VyR8nqD3sQ8/hqdefault.jpg"
+      },
+      {
+        "title": "II – Why info products are dying",
+        "startTimeSeconds": 114,
+        "thumbnail": "https://i.ytimg.com/vi/VyR8nqD3sQ8/hqdefault.jpg"
+      }
+  ]
 }
 */

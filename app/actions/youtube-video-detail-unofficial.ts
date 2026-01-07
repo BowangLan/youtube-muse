@@ -40,6 +40,12 @@ interface YouTubeVideoDetailChannel {
   subscriberCountText?: string;
 }
 
+interface YouTubeVideoChapter {
+  title: string;
+  startTimeSeconds: number;
+  thumbnail: string;
+}
+
 export interface YouTubeVideoDetailResult {
   videoId: string;
   title: string;
@@ -53,6 +59,7 @@ export interface YouTubeVideoDetailResult {
   durationSeconds: number;
   thumbnail: string;
   url: string;
+  chapters: YouTubeVideoChapter[];
   keywords?: string[];
 }
 
@@ -232,6 +239,26 @@ function findChannelCanonicalBaseUrl(obj: any, path: string[] = []): string | nu
   return null;
 }
 
+// Traverse object to find chapters
+function findChapters(obj: any, path: string[] = []): any[] | null {
+  if (!obj || typeof obj !== "object") return null;
+
+  // Check if this object has a chapters property
+  if (obj.chapters) {
+    return obj.chapters;
+  }
+
+  // Recursively search nested objects
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const result = findChapters(obj[key], [...path, key]);
+      if (result) return result;
+    }
+  }
+
+  return null;
+}
+
 // Field scrapers configuration
 const FIELD_SCRAPERS = {
   // Basic video info from videoDetails
@@ -376,6 +403,22 @@ const FIELD_SCRAPERS = {
   url: {
     source: "static",
     extract: (data: any) => data.url || "",
+  },
+
+  // Chapters from ytInitialData
+  chapters: {
+    source: "combined",
+    extract: (data: any) => {
+      if (data.ytInitialData) {
+        const rawChapters = findChapters(data.ytInitialData) || [];
+        return rawChapters.map((ch: any) => ({
+          title: ch.chapterRenderer.title.simpleText,
+          startTimeSeconds: ch.chapterRenderer.timeRangeStartMillis,
+          thumbnail: ch.chapterRenderer.thumbnail.thumbnails[0].url,
+        }));
+      }
+      return [];
+    },
   },
 };
 
