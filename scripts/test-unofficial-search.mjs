@@ -4,24 +4,27 @@
  * Searches YouTube and extracts video/channel/playlist information.
  *
  * Usage:
- *   node test-unofficial-search.mjs "search query" [type] [duration]
+ *   node test-unofficial-search.mjs "search query" [type] [duration] [maxResults]
  *
  * Parameters:
  *   search query: The search terms (required)
  *   type: Filter by content type - "video" (default), "channel", or "playlist"
  *   duration: Filter by video duration - "short" (<4min), "long" (>20min), or "any" (default)
+ *   maxResults: Maximum number of results to fetch (default: 20, use "all" for unlimited)
  *
  * Examples:
  *   node test-unofficial-search.mjs "lofi hip hop"
- *   node test-unofficial-search.mjs "jazz piano" video long
- *   node test-unofficial-search.mjs "music" channel
- *   node test-unofficial-search.mjs "tutorial" video short
+ *   node test-unofficial-search.mjs "jazz piano" video long 50
+ *   node test-unofficial-search.mjs "music" channel all
+ *   node test-unofficial-search.mjs "tutorial" video short 100
  */
 
-// Get search query, type, and duration from command line arguments
+// Get search query, type, duration, and max results from command line arguments
 const searchQuery = process.argv[2] || "lofi hip hop";
 const searchType = process.argv[3] || "video"; // Default to video type
 const searchDuration = process.argv[4] || "any"; // Default to any duration
+const maxResultsArg = process.argv[5] || "20"; // Default to 20 results
+const maxResults = maxResultsArg === "all" ? Infinity : parseInt(maxResultsArg, 10) || 20;
 
 // YouTube search filter parameters for different content types
 const typeFilters = {
@@ -51,7 +54,7 @@ if (searchType === "video" && searchDuration !== "any") {
 const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}&sp=${spParam}`;
 
 console.log(
-  `Searching for: "${searchQuery}" (type: ${searchType}, duration: ${searchDuration})`
+  `Searching for: "${searchQuery}" (type: ${searchType}, duration: ${searchDuration}, max results: ${maxResults === Infinity ? 'all' : maxResults})`
 );
 
 const extractJsonBlock = (html, marker) => {
@@ -101,39 +104,50 @@ const extractJsonBlock = (html, marker) => {
   throw new Error(`JSON end not found for: ${marker}`);
 };
 
-const response = await fetch(url, {
-  headers: {
-    "User-Agent":
-      "Mozilla/5.0 (compatible; YouTubeMuse/1.0; +https://example.com)",
-    "Accept-Language": "en-US,en;q=0.9",
-  },
-});
+// Function to fetch continuation results for pagination
+const fetchContinuationResults = async (continuationToken, visitorData) => {
+  const continuationUrl = "https://www.youtube.com/youtubei/v1/search";
 
-if (!response.ok) {
-  throw new Error(`Request failed: ${response.status} ${response.statusText}`);
-}
+  const payload = {
+    context: {
+      client: {
+        clientName: "WEB",
+        clientVersion: "2.20240101.01.00",
+        visitorData: visitorData || "",
+      },
+    },
+    continuation: continuationToken,
+  };
 
-const html = await response.text();
-const initialDataJson = extractJsonBlock(html, "ytInitialData");
-const initialData = JSON.parse(initialDataJson);
+  const response = await fetch(continuationUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; YouTubeMuse/1.0; +https://example.com)",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+    body: JSON.stringify(payload),
+  });
 
-// Extract search results from the primary contents
-const primaryContents =
-  initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents
-    ?.sectionListRenderer?.contents ?? [];
+  if (!response.ok) {
+    throw new Error(`Continuation request failed: ${response.status} ${response.statusText}`);
+  }
 
-const videos = [];
+  const data = await response.json();
+  return data;
+};
 
-// Process each section in the search results
-for (const section of primaryContents) {
+// Function to extract items from a section
+const extractItemsFromSection = (section) => {
   const items = section?.itemSectionRenderer?.contents ?? [];
+  const results = [];
 
   for (const item of items) {
     if (searchType === "video" || !searchType || searchType === "video") {
       // Handle video results
       const videoRenderer = item?.videoRenderer;
       if (videoRenderer) {
-        videos.push({
+        results.push({
           videoId: videoRenderer.videoId,
           title: videoRenderer.title?.runs?.[0]?.text ?? "",
           channelTitle: videoRenderer.ownerText?.runs?.[0]?.text ?? "",
@@ -151,7 +165,7 @@ for (const section of primaryContents) {
       // Handle channel results
       const channelRenderer = item?.channelRenderer;
       if (channelRenderer) {
-        videos.push({
+        results.push({
           channelId: channelRenderer.channelId,
           title: channelRenderer.title?.simpleText ?? "",
           channelTitle: channelRenderer.title?.simpleText ?? "",
@@ -168,7 +182,7 @@ for (const section of primaryContents) {
       // Handle playlist results
       const playlistRenderer = item?.playlistRenderer;
       if (playlistRenderer) {
-        videos.push({
+        results.push({
           playlistId: playlistRenderer.playlistId,
           title: playlistRenderer.title?.simpleText ?? "",
           channelTitle: playlistRenderer.ownerText?.runs?.[0]?.text ?? "",
@@ -183,14 +197,96 @@ for (const section of primaryContents) {
       }
     }
   }
+
+  return results;
+};
+
+// Initial request
+const response = await fetch(url, {
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (compatible; YouTubeMuse/1.0; +https://example.com)",
+    "Accept-Language": "en-US,en;q=0.9",
+  },
+});
+
+if (!response.ok) {
+  throw new Error(`Request failed: ${response.status} ${response.statusText}`);
 }
 
-console.log(JSON.stringify(videos, null, 2));
+const html = await response.text();
+const initialDataJson = extractJsonBlock(html, "ytInitialData");
+const initialData = JSON.parse(initialDataJson);
+
+// Extract visitor data for continuation requests
+const visitorDataJson = extractJsonBlock(html, "ytcfg.set");
+const visitorDataMatch = visitorDataJson.match(/"VISITOR_DATA":"([^"]+)"/);
+const visitorData = visitorDataMatch ? visitorDataMatch[1] : "";
+
+// Extract search results from the primary contents
+const primaryContents =
+  initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+    ?.sectionListRenderer?.contents ?? [];
+
+const videos = [];
+let continuationToken = null;
+
+// Process initial results
+for (const section of primaryContents) {
+  videos.push(...extractItemsFromSection(section));
+
+  // Check for continuation token
+  if (section?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token) {
+    continuationToken = section.continuationItemRenderer.continuationEndpoint.continuationCommand.token;
+  }
+}
+
+// Continue fetching more pages if needed and available
+while (videos.length < maxResults && continuationToken) {
+  console.log(`Fetched ${videos.length} results so far, continuing with token...`);
+
+  try {
+    const continuationData = await fetchContinuationResults(continuationToken, visitorData);
+
+    // Extract results from continuation response
+    const continuationContents = continuationData?.onResponseReceivedCommands?.[0]?.appendContinuationItemsAction?.continuationItems ?? [];
+
+    for (const section of continuationContents) {
+      videos.push(...extractItemsFromSection(section));
+
+      // Check for next continuation token
+      if (section?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token) {
+        continuationToken = section.continuationItemRenderer.continuationEndpoint.continuationCommand.token;
+      } else {
+        continuationToken = null;
+        break;
+      }
+
+      // Stop if we've reached the desired number of results
+      if (videos.length >= maxResults) {
+        break;
+      }
+    }
+  } catch (error) {
+    console.error(`Error fetching continuation: ${error.message}`);
+    break;
+  }
+}
+
+// Trim results to maxResults if needed
+if (videos.length > maxResults) {
+  videos.splice(maxResults);
+}
+
+console.log(`Total results found: ${videos.length}`);
+
+// console.log(JSON.stringify(videos, null, 2));
 
 /*
 
-Return format:
+Return format: Array of search results (videos, channels, or playlists)
 
+Video results:
 [{
     "videoId": "oLDcbkEqi-M",
     "title": "Why The AI Boom Might Be A Bubble?",
@@ -201,5 +297,28 @@ Return format:
     "lengthText": "9:37",
     "thumbnail": "https://i.ytimg.com/vi/oLDcbkEqi-M/hq720.jpg?sqp=-oaymwEjCOgCEMoBSFryq4qpAxUIARUAAAAAGAElAADIQj0AgKJDeAE=&rs=AOn4CLBP5ljhjaQ5UXWH1sHA2FOrOjMJFQ",
     "url": "https://www.youtube.com/watch?v=oLDcbkEqi-M"
+}, ...]
+
+Channel results:
+[{
+    "channelId": "UCvJJ_dzjViJCoLf5uKUTwoA",
+    "title": "CNBC",
+    "channelTitle": "CNBC",
+    "description": "Breaking business news...",
+    "subscriberCount": "2.5M subscribers",
+    "videoCount": "15K videos",
+    "thumbnail": "https://yt3.ggpht.com/...",
+    "url": "https://www.youtube.com/channel/UCvJJ_dzjViJCoLf5uKUTwoA"
+}, ...]
+
+Playlist results:
+[{
+    "playlistId": "PLrAXtmRdnEQy...",
+    "title": "My Favorite Songs",
+    "channelTitle": "Music Channel",
+    "channelId": "UCvJJ_dzjViJCoLf5uKUTwoA",
+    "videoCount": "25",
+    "thumbnail": "https://i.ytimg.com/vi/...",
+    "url": "https://www.youtube.com/playlist?list=PLrAXtmRdnEQy..."
 }, ...]
 */
