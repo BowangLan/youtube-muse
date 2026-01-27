@@ -123,7 +123,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark h-full">
       <head>
         <StructuredData />
         {process.env.NODE_ENV === "development" && (
@@ -142,7 +142,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full overflow-hidden antialiased`}
       >
         <Providers>
           <Toaster richColors position="top-center" />

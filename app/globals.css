@@ -82,6 +82,7 @@
 
 
   --easing-ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
+  --bottom-spacing: 240px;
 }
 
 .dark {
@@ -265,4 +266,8 @@
 
 .youtube-player-container {
   @apply h-full w-full rounded-lg overflow-hidden;
+}
+
+.h2 {
+  @apply text-sm font-medium text-white/60 uppercase tracking-wider;
 }

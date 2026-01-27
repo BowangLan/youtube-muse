@@ -24,6 +24,9 @@ export function useVideoQuality() {
 
     const updateAvailableQualities = () => {
       try {
+        // Check if method exists before calling (YouTube API may not have it ready)
+        if (typeof player.getAvailableQualityLevels !== "function") return
+        
         const qualities = player.getAvailableQualityLevels()
         if (qualities && qualities.length > 0) {
           setAvailableQualities(qualities)
@@ -38,10 +41,17 @@ export function useVideoQuality() {
 
     // Also update when video changes (after a small delay to ensure YouTube has loaded quality info)
     const interval = setInterval(() => {
-      const currentQualities = player.getAvailableQualityLevels()
-      if (currentQualities && currentQualities.length > 0) {
-        setAvailableQualities(currentQualities)
-        clearInterval(interval)
+      try {
+        // Check if method exists before calling
+        if (typeof player.getAvailableQualityLevels !== "function") return
+        
+        const currentQualities = player.getAvailableQualityLevels()
+        if (currentQualities && currentQualities.length > 0) {
+          setAvailableQualities(currentQualities)
+          clearInterval(interval)
+        }
+      } catch (error) {
+        // Silently ignore errors in interval - will retry
       }
     }, 500)
 
@@ -66,6 +76,14 @@ export function useVideoQuality() {
       const targetQuality = getQualityForMode(videoMode)
 
       try {
+        // Check if methods exist before calling
+        if (
+          typeof player.getPlaybackQuality !== "function" ||
+          typeof player.setPlaybackQuality !== "function"
+        ) {
+          return
+        }
+
         const currentQuality = player.getPlaybackQuality()
 
         // Only change if different

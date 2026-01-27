@@ -202,6 +202,7 @@ type TrackUpdate = Partial<Pick<Track, TrackUpdatableFields>>
 interface PlaylistActions {
   // Playlist management
   createPlaylist: (name: string, description?: string, initialTracks?: Track[]) => void
+  ensurePlaylist: (playlistId: string, name: string, description?: string, initialTracks?: Track[]) => void
   deletePlaylist: (playlistId: string) => void
   updatePlaylist: (playlistId: string, updates: Partial<Omit<Playlist, "id" | "tracks" | "createdAt">>) => void
   setPlaylistTracks: (playlistId: string, tracks: Track[]) => void
@@ -270,6 +271,28 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
         set((state) => ({
           playlists: [...state.playlists, newPlaylist],
         }))
+      },
+
+      ensurePlaylist: (playlistId, name, description, initialTracks = []) => {
+        set((state) => {
+          const existingPlaylist = state.playlists.find((p) => p.id === playlistId)
+          if (existingPlaylist) {
+            // Playlist already exists, no changes needed
+            return state
+          }
+          // Create the playlist with the specified ID
+          const newPlaylist: Playlist = {
+            id: playlistId,
+            name,
+            description,
+            tracks: initialTracks,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }
+          return {
+            playlists: [...state.playlists, newPlaylist],
+          }
+        })
       },
 
       deletePlaylist: (playlistId) => {

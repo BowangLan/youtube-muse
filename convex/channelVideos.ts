@@ -1,73 +1,10 @@
 import { action, mutation, query } from "./_generated/server"
 import { v } from "convex/values"
-import { fetchLatestVideoIds } from "./youtubeUnofficial"
+import { fetchLatestVideos, type UnofficialVideo } from "./youtubeUnofficial"
 import { api } from "./_generated/api"
 
-type OfficialVideo = {
-  videoId: string
-  title: string
-  url: string
-  publishedAt?: string
-  publishedAtMs?: number
-  thumbnailUrl?: string
-  duration?: string
-  viewCount?: string
-  channelTitle?: string
-  channelThumbnailUrl?: string
-  thumbnail?: Array<{
-    url: string
-    width: number
-    height: number
-  }>
-}
-
-const fetchOfficialVideoDetails = async (videoIds: string[], apiKey: string) => {
-  if (videoIds.length === 0) return []
-
-  const params = new URLSearchParams({
-    part: "snippet,contentDetails,statistics",
-    id: videoIds.join(","),
-    key: apiKey,
-  })
-
-  const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`)
-
-  if (!response.ok) {
-    throw new Error(`YouTube Data API error: ${response.status} ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  const items = Array.isArray(data.items) ? data.items : []
-
-  return items.map((item: { id: string; snippet?: { title?: string; publishedAt?: string; thumbnails?: { [key: string]: { url?: string; width?: number; height?: number } }; channelTitle?: string }; contentDetails?: { duration?: string }; statistics?: { viewCount?: string } }) => {
-    const publishedAt = item.snippet?.publishedAt
-    const thumbnails = item.snippet?.thumbnails
-
-    // Convert YouTube thumbnails to our format
-    const thumbnailArray = thumbnails ? Object.entries(thumbnails)
-      .filter(([, thumb]) => thumb?.url)
-      .map(([, thumb]) => ({
-        url: thumb!.url!,
-        width: thumb!.width ?? 0,
-        height: thumb!.height ?? 0,
-      })) : []
-
-    return {
-      videoId: item.id,
-      title: item.snippet?.title ?? "",
-      url: `https://www.youtube.com/watch?v=${item.id}`,
-      publishedAt,
-      publishedAtMs: publishedAt ? Date.parse(publishedAt) : undefined,
-      thumbnailUrl:
-        item.snippet?.thumbnails?.high?.url ??
-        item.snippet?.thumbnails?.medium?.url,
-      duration: item.contentDetails?.duration,
-      viewCount: item.statistics?.viewCount,
-      channelTitle: item.snippet?.channelTitle,
-      thumbnail: thumbnailArray.length > 0 ? thumbnailArray : undefined,
-    }
-  })
-}
+// Re-export the type for consumers
+export type { UnofficialVideo }
 
 export const getChannelVideos = query({
   args: {
@@ -254,6 +191,50 @@ export const upsertVideos = mutation({
         await ctx.db.patch(existing._id, payload)
       } else {
         await ctx.db.insert("videos", payload)
+      }
+    }
+  },
+})
+
+/**
+ * Fetch latest videos from a YouTube channel using unofficial scraping
+ * and store them in the database.
+ * 
+ * This action combines fetchLatestVideos + upsertVideos in a single call.
+ */
+export const syncChannelVideos = action({
+  args: {
+    channelId: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean; videoCount: number; error?: string }> => {
+    try {
+      const limit = args.limit ?? 20
+      const videos = await fetchLatestVideos(args.channelId, limit)
+
+      if (videos.length === 0) {
+        return { success: true, videoCount: 0 }
+      }
+
+      const latestVideoId = videos[0].videoId
+      const channelTitle = videos[0].channelTitle
+      const channelThumbnailUrl = videos[0].channelThumbnailUrl
+
+      await ctx.runMutation(api.channelVideos.upsertVideos, {
+        channelId: args.channelId,
+        latestVideoId,
+        channelTitle,
+        thumbnail: channelThumbnailUrl ? [{ url: channelThumbnailUrl, width: 88, height: 88 }] : undefined,
+        videos,
+      })
+
+      return { success: true, videoCount: videos.length }
+    } catch (error) {
+      console.error("syncChannelVideos error:", error)
+      return {
+        success: false,
+        videoCount: 0,
+        error: error instanceof Error ? error.message : "Unknown error",
       }
     }
   },

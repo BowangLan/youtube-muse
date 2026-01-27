@@ -101,16 +101,25 @@ interface YouTubeSearchChannelRenderer {
   title: {
     simpleText: string;
   };
-  descriptionSnippet: {
-    runs: Array<{
+  navigationEndpoint?: {
+    browseEndpoint?: {
+      browseId?: string;
+      canonicalBaseUrl?: string;
+    };
+  };
+  descriptionSnippet?: {
+    runs?: Array<{
       text: string;
     }>;
   };
-  subscriberCountText: {
-    simpleText: string;
+  // Note: YouTube's API naming is confusing:
+  // - subscriberCountText actually contains the HANDLE (e.g., "@t3dotgg")
+  // - videoCountText actually contains the SUBSCRIBER COUNT (e.g., "500K subscribers")
+  subscriberCountText?: {
+    simpleText?: string;
   };
-  videoCountText: {
-    simpleText: string;
+  videoCountText?: {
+    simpleText?: string;
   };
   thumbnail: {
     thumbnails: Array<{
@@ -183,9 +192,10 @@ export type SearchChannelResult = {
   channelId: string;
   title: string;
   channelTitle: string;
+  handle: string;
+  customUrl: string;
   description: string;
   subscriberCount: string;
-  videoCount: string;
   thumbnail: string;
   url: string;
 };
@@ -325,16 +335,32 @@ export async function searchYouTubeUnofficial(
           // Handle channel results
           const channelRenderer = item?.channelRenderer;
           if (channelRenderer) {
+            // Get the best quality thumbnail
+            const thumbnails = channelRenderer.thumbnail?.thumbnails ?? [];
+            const bestThumbnail =
+              thumbnails[thumbnails.length - 1]?.url ?? thumbnails[0]?.url ?? "";
+            const thumbnailUrl = bestThumbnail.startsWith("//")
+              ? `https:${bestThumbnail}`
+              : bestThumbnail;
+
+            // YouTube's confusing naming convention:
+            // - subscriberCountText contains the HANDLE (e.g., "@t3dotgg")
+            // - videoCountText contains the SUBSCRIBER COUNT (e.g., "500K subscribers")
+            const handle = channelRenderer.subscriberCountText?.simpleText ?? "";
+            const subscriberCount = channelRenderer.videoCountText?.simpleText ?? "";
+            const customUrl =
+              channelRenderer.navigationEndpoint?.browseEndpoint?.canonicalBaseUrl ?? "";
+
             results.push({
               channelId: channelRenderer.channelId,
               title: channelRenderer.title?.simpleText ?? "",
               channelTitle: channelRenderer.title?.simpleText ?? "",
+              handle,
+              customUrl,
               description:
-                channelRenderer.descriptionSnippet?.runs?.[0]?.text ?? "",
-              subscriberCount:
-                channelRenderer.subscriberCountText?.simpleText ?? "",
-              videoCount: channelRenderer.videoCountText?.simpleText ?? "",
-              thumbnail: channelRenderer.thumbnail?.thumbnails?.[0]?.url ?? "",
+                channelRenderer.descriptionSnippet?.runs?.map((r) => r.text).join("") ?? "",
+              subscriberCount,
+              thumbnail: thumbnailUrl,
               url: `https://www.youtube.com/channel/${channelRenderer.channelId}`,
             } as SearchChannelResult);
           }
@@ -365,6 +391,111 @@ export async function searchYouTubeUnofficial(
     return {
       results: [],
       error: ERROR_MESSAGES.SEARCH_FAILED,
+    };
+  }
+}
+
+/**
+ * Search YouTube specifically for channels using unofficial scraping API
+ *
+ * This is a dedicated channel search function with correct field mappings
+ * based on YouTube's actual response structure.
+ *
+ * Usage:
+ *   const result = await searchYouTubeChannels("lofi music");
+ *   const result = await searchYouTubeChannels("tech reviews", 10);
+ */
+export async function searchYouTubeChannels(
+  query: string,
+  maxResults: number = 20
+): Promise<{ results: SearchChannelResult[]; error?: string }> {
+  try {
+    if (!query.trim()) {
+      return { results: [] };
+    }
+
+    const url = `${YOUTUBE_URLS.BASE}${YOUTUBE_URLS.RESULTS_PATH}?search_query=${encodeURIComponent(query)}&sp=${TYPE_FILTERS.channel}`;
+
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": HTTP_HEADERS.USER_AGENT,
+        "Accept-Language": HTTP_HEADERS.ACCEPT_LANGUAGE,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`${ERROR_MESSAGES.REQUEST_FAILED} ${response.status} ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const initialDataJson = extractJsonBlock(html, JSON_MARKERS.YT_INITIAL_DATA);
+    const initialData: YouTubeSearchInitialData = JSON.parse(initialDataJson);
+
+    const primaryContents =
+      initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents ?? [];
+
+    const results: SearchChannelResult[] = [];
+
+    for (const section of primaryContents) {
+      const items = section?.itemSectionRenderer?.contents ?? [];
+
+      for (const item of items) {
+        const channelRenderer = item?.channelRenderer;
+        if (channelRenderer) {
+          // Get the best quality thumbnail (last one is usually highest res)
+          const thumbnails = channelRenderer.thumbnail?.thumbnails ?? [];
+          const bestThumbnail =
+            thumbnails[thumbnails.length - 1]?.url ?? thumbnails[0]?.url ?? "";
+
+          // Ensure thumbnail URL has protocol
+          const thumbnailUrl = bestThumbnail.startsWith("//")
+            ? `https:${bestThumbnail}`
+            : bestThumbnail;
+
+          // Extract custom URL from navigation endpoint (e.g., "/@t3dotgg")
+          const customUrl =
+            channelRenderer.navigationEndpoint?.browseEndpoint?.canonicalBaseUrl ?? "";
+
+          // YouTube's confusing naming convention:
+          // - subscriberCountText.simpleText contains the HANDLE (e.g., "@t3dotgg")
+          // - videoCountText.simpleText contains the SUBSCRIBER COUNT (e.g., "500K subscribers")
+          const handle = channelRenderer.subscriberCountText?.simpleText ?? "";
+          const subscriberCount = channelRenderer.videoCountText?.simpleText ?? "";
+
+          // Description is in runs array
+          const description =
+            channelRenderer.descriptionSnippet?.runs?.map((r) => r.text).join("") ?? "";
+
+          results.push({
+            channelId: channelRenderer.channelId,
+            title: channelRenderer.title?.simpleText ?? "",
+            channelTitle: channelRenderer.title?.simpleText ?? "",
+            handle,
+            customUrl,
+            description,
+            subscriberCount,
+            thumbnail: thumbnailUrl,
+            url: `https://www.youtube.com/channel/${channelRenderer.channelId}`,
+          });
+
+          // Stop if we've reached max results
+          if (results.length >= maxResults) {
+            break;
+          }
+        }
+      }
+
+      if (results.length >= maxResults) {
+        break;
+      }
+    }
+
+    return { results };
+  } catch (error) {
+    console.error("YouTube channel search error:", error);
+    return {
+      results: [],
+      error: "Failed to search channels",
     };
   }
 }

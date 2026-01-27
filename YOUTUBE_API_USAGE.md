@@ -188,8 +188,7 @@ const youtube = google.youtube({
 **Returns**: Array of `ChannelSearchResult` objects with channel metadata.
 
 **Usage**:
-- `components/stream/add-channel-popover.tsx:48` - Search channels in add channel popover
-- `components/stream/create-stream-dialog.tsx:104` - Search channels when creating streams
+- Used by `getChannelById` when resolving @handles in `app/actions/youtube-channels-official.ts`
 
 ---
 
@@ -207,7 +206,7 @@ const youtube = google.youtube({
 **Returns**: Single `ChannelSearchResult` object or null.
 
 **Usage**:
-- `components/stream/create-stream-dialog.tsx:187` - Fetch channel when user pastes URL/ID
+- `app/actions/youtube-channels-sync.ts` - Resolve channels before syncing
 
 ---
 
@@ -237,7 +236,7 @@ const youtube = google.youtube({
 **Returns**: Array of `ChannelVideoResult` objects.
 
 **Usage**:
-- `lib/store/streams-store.ts:155` - Refresh stream with latest channel videos
+- `app/actions/youtube-channels-sync.ts` - Refresh channel videos during sync
 
 ---
 
@@ -329,8 +328,9 @@ type YouTubeVideoMetadata = {
 - Marked with `"use server"` directive
 
 **Files**:
-- `app/actions/youtube-search.ts`
-- `app/actions/youtube-channels.ts`
+- `app/actions/youtube-search-official.ts`
+- `app/actions/youtube-search-unofficial.ts`
+- `app/actions/youtube-channels-official.ts`
 
 ### Client-Side (React Components/Hooks)
 - **YouTube IFrame Player API** (embedded player)
@@ -346,7 +346,7 @@ type YouTubeVideoMetadata = {
 
 ## Convex Usage
 
-**Optional for streams** - Convex can sync latest channel videos for streams without replacing local stores.
+**Optional for channels** - Convex can sync latest channel videos without replacing local stores.
 
 **Flow**:
 - `convex/youtube-unofficial.ts` scrapes the channel videos page to detect the latest IDs.
@@ -358,7 +358,7 @@ type YouTubeVideoMetadata = {
 - `NEXT_PUBLIC_CONVEX_URL` for the frontend Convex client
 
 **Stores remain**:
-- `lib/store/streams-store.ts` - Stream configuration and local playlist updates
+- `lib/store/channels-store.ts` - Channel list and metadata
 - `lib/store/playlist-store.ts` - Playlists and tracks
 
 ---

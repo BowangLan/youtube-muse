@@ -67,7 +67,7 @@ export function TrackItemMedium({
   track: Track;
   isCurrentTrack: boolean;
   onClick: () => void;
-  onRemove: () => void;
+  onRemove?: () => void;
 }) {
   // Use selectors to only subscribe to specific properties
   const isPlaying = useIsPlaying();
