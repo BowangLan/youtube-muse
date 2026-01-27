@@ -285,19 +285,19 @@ export function IntentDetailSection() {
   if (!activePlaylist) return null;
 
   return (
-    <motion.section
-      aria-label={`Intent - ${activePlaylist.name}`}
-      className="space-y-6 md:space-y-8"
-      layoutId={`intent-detail-section-${activePlaylist.id}`}
-      layout
-      transition={{ duration: EASING_DURATION_CARD, ease: EASING_EASE_OUT }}
-    >
-      <div
-        className={cn(
-          // Layout & spacing
-          "relative flex flex-col gap-3 h-[60vh] overflow-y-auto overflow-hidden rounded-2xl p-2 md:p-3",
-          // Border & background
-          "border border-white/10 bg-white/3",
+      <motion.section
+        aria-label={`Intent - ${activePlaylist.name}`}
+        className="space-y-6 md:space-y-8"
+        layoutId={`intent-detail-section-${activePlaylist.id}`}
+        layout
+        transition={{ duration: EASING_DURATION_CARD, ease: EASING_EASE_OUT }}
+      >
+        <div
+          className={cn(
+            // Layout & spacing
+            "relative flex h-[68vh] flex-col gap-3 overflow-hidden overflow-y-auto rounded-2xl p-3 sm:h-[60vh] md:p-3",
+            // Border & background
+            "border border-white/10 bg-white/3",
           // Gradients & layer effects
           "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90",
           intentGradient
@@ -312,8 +312,9 @@ export function IntentDetailSection() {
               returnToGrid("intents");
             }}
             size="icon"
+            className="h-11 w-11 sm:h-10 sm:w-10"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5 sm:h-4 sm:w-4" />
             {/* <span className="text-sm">Back</span> */}
           </Button>
 
@@ -335,17 +336,18 @@ export function IntentDetailSection() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2 sm:gap-1">
             <Button
               onClick={handleAddToIntent}
               disabled={isAdding || !activePlaylistId}
               variant="ghost"
               size="icon"
+              className="h-11 w-11 sm:h-10 sm:w-10"
             >
               {isAdding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin sm:h-4 sm:w-4" />
               ) : (
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
               )}
             </Button>
 
@@ -362,18 +364,23 @@ export function IntentDetailSection() {
               disabled={isRefreshing || !activePlaylistId}
               variant="ghost"
               size="icon"
+              className="h-11 w-11 sm:h-10 sm:w-10"
             >
               {isRefreshing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin sm:h-4 sm:w-4" />
               ) : (
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-5 w-5 sm:h-4 sm:w-4" />
               )}
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-11 sm:h-10 sm:w-10"
+                >
+                  <MoreVertical className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -403,7 +410,7 @@ export function IntentDetailSection() {
           </div>
         </div>
 
-        <div className="space-y-1 mt-4 mb-2 px-3 flex-1 overflow-y-auto">
+        <div className="mt-4 mb-2 flex-1 space-y-2 overflow-y-auto px-2 sm:space-y-1 sm:px-3">
           {activePlaylist.tracks.map((track, index) => (
             <div
               key={`${track.id}-${track.addedAt}`}

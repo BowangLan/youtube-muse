@@ -117,8 +117,12 @@ export function AddTrackByUrlDialog({
   };
 
   const defaultTrigger = (
-    <Button variant="ghost" size="icon">
-      <Link2 className="h-4 w-4" />
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-11 w-11 sm:h-10 sm:w-10"
+    >
+      <Link2 className="h-5 w-5 sm:h-4 sm:w-4" />
     </Button>
   );
 
@@ -168,7 +172,7 @@ export function AddTrackByUrlDialog({
                 }
               }}
               placeholder="https://www.youtube.com/watch?v=..."
-              className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+              className="h-11 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0 sm:h-10"
               disabled={isLoading}
             />
           </div>

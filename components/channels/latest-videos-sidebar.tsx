@@ -203,7 +203,7 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
         </div>
         <ManageChannelsDialog
           trigger={
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/40 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white/60">
+            <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-white/40 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white/60">
               <Plus className="h-4 w-4" />
               Add channels to see latest videos
             </button>
@@ -214,7 +214,7 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
   }
 
   return (
-    <aside className={cn("space-y-4", className)}>
+    <aside className={cn("space-y-4 sm:space-y-5", className)}>
       <div className="flex-none">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
               trigger={
                 <button
                   type="button"
-                  className="flex items-center cursor-pointer select-none group/manage-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/60"
+                  className="flex items-center cursor-pointer select-none p-2 -m-2 group/manage-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/60 sm:m-0 sm:p-0"
                   aria-label="Manage channels"
                 >
                   <div className="flex -space-x-3 group-hover/manage-trigger:-space-x-1">
@@ -251,7 +251,7 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
           <p className="text-sm">No videos found from your channels.</p>
         </div>
       ) : (
-        <div className="space-y-6 flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 space-y-5 overflow-y-auto sm:space-y-6">
           {groupedTracks.map((group) => (
             <div key={group.dateKey} className="space-y-2">
               <div className="flex items-center gap-2 px-1">

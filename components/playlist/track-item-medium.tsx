@@ -75,7 +75,7 @@ export function TrackItemMedium({
   return (
     <motion.div
       className={cn(
-        "group flex items-center gap-3 cursor-pointer rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
+        "group flex items-center gap-3 cursor-pointer rounded-lg border border-white/5 bg-white/5 px-3 py-3 transition-colors hover:bg-white/10 sm:py-2"
       )}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}
@@ -156,13 +156,13 @@ export function TrackItemMedium({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="text-zinc-200 opacity-0 group-hover:opacity-100"
+            className="h-9 w-9 text-zinc-200 opacity-100 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
               onRemove();
             }}
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" />
           </Button>
         )}
       </div>

@@ -122,30 +122,30 @@ export default function Home() {
 
       <div
         className={cn(
-          "mx-auto flex h-full min-h-0 w-full flex-col space-y-8 px-4 pt-8 sm:px-6 md:space-y-10 lg:px-8 z-10 isolate"
+          "mx-auto flex h-full min-h-0 w-full flex-col space-y-6 px-4 pt-6 sm:space-y-8 sm:px-6 sm:pt-8 md:space-y-10 lg:px-8 z-10 isolate"
         )}
       >
         <AppHeader />
 
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="flex flex-row flex-none mb-4">
+          <div className="flex flex-col flex-none gap-3 mb-3 sm:flex-row sm:items-center sm:mb-4">
             <PlayUrlDialog />
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
             {view === "grid" ? (
-              <div className="grid h-full min-h-0 grid-cols-1 gap-8 lg:grid-cols-3">
-                <div className="min-h-0 space-y-4 lg:col-span-2 flex flex-col">
-                  <div className="sticky top-0 z-10 bg-[#050505]/80 pb-2 backdrop-blur">
+              <div className="grid h-full min-h-0 grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3 overflow-y-auto lg:overflow-y-hidden">
+                <div className="min-h-0 lg:col-span-2 flex flex-col">
+                  <div className="sticky top-0 z-10 h-12 backdrop-blur flex items-center">
                     <h2 className="h2">Intents</h2>
                   </div>
-                  <div className="flex-1 min-h-0 overflow-y-auto">
+                  <div className="flex-none lg:flex-1 min-h-0 lg:overflow-y-auto">
                     <IntentGridSection intentPlaylists={intentPlaylists} />
                     <div className="h-(--bottom-spacing) flex-none"></div>
                   </div>
                 </div>
 
-                <LatestVideosSidebar className="flex-1 min-h-0 lg:col-span-1 flex flex-col" />
+                <LatestVideosSidebar className="flex-none lg:flex-1 min-h-0 lg:col-span-1 flex flex-col" />
               </div>
             ) : view === "intent" ? (
               <div className="h-full min-h-0 overflow-y-auto">

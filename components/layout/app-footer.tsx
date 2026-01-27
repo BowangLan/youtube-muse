@@ -42,7 +42,7 @@ export const AppFooterFixed = () => {
 export const AppFooterMobileBottom = () => {
   return (
     <footer className="relative z-10">
-      <div className="mx-auto w-full max-w-4xl py-4">
+      <div className="mx-auto w-full max-w-4xl px-4 py-4 sm:px-0">
         <AppFooterInner />
       </div>
     </footer>

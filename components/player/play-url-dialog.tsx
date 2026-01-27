@@ -146,8 +146,8 @@ export function PlayUrlDialog({ trigger }: PlayUrlDialogProps) {
   };
 
   const defaultTrigger = (
-    <Button className="h-10 rounded-2xl border border-white/10 bg-white/5 px-3 text-xs uppercase tracking-[0.2em] text-white/70 hover:bg-white/10 hover:text-white">
-      <Link2 className="size-3.5" />
+    <Button className="h-11 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-xs uppercase tracking-[0.2em] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:h-10 sm:w-auto sm:px-3">
+      <Link2 className="size-4" />
       Play URL
     </Button>
   );
@@ -193,7 +193,7 @@ export function PlayUrlDialog({ trigger }: PlayUrlDialogProps) {
                 }
               }}
               placeholder="https://www.youtube.com/watch?v=..."
-              className="h-10 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0"
+              className="h-11 w-full rounded-none border-x-0 border-b border-t-0 border-white/20 bg-transparent px-3 text-sm text-white placeholder:text-white/30 focus-visible:ring-0 sm:h-10"
               disabled={isLoading}
             />
           </div>

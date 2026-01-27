@@ -120,7 +120,7 @@ export function TrackItemSmall({
 
   return (
     <motion.div
-      className={cn("group flex items-center gap-2 cursor-pointer h-9")}
+      className={cn("group flex h-11 items-center gap-2 cursor-pointer sm:h-9")}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}
     >
@@ -183,10 +183,10 @@ export function TrackItemSmall({
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-zinc-200 opacity-0 group-hover:opacity-100"
+              className="h-9 w-9 text-zinc-200 opacity-100 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
               onClick={(event) => event.stopPropagation()}
             >
-              <MoreVertical className="h-3 w-3" />
+              <MoreVertical className="h-4 w-4 sm:h-3 sm:w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">

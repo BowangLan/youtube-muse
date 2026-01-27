@@ -47,11 +47,11 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
     gradientOverrides[playlist.id] ?? intent?.gradientClassName;
 
   return (
-    <div
-      className={cn(
-        "relative group trans w-full flex min-h-32 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
-        "hover:scale-[102%]",
-        "transition-colors hover:bg-white/6 active:bg-white/8",
+      <div
+        className={cn(
+          "relative group trans w-full flex min-h-36 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left sm:min-h-32",
+          "hover:scale-[102%]",
+          "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[radial-gradient(60%_60%_at_20%_10%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_70%)] after:opacity-50",
         "active:scale-95",
@@ -102,7 +102,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
       </div>
 
       {/* Mobile Play/Pause Button */}
-      <div className="absolute block sm:hidden bottom-2 right-3 z-30">
+      <div className="absolute bottom-2 right-3 z-30 block sm:hidden">
         <button
           type="button"
           aria-label={
@@ -121,18 +121,18 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
               setCurrentTrackIndex(0);
             }
           }}
-          className="p-2 z-10 rounded-full text-foreground/80 hover:bg-white/10 active:bg-white/20 trans flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/60"
+          className="z-10 flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-white/10 active:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/60"
         >
           {isCurrentlyPlaying ? (
-            <Icons.Pause className="size-4.5" />
+            <Icons.Pause className="size-5" />
           ) : (
-            <Icons.Play className="size-4.5 translate-x-px" />
+            <Icons.Play className="size-5 translate-x-px" />
           )}
         </button>
       </div>
 
       <div className="relative z-20 pointer-events-none flex flex-col gap-1">
-        <div className="text-[10px]/[12px] md:text-xs/tight uppercase tracking-[0.32em] text-white/60">
+        <div className="text-[11px]/[14px] uppercase tracking-[0.3em] text-white/60 md:text-xs/tight">
           Intent
         </div>
         <div className="relative flex items-center gap-2">
@@ -193,9 +193,9 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             {playlist.name}
           </motion.div>
         </div>
-        <div className="line-clamp-2 text-[11px]/[13px] md:text-xs/tight text-white/65">
-          {intent?.description ?? ""}
-        </div>
+          <div className="line-clamp-2 text-[12px]/[16px] text-white/65 md:text-xs/tight">
+            {intent?.description ?? ""}
+          </div>
       </div>
       <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-white/60">
         <span>{trackCount} tracks</span>
