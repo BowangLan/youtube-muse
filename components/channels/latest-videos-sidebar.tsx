@@ -198,7 +198,7 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
   if (channels.length === 0) {
     return (
       <aside className={cn("space-y-4", className)}>
-        <div className="sticky top-0 z-10 bg-[#050505]/80 pb-2 backdrop-blur">
+        <div className="sticky top-0 z-10 pb-2 backdrop-blur">
           <h2 className="h2">Latest Videos</h2>
         </div>
         <ManageChannelsDialog
