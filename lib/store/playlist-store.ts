@@ -333,15 +333,67 @@ export const usePlaylistStore = create<PlaylistState & PlaylistActions>()(
             return { playlists }
           }
 
+          const currentActualIndex =
+            state.isShuffleEnabled && state.shuffleOrder.length > 0
+              ? (state.shuffleOrder[state.currentTrackIndex] ?? state.currentTrackIndex)
+              : state.currentTrackIndex
+          const currentTrackId = playlist.tracks[currentActualIndex]?.id
           const maxIndex = Math.max(0, tracks.length - 1)
-          const nextTrackIndex = Math.min(state.currentTrackIndex, maxIndex)
-          const needsShuffleReset =
-            state.isShuffleEnabled && state.shuffleOrder.length !== tracks.length
+          let nextActualIndex = currentTrackId
+            ? tracks.findIndex((track) => track.id === currentTrackId)
+            : -1
+          if (nextActualIndex < 0) {
+            nextActualIndex = Math.min(currentActualIndex, maxIndex)
+          }
+
+          if (state.isShuffleEnabled && state.shuffleOrder.length > 0) {
+            const nextIndexById = new Map(tracks.map((track, index) => [track.id, index]))
+            const remappedOrder: number[] = []
+
+            state.shuffleOrder.forEach((oldIndex) => {
+              const id = playlist.tracks[oldIndex]?.id
+              if (!id) return
+              const mapped = nextIndexById.get(id)
+              if (mapped === undefined) return
+              if (!remappedOrder.includes(mapped)) {
+                remappedOrder.push(mapped)
+              }
+            })
+
+            const remaining: number[] = []
+            for (let i = 0; i < tracks.length; i += 1) {
+              if (!remappedOrder.includes(i)) {
+                remaining.push(i)
+              }
+            }
+
+            let nextShuffleOrder = remappedOrder.length > 0
+              ? [...remappedOrder, ...remaining]
+              : buildShuffleOrder(tracks.length, nextActualIndex)
+
+            let nextTrackIndex = nextShuffleOrder.indexOf(nextActualIndex)
+            if (nextTrackIndex < 0) {
+              if (nextActualIndex >= 0 && nextActualIndex < tracks.length) {
+                nextShuffleOrder = [
+                  nextActualIndex,
+                  ...nextShuffleOrder.filter((index) => index !== nextActualIndex),
+                ]
+                nextTrackIndex = 0
+              } else {
+                nextTrackIndex = 0
+              }
+            }
+
+            return {
+              playlists,
+              currentTrackIndex: nextTrackIndex,
+              shuffleOrder: nextShuffleOrder,
+            }
+          }
 
           return {
             playlists,
-            currentTrackIndex: nextTrackIndex,
-            shuffleOrder: needsShuffleReset ? [] : state.shuffleOrder,
+            currentTrackIndex: nextActualIndex,
           }
         })
       },
