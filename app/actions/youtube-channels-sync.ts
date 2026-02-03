@@ -68,7 +68,6 @@ export async function syncChannelLatestVideo(channelId: string, limit: number) {
 
   if (channelState?.lastSyncedAt
     && Date.now() - channelState.lastSyncedAt < syncIntervalMs
-    && channelState.totalVideos >= limit
   ) {
     // skip sync if the channel was recently synced
     return { success: true, message: `Skipped sync for channel ${channelId} (recently synced)` }

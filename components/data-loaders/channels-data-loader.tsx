@@ -22,8 +22,9 @@ type StreamVideo = {
 
 export function ChannelsDataLoader() {
   const channels = useChannelsStore((state) => state.channels);
-  const channelIds = channels.map((channel) => channel.id);
-  console.debug(`[ChannelsDataLoader] Channel IDs: ${channelIds.join(", ")}`);
+  const channelIds = useMemo(() => channels.map((channel) => channel.id), [channels]);
+  const channelIdsKey = useMemo(() => channelIds.join(","), [channelIds]);
+  console.debug(`[ChannelsDataLoader] Channel IDs: ${channelIdsKey}`);
 
   const LIMIT = 15; // TODO: Move this to a config
 
@@ -97,7 +98,7 @@ export function ChannelsDataLoader() {
       window.clearInterval(intervalId);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [channelIds]);
+  }, [channelIdsKey]);
 
   useEffect(() => {
     // sync convex videos to channel video playlist
