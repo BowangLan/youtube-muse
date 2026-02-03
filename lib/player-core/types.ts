@@ -38,6 +38,13 @@ export type PlayerEvent =
   | { type: "UserSetVolume"; volume: number }
   | { type: "UserNextTrack" }
   | { type: "UserPreviousTrack" }
+  | { type: "UserToggleSliceRepeatMode" }
+  | { type: "UserSetSliceStart"; seconds: number }
+  | { type: "UserSetSliceEnd"; seconds: number }
+  | { type: "UserSetSliceRepeatEnabled"; enabled: boolean }
+  | { type: "UserClearSlice" }
+  | { type: "UserSetSliceAutoRepeat"; autoRepeat: boolean }
+  | { type: "SliceBoundaryReached" }
 
 export interface PlayerState {
   apiReady: boolean
@@ -52,6 +59,13 @@ export interface PlayerState {
   observedPlayback: PlaybackState
   mode: PlayerMode
   loadRequestId: number
+  sliceRepeat: {
+    isActive: boolean
+    startTime: number | null
+    endTime: number | null
+    isSliceSet: boolean
+    autoRepeat: boolean
+  }
 }
 
 export const initialPlayerState: PlayerState = {
@@ -67,4 +81,11 @@ export const initialPlayerState: PlayerState = {
   observedPlayback: "paused",
   mode: { tag: "uninitialized" },
   loadRequestId: 0,
+  sliceRepeat: {
+    isActive: false,
+    startTime: null,
+    endTime: null,
+    isSliceSet: false,
+    autoRepeat: true,
+  },
 }

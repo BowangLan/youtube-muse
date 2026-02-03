@@ -1,22 +1,21 @@
 "use client";
 
 import { usePlaylistStore } from "@/lib/store/playlist-store";
+import { usePlayerStore } from "@/lib/store/player-store";
 import {
   PlayPauseButton,
   ProgressBar,
   TimeDisplay,
   VolumeControl,
 } from "@/components/player/player-controls";
+import { SliceRepeatControls, SliceRepeatToggleButton } from "./slice-repeat-controls";
 import { formatDate } from "@/lib/utils/youtube";
-import { Button } from "../ui/button";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import Link from "next/link";
 
 export function FullscreenPlayerControls() {
   const currentTrack = usePlaylistStore((state) => state.getCurrentTrack());
-  const setVideoMode = useYouTubePlayerInstanceStore(
-    (state) => state.setVideoMode
-  );
+  const sliceRepeatActive = usePlayerStore((state) => state.sliceRepeat.isActive);
 
   if (!currentTrack) {
     return (
@@ -24,11 +23,18 @@ export function FullscreenPlayerControls() {
         className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <TimeDisplay />
-        <ProgressBar className="mt-2" />
-        <div className="flex mt-6 gap-2">
+        {sliceRepeatActive ? (
+          <SliceRepeatControls />
+        ) : (
+          <>
+            <TimeDisplay />
+            <ProgressBar className="mt-2" />
+          </>
+        )}
+        <div className="flex mt-6 gap-2 items-center">
           <PlayPauseButton className="h-10 w-10" iconClassName="size-5" />
           <div className="flex-1"></div>
+          <SliceRepeatToggleButton />
           <VolumeControl />
         </div>
       </div>
@@ -81,6 +87,27 @@ export function FullscreenPlayerControls() {
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Controls Section */}
+      <div
+        className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {sliceRepeatActive ? (
+          <SliceRepeatControls />
+        ) : (
+          <>
+            <TimeDisplay />
+            <ProgressBar className="mt-2" />
+          </>
+        )}
+        <div className="flex mt-6 gap-2 items-center">
+          <PlayPauseButton className="h-10 w-10" iconClassName="size-5" />
+          <div className="flex-1"></div>
+          <SliceRepeatToggleButton />
+          <VolumeControl />
         </div>
       </div>
     </>

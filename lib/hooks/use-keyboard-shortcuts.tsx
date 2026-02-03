@@ -56,7 +56,8 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      const { dispatch, volume, duration, isPlaying } = usePlayerStore.getState()
+      const { dispatch, volume, duration, isPlaying, currentTime, sliceRepeat } =
+        usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
       const { videoMode, setVideoMode } = useYouTubePlayerInstanceStore.getState()
@@ -77,6 +78,7 @@ export function useKeyboardShortcuts() {
         if (key === " " || key === "k") return true
         if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) return true
         if (["f", "j", "l", "m", "n", "p", "v"].includes(key)) return true
+        if (key === "s" && !ctrl && isPlaying && !sliceRepeat.isActive) return true
         if (!isNaN(Number(key))) return true
         return false
       }
@@ -204,6 +206,16 @@ export function useKeyboardShortcuts() {
         setVideoMode(nextMode)
         showFeedback({
           label: nextMode === "fullscreen" ? "Fullscreen" : "Video Floating",
+        })
+        return
+      }
+
+      if (key === "s" && !ctrl) {
+        if (!isPlaying || sliceRepeat.isActive) return
+        dispatch({ type: "UserSetSliceRepeatEnabled", enabled: true })
+        dispatch({ type: "UserSetSliceStart", seconds: currentTime })
+        showFeedback({
+          label: "Slice repeat start",
         })
         return
       }

@@ -42,6 +42,37 @@ export function reducePlayerState(
       nextState.playerReady = true
       if (event.duration > 0) {
         nextState.duration = event.duration
+        const maxDuration = event.duration
+        const minSliceSeconds = 1
+        const currentStart = state.sliceRepeat.startTime
+        const currentEnd = state.sliceRepeat.endTime
+        if (currentStart !== null || currentEnd !== null) {
+          let newStart =
+            currentStart !== null ? clamp(currentStart, 0, maxDuration) : null
+          let newEnd = currentEnd !== null ? clamp(currentEnd, 0, maxDuration) : null
+
+          if (newStart !== null && newEnd !== null) {
+            if (newEnd - newStart < minSliceSeconds) {
+              if (newStart + minSliceSeconds <= maxDuration) {
+                newEnd = Math.max(newEnd, newStart + minSliceSeconds)
+                if (newEnd > maxDuration) {
+                  newEnd = maxDuration
+                  newStart = Math.max(0, newEnd - minSliceSeconds)
+                }
+              } else {
+                newEnd = maxDuration
+                newStart = Math.max(0, newEnd - minSliceSeconds)
+              }
+            }
+          }
+
+          nextState.sliceRepeat = {
+            ...state.sliceRepeat,
+            startTime: newStart,
+            endTime: newEnd,
+            isSliceSet: newStart !== null && newEnd !== null,
+          }
+        }
       }
 
       if (state.mode.tag === "loading") {
@@ -201,6 +232,130 @@ export function reducePlayerState(
 
       if (event.state === "ended") {
         commands.push({ type: "RequestNextTrack" })
+      }
+      break
+    }
+    case "UserToggleSliceRepeatMode": {
+      nextState.sliceRepeat = {
+        ...state.sliceRepeat,
+        isActive: !state.sliceRepeat.isActive,
+      }
+      break
+    }
+    case "UserSetSliceStart": {
+      const minSliceSeconds = 1
+      const maxDuration = state.duration > 0 ? state.duration : null
+      const clampedTime =
+        maxDuration !== null ? clamp(event.seconds, 0, maxDuration) : Math.max(0, event.seconds)
+      const currentEnd = state.sliceRepeat.endTime
+      // Ensure start is before end and stays within duration bounds.
+      if (currentEnd !== null && clampedTime >= currentEnd) {
+        let newStart = clampedTime
+        let newEnd = currentEnd
+        if (newStart + minSliceSeconds > newEnd) {
+          newEnd = newStart + minSliceSeconds
+        }
+        if (maxDuration !== null && newEnd > maxDuration) {
+          newEnd = maxDuration
+          newStart = Math.max(0, newEnd - minSliceSeconds)
+        }
+        nextState.sliceRepeat = {
+          ...state.sliceRepeat,
+          startTime: newStart,
+          endTime: newEnd,
+          isSliceSet: true,
+        }
+      } else {
+        nextState.sliceRepeat = {
+          ...state.sliceRepeat,
+          startTime: clampedTime,
+          isSliceSet: currentEnd !== null,
+        }
+      }
+      if (state.playerReady && nextState.sliceRepeat.startTime !== null) {
+        nextState.desiredPlayback = "playing"
+        commands.push({ type: "Seek", seconds: nextState.sliceRepeat.startTime })
+        commands.push({ type: "Play" })
+      }
+      break
+    }
+    case "UserSetSliceEnd": {
+      const minSliceSeconds = 1
+      const maxDuration = state.duration > 0 ? state.duration : null
+      const clampedTime =
+        maxDuration !== null ? clamp(event.seconds, 0, maxDuration) : Math.max(0, event.seconds)
+      const currentStart = state.sliceRepeat.startTime
+      // Ensure end is after start and stays within duration bounds.
+      if (currentStart !== null && clampedTime <= currentStart) {
+        let newEnd = clampedTime
+        let newStart = currentStart
+        if (newEnd - minSliceSeconds < newStart) {
+          newStart = newEnd - minSliceSeconds
+        }
+        if (newStart < 0) {
+          newStart = 0
+          newEnd = Math.max(newEnd, minSliceSeconds)
+        }
+        if (maxDuration !== null && newEnd > maxDuration) {
+          newEnd = maxDuration
+          newStart = Math.max(0, newEnd - minSliceSeconds)
+        }
+        nextState.sliceRepeat = {
+          ...state.sliceRepeat,
+          startTime: newStart,
+          endTime: newEnd,
+          isSliceSet: true,
+        }
+      } else {
+        nextState.sliceRepeat = {
+          ...state.sliceRepeat,
+          endTime: clampedTime,
+          isSliceSet: currentStart !== null,
+        }
+      }
+      if (state.playerReady && nextState.sliceRepeat.startTime !== null) {
+        nextState.desiredPlayback = "playing"
+        commands.push({ type: "Seek", seconds: nextState.sliceRepeat.startTime })
+        commands.push({ type: "Play" })
+      }
+      break
+    }
+    case "UserClearSlice": {
+      nextState.sliceRepeat = {
+        ...state.sliceRepeat,
+        startTime: null,
+        endTime: null,
+        isSliceSet: false,
+      }
+      break
+    }
+    case "UserSetSliceRepeatEnabled": {
+      nextState.sliceRepeat = {
+        ...state.sliceRepeat,
+        isActive: event.enabled,
+      }
+      break
+    }
+    case "UserSetSliceAutoRepeat": {
+      nextState.sliceRepeat = {
+        ...state.sliceRepeat,
+        autoRepeat: event.autoRepeat,
+      }
+      break
+    }
+    case "SliceBoundaryReached": {
+      if (state.sliceRepeat.isSliceSet && state.sliceRepeat.startTime !== null) {
+        if (state.sliceRepeat.autoRepeat) {
+          // Seek to slice start
+          const targetTime = state.sliceRepeat.startTime
+          nextState.currentTime = targetTime
+          if (state.playerReady) {
+            commands.push({ type: "Seek", seconds: targetTime })
+          }
+        } else {
+          commands.push({ type: "Pause" })
+          nextState.desiredPlayback = "paused"
+        }
       }
       break
     }

@@ -17,6 +17,7 @@ import { usePlayerStore } from "@/lib/store/player-store";
 import { motion } from "motion/react";
 import { Icons } from "@/components/icons";
 import { useIsPlaying } from "@/hooks/use-is-playing";
+import { SliceRepeatControls, SliceRepeatToggleButton } from "./slice-repeat-controls";
 
 type PlayerToggleButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
@@ -46,6 +47,7 @@ function PlayerToggleButton({
 export function PlayerControls() {
   const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
     usePlaylistStore();
+  const sliceRepeat = usePlayerStore((state) => state.sliceRepeat);
 
   const repeatLabel =
     repeatMode === "one"
@@ -80,10 +82,15 @@ export function PlayerControls() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <TimeDisplay className="motion-preset-blur-up-md motion-delay-500" />
-        <ProgressBar className="motion-opacity-in-0 motion-scale-in-0 motion-delay-200" />
-      </div>
+      {/* Slice Repeat Controls or Standard Progress Bar */}
+      {sliceRepeat.isActive ? (
+        <SliceRepeatControls className="motion-preset-blur-up-md motion-delay-200" />
+      ) : (
+        <div className="flex flex-col gap-2">
+          <TimeDisplay className="motion-preset-blur-up-md motion-delay-500" />
+          <ProgressBar className="motion-opacity-in-0 motion-scale-in-0 motion-delay-200" />
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-sm uppercase text-neutral-600">
         <div className="flex items-center gap-2 sm:min-w-[150px] -translate-x-2 sm:-translate-x-3">
@@ -110,6 +117,9 @@ export function PlayerControls() {
         <VolumeControl className="motion-preset-blur-up-md motion-delay-500" />
 
         <div className="flex items-center justify-end gap-2 sm:min-w-[150px] translate-x-2 sm:translate-x-3">
+          {/* Slice Repeat Toggle */}
+          <SliceRepeatToggleButton className="motion-preset-blur-up-md motion-delay-500" />
+
           <PlayerToggleButton
             active={repeatMode !== "off"}
             title={repeatLabel}
@@ -351,6 +361,7 @@ export const PlayPauseButton = React.memo(
       (state) => state.isLoadingNewVideo
     );
     const apiReady = usePlayerStore((state) => state.apiReady);
+    const sliceRepeat = usePlayerStore((state) => state.sliceRepeat);
 
     return (
       <motion.button
@@ -364,6 +375,16 @@ export const PlayPauseButton = React.memo(
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
+          if (
+            !isPlaying &&
+            sliceRepeat.isActive &&
+            sliceRepeat.isSliceSet &&
+            sliceRepeat.startTime !== null
+          ) {
+            dispatch({ type: "UserSeek", seconds: sliceRepeat.startTime });
+            dispatch({ type: "UserPlay" });
+            return;
+          }
           dispatch({ type: "UserTogglePlay" });
         }}
         disabled={isLoadingNewVideo || !apiReady}

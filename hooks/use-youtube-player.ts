@@ -232,5 +232,32 @@ export function useYouTubePlayer() {
     dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: shouldAutoplay })
   }, [currentTrack?.id, dispatch, isPlaying])
 
+  // Slice repeat monitoring - check if we've reached the slice end boundary
+  const sliceRepeat = usePlayerStore((state) => state.sliceRepeat)
+  const currentTime = usePlayerStore((state) => state.currentTime)
+
+  React.useEffect(() => {
+    if (!sliceRepeat.isActive || !sliceRepeat.isSliceSet) {
+      return
+    }
+
+    const { startTime, endTime, autoRepeat } = sliceRepeat
+    if (startTime === null || endTime === null) {
+      return
+    }
+
+    // Check if we've reached or passed the slice end boundary
+    // Use a small threshold (0.1s) to account for timing inaccuracies
+    if (currentTime >= endTime - 0.1) {
+      if (autoRepeat) {
+        // Seek back to slice start
+        dispatch({ type: "UserSeek", seconds: startTime })
+      } else {
+        // Pause at slice end
+        dispatch({ type: "UserPause" })
+      }
+    }
+  }, [currentTime, sliceRepeat, dispatch])
+
   return undefined
 }

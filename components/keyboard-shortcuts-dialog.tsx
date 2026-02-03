@@ -29,6 +29,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["→", "L"], description: "Skip forward 10s" },
       { keys: ["←", "J"], description: "Skip backward 10s" },
       { keys: ["Shift + →"], description: "Hold to play at 2x speed" },
+      { keys: ["S"], description: "Start slice repeat from current time" },
     ],
   },
   {
