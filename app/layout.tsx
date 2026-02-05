@@ -31,19 +31,16 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION_FULL,
   keywords: [
-    "YouTube music",
-    "playlist manager",
+    "YouTube player",
+    "YouTube audio player",
+    "YouTube video player",
+    "minimal player",
+    "lightweight player",
+    "background listening",
+    "playlist player",
     "music player",
-    "YouTube playlists",
-    "online music",
-    "streaming music",
-    "music organizer",
-    "mood music app",
-    "focus music",
-    "productivity music",
-    "ambient playlists",
-    "music for work",
-    "intent-based music",
+    "video playback",
+    "streaming player",
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -114,7 +111,7 @@ export const metadata: Metadata = {
   },
 
   // Additional metadata
-  category: "music",
+  category: "video",
 };
 
 export default function RootLayout({
