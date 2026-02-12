@@ -82,3 +82,4 @@ export const FEATURE_FLAGS = {
 }
 
 export const INTENT_DEFAULT_MAX_TRACKS = 10;
+export const CHANNEL_VIDEOS_LIMIT = 20;

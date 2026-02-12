@@ -5,6 +5,7 @@ import { syncChannelLatestVideo } from "@/app/actions/youtube-channels-sync";
 import { useChannelVideoPlaylistStore } from "@/lib/store/channels-video-playlist-store";
 import type { Track } from "@/lib/types/playlist";
 import { useChannelsStore } from "@/lib/store/channels-store";
+import { CHANNEL_VIDEOS_LIMIT } from "@/lib/constants";
 
 type StreamVideo = {
   id?: string;
@@ -26,14 +27,12 @@ export function ChannelsDataLoader() {
   const channelIdsKey = useMemo(() => channelIds.join(","), [channelIds]);
   console.debug(`[ChannelsDataLoader] Channel IDs: ${channelIdsKey}`);
 
-  const LIMIT = 15; // TODO: Move this to a config
-
   const videos = useQuery(
     api.channelVideos.getLatestVideosByChannelIds,
     channelIds.length > 0
       ? {
         channelIds,
-        limit: LIMIT,
+        limit: CHANNEL_VIDEOS_LIMIT,
       }
       : "skip"
   );
@@ -65,7 +64,7 @@ export function ChannelsDataLoader() {
           console.debug(`[ChannelsDataLoader] Syncing channel: ${channelId}`);
           const result = await syncChannelLatestVideo(
             channelId,
-            LIMIT
+            CHANNEL_VIDEOS_LIMIT
           );
           console.debug(
             `[ChannelsDataLoader] Sync result for ${channelId}:

@@ -54,11 +54,23 @@ const TYPE_FILTERS = {
 } as const;
 
 // YouTube duration filter parameters (only applies to videos)
-const DURATION_FILTERS = {
+export type DurationFilter = "short" | "long" | "any";
+
+const DURATION_FILTER_OPTIONS: {
+  value: DurationFilter;
+  label: string;
+  description: string;
+}[] = [
+  { value: "any", label: "Any", description: "No duration filter" },
+  { value: "short", label: "Short", description: "Under 4 minutes" },
+  { value: "long", label: "Long", description: "Over 20 minutes" },
+];
+
+const DURATION_FILTERS: Record<DurationFilter, string> = {
   short: "EgQQARAB", // Short videos (<4 minutes)
   long: "EgQQARAC", // Long videos (>20 minutes)
   any: "", // Any duration (no filter)
-} as const;
+};
 
 // Types for unofficial YouTube search API response structures
 interface YouTubeSearchVideoRenderer {

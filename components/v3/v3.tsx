@@ -128,10 +128,13 @@ export default function Home() {
         <AppHeader />
 
         <div className="flex-1 min-h-0 overflow-hidden">
+
+          {/* Global Toolbar */}
           <div className="flex flex-col flex-none gap-3 mb-3 sm:flex-row sm:items-center sm:mb-4">
             <PlayUrlDialog />
           </div>
 
+          {/* Main Content */}
           <AnimatePresence mode="wait" initial={false}>
             {view === "grid" ? (
               <div className="grid h-full min-h-0 grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3 overflow-y-auto lg:overflow-y-hidden">
