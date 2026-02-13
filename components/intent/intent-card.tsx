@@ -47,17 +47,17 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
     gradientOverrides[playlist.id] ?? intent?.gradientClassName;
 
   return (
-      <div
-        className={cn(
-          "relative group trans w-full flex min-h-36 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left sm:min-h-32",
-          "hover:scale-[102%]",
-          "transition-colors hover:bg-white/6 active:bg-white/8",
+    <div
+      className={cn(
+        "relative group trans w-full flex min-h-36 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left sm:min-h-40",
+        "hover:scale-[101%]",
+        "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-[radial-gradient(60%_60%_at_20%_10%,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_70%)] after:opacity-50",
         "active:scale-95",
         isActive ? "intent-card-active" : "intent-card",
         gradientClassName &&
-          (isActive ? `${gradientClassName}-active` : gradientClassName)
+        (isActive ? `${gradientClassName}-active` : gradientClassName)
       )}
     >
       <button
@@ -132,9 +132,6 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
       </div>
 
       <div className="relative z-20 pointer-events-none flex flex-col gap-1">
-        <div className="text-[11px]/[14px] uppercase tracking-[0.3em] text-white/60 md:text-xs/tight">
-          Intent
-        </div>
         <div className="relative flex items-center gap-2">
           <AnimatePresence>
             {isActive && (
@@ -181,7 +178,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             )}
           </AnimatePresence>
           <motion.div
-            className="text-base/tight md:text-lg/tight font-normal text-white"
+            className={cn("text-lg/tight md:text-xl/tight font-normal text-foreground trans", isActive ? "text-primary" : "text-foreground/80 hover:text-foreground")}
             layoutId={`intent-name-${playlist.id}`}
             layout="position"
             transition={
@@ -193,11 +190,11 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             {playlist.name}
           </motion.div>
         </div>
-          <div className="line-clamp-2 text-[12px]/[16px] text-white/65 md:text-xs/tight">
-            {intent?.description ?? ""}
-          </div>
+        <div className="line-clamp-2 text-[12px]/[16px] text-muted-foreground md:text-xs/tight">
+          {intent?.description ?? ""}
+        </div>
       </div>
-      <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-white/60">
+      <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-muted-foreground font-mono">
         <span>{trackCount} tracks</span>
       </div>
     </div>

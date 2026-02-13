@@ -75,7 +75,7 @@ export function TrackItemMedium({
   return (
     <motion.div
       className={cn(
-        "group flex items-center gap-3 cursor-pointer rounded-lg border border-white/5 bg-white/5 px-3 py-3 transition-colors hover:bg-white/10 sm:py-2"
+        "group flex items-center gap-3 cursor-pointer rounded-lg border border-white/5 px-3 py-3 transition-colors bg-card/20 hover:bg-card/35 sm:py-2"
       )}
       onClick={onClick}
       layoutId={`track-item-${track.id}`}
@@ -124,7 +124,7 @@ export function TrackItemMedium({
         >
           {track.title}
         </motion.div>
-        <div className="flex items-center gap-1.5 text-xs text-white/60">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5 truncate">
             {track.authorThumbnail ? (
               <img
@@ -156,7 +156,7 @@ export function TrackItemMedium({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="h-9 w-9 text-zinc-200 opacity-100 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
+            className="h-9 w-9 text-muted-foreground opacity-100 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
               onRemove();

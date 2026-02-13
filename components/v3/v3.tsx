@@ -236,7 +236,7 @@ export default function Home() {
         <div className="flex-1 min-h-0 overflow-hidden">
 
           {/* Global Toolbar */}
-          <div className="mb-3 flex flex-none flex-col gap-3 sm:mb-4 sm:flex-row sm:items-center">
+          <div className="mb-3 flex flex-none flex-col gap-3 my-2 sm:mb-4 sm:flex-row sm:items-center px-px-secondary">
             <PlayUrlDialog />
             <form
               className="flex w-full items-center gap-2 sm:max-w-2xl"
@@ -245,13 +245,13 @@ export default function Home() {
                 void handleSearchSubmit();
               }}
             >
-              <div className="relative flex-1">
+              <div className="relative flex-none w-full sm:max-w-sm focus-within:max-w-md trans">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
                 <Input
                   value={query}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="Search YouTube videos..."
-                  className="h-10 rounded-xl border-white/10 bg-white/5 pl-9 pr-10 text-white placeholder:text-white/35"
+                  className="h-10 rounded-xl focus-visible:ring-0 border-white/10 dark:border-white/10 dark:focus-visible:bg-white/10 bg-white/5 dark:bg-white/5 pl-9 pr-10 text-white placeholder:text-white/35 dark:placeholder:text-white/35"
                 />
                 {isSearching ? (
                   <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/45" />
@@ -267,20 +267,13 @@ export default function Home() {
                   <X className="h-4 w-4" />
                 </Button>
               ) : null}
-              <Button
-                type="submit"
-                disabled={!query.trim() || isSearching}
-                className="h-10 rounded-xl bg-white px-5 text-black hover:bg-white/90"
-              >
-                Search
-              </Button>
             </form>
           </div>
 
           {/* Main Content */}
           <AnimatePresence mode="wait" initial={false}>
             {isSearchActive ? (
-              <div className="h-full min-h-0">
+              <div className="h-full min-h-0 px-px-secondary">
                 <YouTubeSearchResultsSection
                   query={query}
                   isSearching={isSearching}
@@ -293,10 +286,10 @@ export default function Home() {
             ) : view === "grid" ? (
               <div className="grid h-full min-h-0 grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3 overflow-y-auto lg:overflow-y-hidden">
                 <div className="min-h-0 lg:col-span-2 flex flex-col">
-                  <div className="sticky top-0 z-10 h-12 backdrop-blur flex items-center">
+                  <div className="sticky top-0 z-10 h-12 backdrop-blur flex items-center px-px-secondary">
                     <h2 className="h2">Intents</h2>
                   </div>
-                  <div className="flex-none lg:flex-1 min-h-0 lg:overflow-y-auto">
+                  <div className="flex-none lg:flex-1 min-h-0 lg:overflow-y-auto py-2 px-px-secondary">
                     <IntentGridSection intentPlaylists={intentPlaylists} />
                     <div className="h-(--bottom-spacing) flex-none"></div>
                   </div>
@@ -305,7 +298,7 @@ export default function Home() {
                 <LatestVideosSidebar className="flex-none lg:flex-1 min-h-0 lg:col-span-1 flex flex-col" />
               </div>
             ) : view === "intent" ? (
-              <div className="h-full min-h-0 overflow-y-auto">
+              <div className="h-full min-h-0 overflow-y-auto px-px-secondary">
                 <IntentDetailSection key="detail" />
               </div>
             ) : null}

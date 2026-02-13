@@ -1,6 +1,6 @@
 export function AppHeader() {
   return (
-    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2">
+    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2 px-px-secondary">
       <p className="text-[11px] uppercase tracking-[0.3em] text-neutral-600 sm:text-xs sm:tracking-widest">
         Curate & Play & Focus
       </p>

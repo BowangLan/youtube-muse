@@ -163,14 +163,14 @@ export function TrackItemSmall({
           justifyContent: align === "right" ? "flex-end" : "flex-start",
         }}
       >
-        <span className="text-xs text-white/60 text-center hidden flex-none sm:inline-block w-10">
+        <span className="text-xs text-muted-foreground text-center hidden flex-none sm:inline-block w-10">
           {formatTime(track.duration)}
         </span>
         <motion.div
           layout
           className={cn(
-            "truncate text-sm text-white text-left md:text-right group-hover:translate-x-1 trans",
-            !isCurrentTrack && "text-white/60 hover:text-white"
+            "truncate text-sm text-foreground text-left md:text-right group-hover:translate-x-1 trans",
+            !isCurrentTrack && "text-muted-foreground hover:text-foreground"
           )}
         >
           {track.title}

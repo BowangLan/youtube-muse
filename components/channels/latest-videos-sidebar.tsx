@@ -254,18 +254,18 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
         <div className="flex-1 min-h-0 space-y-5 overflow-y-auto sm:space-y-6">
           {groupedTracks.map((group) => (
             <div key={group.dateKey} className="space-y-2">
-              <div className="flex items-center gap-2 px-1">
-                <h3 className="text-sm font-medium text-white/80">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium text-foreground/80">
                   {group.label}
                   {!group.isToday &&
                     group.daysAgo !== undefined &&
                     group.daysAgo > 0 && (
-                      <span className="ml-3 text-white/50">
+                      <span className="ml-3 text-muted-foreground">
                         {group.daysAgo} {group.daysAgo === 1 ? "day" : "days"} ago
                       </span>
                     )}
                   {group.isToday && (
-                    <span className="ml-3 text-white/50">Today</span>
+                    <span className="ml-3 text-muted-foreground">Today</span>
                   )}
                 </h3>
               </div>
