@@ -27,6 +27,7 @@ export type PlayerEvent =
   | { type: "ApiReady" }
   | { type: "PlayerReady"; duration: number }
   | { type: "PlayerStateChanged"; state: PlaybackState; duration?: number }
+  | { type: "PlayerLoadFailed"; reason?: string }
   | { type: "TimeTick"; currentTime: number }
   | { type: "TrackSelected"; videoId: string; autoplay: boolean }
   | { type: "UserTogglePlay" }

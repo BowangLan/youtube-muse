@@ -32,6 +32,7 @@ export interface YTPlayerOptions {
   events?: {
     onReady?: (event: YTPlayerEvent) => void;
     onStateChange?: (event: YTPlayerEvent) => void;
+    onError?: (event: YTPlayerEvent) => void;
   };
 }
 

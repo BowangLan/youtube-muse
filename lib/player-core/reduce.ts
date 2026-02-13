@@ -205,7 +205,7 @@ export function reducePlayerState(
 
       if (
         state.mode.tag === "loading" &&
-        ["cued", "playing", "paused", "buffering"].includes(event.state)
+        ["unstarted", "cued", "playing", "paused", "buffering"].includes(event.state)
       ) {
         nextState.mode = { tag: "ready", videoId: state.mode.videoId }
       }
@@ -233,6 +233,16 @@ export function reducePlayerState(
       if (event.state === "ended") {
         commands.push({ type: "RequestNextTrack" })
       }
+      break
+    }
+    case "PlayerLoadFailed": {
+      nextState.mode = {
+        tag: "error",
+        reason: event.reason ?? "Failed to load video",
+      }
+      nextState.desiredPlayback = "paused"
+      nextState.observedPlayback = "paused"
+      nextState.pendingPlayState = null
       break
     }
     case "UserToggleSliceRepeatMode": {

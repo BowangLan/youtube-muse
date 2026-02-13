@@ -174,6 +174,13 @@ export function useYouTubePlayer() {
             syncTrackMetadataFromPlayer(event.target, { duration })
           }
         },
+        onError: (event: YTPlayerEvent) => {
+          console.error("YouTube player load error:", event.data)
+          dispatch({
+            type: "PlayerLoadFailed",
+            reason: `YouTube player error code: ${event.data}`,
+          })
+        },
       },
     })
 
