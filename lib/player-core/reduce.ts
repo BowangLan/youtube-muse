@@ -1,6 +1,12 @@
 import type { PlayerCommand, PlayerEvent, PlayerState } from "./types"
 import { initialPlayerState } from "./types"
 
+/* eslint-disable no-console */
+const DEBUG_PLAYER = true
+const debug = (...args: unknown[]) => {
+  if (DEBUG_PLAYER) console.log("[player-reduce]", ...args)
+}
+
 const SEEK_STEP_SECONDS = 10
 
 const clamp = (value: number, min: number, max: number) => {
@@ -76,6 +82,10 @@ export function reducePlayerState(
       }
 
       if (state.mode.tag === "loading") {
+        debug("PlayerReady: firing DEFERRED Load", {
+          videoId: state.mode.videoId,
+          autoplay: state.mode.autoplay,
+        })
         commands.push({
           type: "Load",
           videoId: state.mode.videoId,
@@ -105,12 +115,21 @@ export function reducePlayerState(
         nextState.desiredPlayback = "playing"
       }
 
+      debug("TrackSelected", {
+        videoId: event.videoId,
+        autoplay: event.autoplay,
+        playerReady: state.playerReady,
+        willEmitLoad: state.playerReady,
+      })
+
       if (state.playerReady) {
         commands.push({
           type: "Load",
           videoId: event.videoId,
           autoplay: event.autoplay,
         })
+      } else {
+        debug("TrackSelected: Load DEFERRED (player not ready)")
       }
       break
     }

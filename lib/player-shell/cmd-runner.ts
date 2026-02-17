@@ -2,6 +2,12 @@ import type { PlayerCommand, PlayerEvent } from "@/lib/player-core/types"
 import type { YTPlayer } from "@/lib/types/youtube"
 import type { QueueAdapter } from "./queue-adapter"
 
+/* eslint-disable no-console */
+const DEBUG_PLAYER = true
+const debug = (...args: unknown[]) => {
+  if (DEBUG_PLAYER) console.log("[cmd-runner]", ...args)
+}
+
 interface CommandContext {
   getPlayer: () => YTPlayer | null
   dispatch: (event: PlayerEvent) => void
@@ -34,13 +40,21 @@ export function runPlayerCommands(
       }
       case "Load": {
         const player = context.getPlayer()
+        debug("Load command", {
+          videoId: command.videoId,
+          autoplay: command.autoplay,
+          hasPlayer: !!player,
+        })
         if (!player) break
 
         if (command.autoplay) {
+          debug("Load: loadVideoById (autoplay)")
           player.loadVideoById(command.videoId)
         } else if (typeof player.cueVideoById === "function") {
+          debug("Load: cueVideoById (no autoplay)")
           player.cueVideoById(command.videoId)
         } else {
+          debug("Load: loadVideoById + pause (fallback)")
           player.loadVideoById(command.videoId)
           player.pauseVideo()
         }

@@ -1,5 +1,11 @@
 "use client";
 
+/* eslint-disable no-console */
+const DEBUG_PLAYER = true;
+const debug = (...args: unknown[]) => {
+  if (DEBUG_PLAYER) console.log("[LatestVideosSidebar]", ...args);
+};
+
 import * as React from "react";
 import { useChannelsStore } from "@/lib/store/channels-store";
 import {
@@ -171,18 +177,81 @@ export function LatestVideosSidebar({ className }: LatestVideosSidebarProps) {
     [tracks]
   );
 
+  // Debug: log when playlist/player state changes (initial + on track change)
+  const playerReady = usePlayerStore((state) => state.playerReady);
+  const apiReady = usePlayerStore((state) => state.apiReady);
+  const playerMode = usePlayerStore((state) => state.mode);
+  const desiredPlayback = usePlayerStore((state) => state.desiredPlayback);
+  const currentTrackFromStore = usePlaylistStore((state) => state.getCurrentTrack());
+
+  React.useEffect(() => {
+    if (!DEBUG_PLAYER) return;
+    debug("state changed", {
+      currentPlaylistId,
+      currentTrackIndex,
+      currentActualTrackIndex,
+      currentTrackId: currentTrackFromStore?.id ?? null,
+      playerReady,
+      apiReady,
+      playerMode,
+      desiredPlayback,
+      channelPlaylistExists: !!channelPlaylist,
+      channelPlaylistTrackCount: channelPlaylist?.tracks.length ?? 0,
+    });
+  }, [
+    currentPlaylistId,
+    currentTrackIndex,
+    currentActualTrackIndex,
+    currentTrackFromStore?.id,
+    playerReady,
+    apiReady,
+    playerMode,
+    desiredPlayback,
+    channelPlaylist,
+  ]);
+
   const handleTrackClick = React.useCallback(
     (index: number) => {
+      const playlistState = usePlaylistStore.getState();
+      const playerState = usePlayerStore.getState();
+      const trackBefore = playlistState.getCurrentTrack();
+      const playlistBefore = playlistState.playlists.find(
+        (p) => p.id === CHANNEL_VIDEO_PLAYLIST_ID
+      );
+
+      debug("handleTrackClick START", {
+        index,
+        isChannelPlaylistActive,
+        currentActualTrackIndex,
+        currentPlaylistId,
+        currentTrackIndex,
+        trackBefore: trackBefore?.id ?? null,
+        playlistExists: !!playlistBefore,
+        playlistTrackCount: playlistBefore?.tracks.length ?? 0,
+        playerReady: playerState.playerReady,
+        apiReady: playerState.apiReady,
+        mode: playerState.mode,
+        desiredPlayback: playerState.desiredPlayback,
+      });
+
       // If viewing a different playlist than the one currently playing, switch to it
       if (!isChannelPlaylistActive) {
+        debug("handleTrackClick: switching playlist, then setting index", index);
         setCurrentPlaylist(CHANNEL_VIDEO_PLAYLIST_ID);
         // setCurrentPlaylist resets to index 0, so we need to set the correct index
         setCurrentTrackIndex(index);
+        const afterPlaylist = usePlaylistStore.getState();
+        debug("handleTrackClick: after setCurrentPlaylist+setIndex", {
+          currentTrackIndex: afterPlaylist.currentTrackIndex,
+          trackNow: afterPlaylist.getCurrentTrack()?.id ?? null,
+        });
       } else if (currentActualTrackIndex === index) {
         // Clicking current track toggles play/pause
+        debug("handleTrackClick: toggling play/pause");
         dispatch({ type: "UserTogglePlay" });
       } else {
         // Switch to new track
+        debug("handleTrackClick: switching to track index", index);
         setCurrentTrackIndex(index);
       }
     },

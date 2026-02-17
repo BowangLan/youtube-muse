@@ -1,5 +1,11 @@
 "use client"
 
+/* eslint-disable no-console */
+const DEBUG_PLAYER = true
+const debug = (...args: unknown[]) => {
+  if (DEBUG_PLAYER) console.log("[useYouTubePlayer]", ...args)
+}
+
 import * as React from "react"
 import type { YTPlayer, YTPlayerEvent } from "@/lib/types/youtube"
 import { usePlayerStore, setPlayerCommandRunner } from "@/lib/store/player-store"
@@ -208,27 +214,44 @@ export function useYouTubePlayer() {
   const lastTrackIdRef = React.useRef<string | null>(null)
   const hasHadUserInteractionRef = React.useRef(false)
 
-  // Track user interactions to enable autoplay after first interaction
+  // Track user interactions to enable autoplay after first interaction.
+  // Use CAPTURE phase so we run before the target's handler - React flushes effects
+  // before the event bubbles to window, so capture phase ensures we mark interaction
+  // before any TrackSelected effect runs.
   React.useEffect(() => {
-    const markUserInteraction = () => {
+    const markUserInteraction = (e: Event) => {
+      debug("markUserInteraction fired", e.type, "hasHadUserInteraction was", hasHadUserInteractionRef.current)
       hasHadUserInteractionRef.current = true
     }
 
-    // Listen for any user interaction
-    window.addEventListener("click", markUserInteraction, { once: true })
-    window.addEventListener("keydown", markUserInteraction, { once: true })
-    window.addEventListener("touchstart", markUserInteraction, { once: true })
+    const opts = { once: true, capture: true }
+    window.addEventListener("click", markUserInteraction, opts)
+    window.addEventListener("keydown", markUserInteraction, opts)
+    window.addEventListener("touchstart", markUserInteraction, opts)
 
     return () => {
-      window.removeEventListener("click", markUserInteraction)
-      window.removeEventListener("keydown", markUserInteraction)
-      window.removeEventListener("touchstart", markUserInteraction)
+      window.removeEventListener("click", markUserInteraction, opts)
+      window.removeEventListener("keydown", markUserInteraction, opts)
+      window.removeEventListener("touchstart", markUserInteraction, opts)
     }
   }, [])
 
   React.useEffect(() => {
     const nextTrackId = currentTrack?.id ?? null
+    const playerState = usePlayerStore.getState()
+
+    debug("TrackSelected effect run", {
+      nextTrackId,
+      lastTrackId: lastTrackIdRef.current,
+      hasHadUserInteraction: hasHadUserInteractionRef.current,
+      isPlaying,
+      playerReady: playerState.playerReady,
+      apiReady: playerState.apiReady,
+      mode: playerState.mode,
+    })
+
     if (!nextTrackId || nextTrackId === lastTrackIdRef.current) {
+      debug("TrackSelected effect: skipping (no track or same track)")
       return
     }
     lastTrackIdRef.current = nextTrackId
@@ -236,6 +259,11 @@ export function useYouTubePlayer() {
     // Only autoplay if user has interacted with the page (to comply with browser autoplay policies)
     // OR if we're already playing (track transition)
     const shouldAutoplay = hasHadUserInteractionRef.current || isPlaying
+    debug("TrackSelected effect: dispatching", {
+      videoId: nextTrackId,
+      shouldAutoplay,
+      reason: hasHadUserInteractionRef.current ? "user-interacted" : isPlaying ? "was-playing" : "no-autoplay",
+    })
     dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: shouldAutoplay })
   }, [currentTrack?.id, dispatch, isPlaying])
 
