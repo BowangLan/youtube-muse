@@ -23,8 +23,11 @@ export function IntentGridSection({
     <section aria-label="Intent Grid" className="space-y-6 md:space-y-8">
       <div
         className={cn(
-          "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4"
+          "grid gap-4"
         )}
+        style={{
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        }}
       >
         {intentPlaylists.map((playlist, index) => {
           const intent = intentMetadataByPlaylistId[playlist.id];

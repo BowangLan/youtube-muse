@@ -251,7 +251,7 @@ export function CreateIntentDialog({
     <button
       type="button"
       className={cn(
-        "relative group w-full flex min-h-32 flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl",
+        "relative group w-full flex min-h-36 sm:min-h-40 flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl",
         "border-2 border-dashed border-white/10 bg-white/[0.02]",
         "transition-all duration-300 hover:border-white/20 hover:bg-white/[0.04]",
         "text-white/40 hover:text-white/60"

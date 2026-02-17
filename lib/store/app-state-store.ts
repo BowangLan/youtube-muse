@@ -3,11 +3,15 @@ import { create } from "zustand"
 export type ViewMode = "grid" | "intent" | "stream"
 export type GridTab = "intents" | "streams"
 
+// new tabs
+export type V4Tab = "intents" | "channels"
+
 export type AppState = {
   isFocused: boolean
   view: ViewMode
   activePlaylistId: string | null
   gridTab: GridTab
+  activeTab: V4Tab
   isMiniPlayerPinned: boolean
 }
 
@@ -22,6 +26,8 @@ export type AppStateActions = {
   openStream: (playlistId: string) => void
   returnToGrid: (tab?: GridTab) => void
   closeIntent: () => void
+
+  setActiveTab: (tab: V4Tab) => void
 }
 
 export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
@@ -29,6 +35,7 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
   view: "grid",
   activePlaylistId: null,
   gridTab: "intents",
+  activeTab: "intents",
   isMiniPlayerPinned: false,
   toggleFocus: () => set((state) => ({ isFocused: !state.isFocused })),
   setView: (view) => set({ view }),
@@ -48,4 +55,6 @@ export const useAppStateStore = create<AppState & AppStateActions>((set) => ({
       gridTab: tab ?? state.gridTab,
     })),
   closeIntent: () => set({ view: "grid" }),
+
+  setActiveTab: (tab) => set({ activeTab: tab }),
 }))

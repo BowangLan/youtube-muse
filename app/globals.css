@@ -272,3 +272,7 @@
 .h2 {
   @apply text-sm font-medium text-white/60 uppercase tracking-wider;
 }
+
+.px-page {
+  @apply px-4 sm:px-6 lg:px-8;
+}

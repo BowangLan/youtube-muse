@@ -1,9 +1,8 @@
 "use client";
 
-import { usePlayerStore } from "@/lib/store/player-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
-import { formatTime, formatDate, extractChannelId } from "@/lib/utils/youtube";
+import { formatTime, extractChannelId } from "@/lib/utils/youtube";
 import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ function formatPublishedDate(publishedAt?: string): string {
   const now = new Date();
   const published = new Date(publishedAt);
 
-  // Validate that the date is valid
   if (isNaN(published.getTime())) return "";
 
   const diffMs = now.getTime() - published.getTime();
@@ -30,28 +28,20 @@ function formatPublishedDate(publishedAt?: string): string {
   const diffDays = Math.floor(diffHours / 24);
   const diffWeeks = Math.floor(diffDays / 7);
 
-  // Less than 1 hour
   if (diffMinutes < 60) {
     if (diffMinutes < 1) return "Just now";
     return `${diffMinutes} ${diffMinutes === 1 ? "minute" : "minutes"} ago`;
   }
-
-  // Less than 24 hours
   if (diffHours < 24) {
     return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
   }
-
-  // Less than 7 days
   if (diffDays < 7) {
     return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
   }
-
-  // Less than 4 weeks
   if (diffWeeks < 4) {
     return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
   }
 
-  // Older: show absolute date
   return published.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -59,118 +49,121 @@ function formatPublishedDate(publishedAt?: string): string {
   });
 }
 
-export function TrackItemMedium({
+export function TrackCard({
   track,
   isCurrentTrack,
   onClick,
   onRemove,
-  card = true,
+  className,
 }: {
   track: Track;
   isCurrentTrack: boolean;
   onClick: () => void;
   onRemove?: () => void;
-  card?: boolean;
+  className?: string;
 }) {
-  // Use selectors to only subscribe to specific properties
   const isPlaying = useIsPlaying();
   const channel = useChannel(extractChannelId(track.authorUrl) ?? "");
 
   return (
-    <motion.div
+    <motion.article
       className={cn(
-        "group flex items-center gap-3 cursor-pointer my-3 transition-colors",
-        card && "rounded-lg border border-white/5 my-0 px-3 py-3 bg-card/20 hover:bg-card/35 sm:py-2",
+        "group flex flex-col overflow-hidden rounded-xl transition-colors cursor-pointer",
+        className
       )}
       onClick={onClick}
-      layoutId={`track-item-${track.id}`}
+      layoutId={`track-card-${track.id}`}
     >
       {/* Thumbnail */}
-      <div className="relative shrink-0">
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-xl">
         <img
           src={track.thumbnailUrl}
           alt={track.title}
-          className="w-14 aspect-video rounded-md object-cover shrink-0"
+          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
           loading="lazy"
         />
         <AnimatePresence>
           {isCurrentTrack && (
             <>
-              {/* Overlay */}
               <motion.div
-                className="absolute inset-0 bg-black/70 rounded-md"
+                className="absolute inset-0 bg-black/70"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-              ></motion.div>
+              />
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="absolute top-1/2 -translate-y-1/2 right-1/2 z-20 translate-x-1/2 group-hover:hidden"
+                className="absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 group-hover:hidden"
               >
                 <PlayingIndicatorSmall isPlaying={isPlaying} />
               </motion.div>
             </>
           )}
         </AnimatePresence>
+        {/* Duration badge */}
+        <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white/90">
+          {formatTime(track.duration)}
+        </span>
+        {/* Remove button overlay */}
+        {onRemove && (
+          <div className="absolute top-2 right-2 z-20 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="h-8 w-8 bg-black/60 text-white hover:bg-black/80"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <motion.div
-          layout
-          className={cn(
-            "truncate text-sm font-medium text-foreground trans",
-            !isCurrentTrack && "text-foreground/80 group-hover:text-foreground"
-          )}
-        >
-          {track.title}
-        </motion.div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5 truncate">
+      <div className="flex min-w-0 flex-1 flex-col gap-1 py-3">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex min-w-0 items-center gap-1.5 self-start">
             {channel?.thumbnailUrl ? (
               <img
                 src={channel.thumbnailUrl}
                 alt={track.author}
-                className="h-3 w-3 shrink-0 rounded-full object-cover"
+                className="size-8 shrink-0 rounded-full object-cover"
               />
             ) : (
-              <User className="h-3 w-3 shrink-0" />
+              <User className="size-8 shrink-0" />
             )}
-            <span className="truncate">{channel?.title}</span>
           </span>
-          <span className="shrink-0">•</span>
-          <span className="shrink-0">{formatTime(track.duration)}</span>
-          {track.publishedAt && (
-            <>
-              <span className="shrink-0">•</span>
-              <span className="shrink-0">
-                {formatPublishedDate(track.publishedAt)}
-              </span>
-            </>
-          )}
+
+          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+            <h3
+              className={cn(
+                "line-clamp-2 text-sm/tight font-medium text-foreground transition-colors",
+                !isCurrentTrack && "text-foreground/80 group-hover:text-foreground"
+              )}
+            >
+              {track.title}
+            </h3>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="truncate">{channel?.title ?? track.author}</span>
+              {track.publishedAt && (
+                <>
+                  <span className="shrink-0">•</span>
+                  <span className="shrink-0">
+                    {formatPublishedDate(track.publishedAt)}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Remove button */}
-      <div className="flex items-center justify-end">
-        {onRemove && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="h-9 w-9 text-muted-foreground opacity-100 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" />
-          </Button>
-        )}
-      </div>
-    </motion.div>
+    </motion.article>
   );
 }

@@ -1,0 +1,106 @@
+"use client";
+
+import * as React from "react";
+import { Loader2, Search, X } from "lucide-react";
+import { PlayUrlDialog } from "@/components/player/play-url-dialog";
+import { searchYouTubeUnofficial, type SearchVideoResult } from "@/app/actions/youtube-search-unofficial";
+import {
+  useYouTubeSearchStore,
+} from "@/lib/store/youtube-search-store";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { V4TabsSection } from "./v4-tabs-list";
+
+export function V4Header() {
+  const query = useYouTubeSearchStore((state) => state.query);
+  const isSearchActive = useYouTubeSearchStore((state) => state.isActive);
+  const isSearching = useYouTubeSearchStore((state) => state.isSearching);
+  const setSearchQuery = useYouTubeSearchStore((state) => state.setQuery);
+  const startSearch = useYouTubeSearchStore((state) => state.startSearch);
+  const setSearchResults = useYouTubeSearchStore((state) => state.setResults);
+  const setSearchError = useYouTubeSearchStore((state) => state.setError);
+  const clearSearch = useYouTubeSearchStore((state) => state.clearSearch);
+
+  const handleSearchSubmit = React.useCallback(async () => {
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) {
+      clearSearch();
+      return;
+    }
+
+    startSearch(normalizedQuery);
+    try {
+      const { results, error } = await searchYouTubeUnofficial(
+        normalizedQuery,
+        "video",
+        "any"
+      );
+      if (error) {
+        setSearchError(error);
+        return;
+      }
+
+      const videoResults = results.filter(
+        (result): result is SearchVideoResult => "videoId" in result
+      );
+      const filteredResults = videoResults.filter(
+        (result) => /^[a-zA-Z0-9_-]{11}$/.test(result.videoId)
+      );
+      const uniqueResults = Array.from(
+        new Map(filteredResults.map((result) => [result.videoId, result])).values()
+      );
+      setSearchResults(uniqueResults);
+    } catch (error) {
+      console.error("YouTube search failed:", error);
+      setSearchError("Failed to search videos. Please try again.");
+    }
+  }, [query, clearSearch, setSearchError, setSearchResults, startSearch]);
+
+  return (
+    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center">
+      <div className="flex flex-row items-center gap-3">
+        {/* Site name */}
+        <h1 className="text-base font-light leading-none md:text-lg">
+          YouTube Muse
+        </h1>
+        {/* <span className="text-xs text-neutral-500">curate & play & focus</span> */}
+
+        <V4TabsSection className="mx-8 flex-none" />
+
+        <div className="flex flex-1 items-center gap-3">
+          <PlayUrlDialog />
+          <form
+            className="flex w-full items-center gap-2 sm:max-w-2xl"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSearchSubmit();
+            }}
+          >
+            <div className="relative flex-none w-full sm:max-w-sm focus-within:max-w-md trans">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+              <Input
+                value={query}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search YouTube videos..."
+                className="h-10 rounded-xl focus-visible:ring-0 border-white/10 dark:border-white/10 dark:focus-visible:bg-white/10 bg-white/5 dark:bg-white/5 pl-9 pr-10 text-white placeholder:text-white/35 dark:placeholder:text-white/35"
+              />
+              {isSearching ? (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/45" />
+              ) : null}
+            </div>
+            {isSearchActive ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={clearSearch}
+                className="h-10 rounded-xl border-white/15 bg-white/5 px-3 text-white hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </form>
+        </div>
+      </div>
+    </div >
+  );
+}
