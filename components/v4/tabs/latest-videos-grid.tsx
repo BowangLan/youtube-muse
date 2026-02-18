@@ -409,30 +409,33 @@ export function LatestVideosGrid() {
                   </h3>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {group.tracks.map(({ track, originalIndex }, trackIndex) => (
-                    <motion.div
-                      key={track.id}
-                      className="motion-preset-blur-up-sm"
-                      style={{ "--motion-delay": `${groupIndex * 60 + trackIndex * 30}ms` } as React.CSSProperties}
-                      layout
-                      layoutId={`video-track-${track.id}`}
-                      transition={{
-                        duration: reduceMotion ? 0 : EASING_DURATION_CARD,
-                        ease: reduceMotion ? "linear" : EASING_EASE_OUT,
-                      }}
-                    >
-                      <TrackItemMedium
-                        track={track}
-                        isCurrentTrack={
-                          isChannelPlaylistActive &&
-                          currentActualTrackIndex === originalIndex
-                        }
-                        onClick={() => handleTrackClick(originalIndex)}
-                        onRemove={() => removeTrack(track.id)}
-                      // card={false}
-                      />
-                    </motion.div>
-                  ))}
+                  {group.tracks.map(({ track }, trackIndex) => {
+                    const fullIndex = tracks.findIndex((t) => t.id === track.id);
+                    return (
+                      <motion.div
+                        key={track.id}
+                        className="motion-preset-blur-up-sm"
+                        style={{ "--motion-delay": `${groupIndex * 60 + trackIndex * 30}ms` } as React.CSSProperties}
+                        layout
+                        layoutId={`video-track-${track.id}`}
+                        transition={{
+                          duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+                          ease: reduceMotion ? "linear" : EASING_EASE_OUT,
+                        }}
+                      >
+                        <TrackItemMedium
+                          track={track}
+                          isCurrentTrack={
+                            isChannelPlaylistActive &&
+                            currentActualTrackIndex === fullIndex
+                          }
+                          onClick={() => handleTrackClick(fullIndex)}
+                          onRemove={() => removeTrack(track.id)}
+                        // card={false}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             ))}
