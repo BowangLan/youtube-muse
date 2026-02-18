@@ -22,6 +22,8 @@ import type { Track } from "@/lib/types/playlist";
 import { V4TabContentHeader } from "../v4-tab-content-header";
 import { TrackItemMedium } from "@/components/playlist/track-item-medium";
 import { ChannelFilterButton } from "./channel-filter-button";
+import { motion, useReducedMotion } from "motion/react";
+import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 
 
 type GroupedTracks = {
@@ -122,6 +124,7 @@ function trackBelongsToChannel(track: Track, channelId: string): boolean {
 }
 
 export function LatestVideosGrid() {
+  const reduceMotion = useReducedMotion();
   const channels = useChannelsStore((state) => state.channels);
   const tracks = useChannelVideoPlaylistStore((state) => state.playlist.tracks);
   const [selectedChannelId, setSelectedChannelId] = React.useState<string | null>(null);
@@ -224,59 +227,50 @@ export function LatestVideosGrid() {
     channelPlaylist,
   ]);
 
-  const handleTrackClick = React.useCallback(
-    (index: number) => {
-      const playlistState = usePlaylistStore.getState();
-      const playerState = usePlayerStore.getState();
-      const trackBefore = playlistState.getCurrentTrack();
-      const playlistBefore = playlistState.playlists.find(
-        (p) => p.id === CHANNEL_VIDEO_PLAYLIST_ID
-      );
+  const handleTrackClick = (index: number) => {
+    const playlistState = usePlaylistStore.getState();
+    const playerState = usePlayerStore.getState();
+    const trackBefore = playlistState.getCurrentTrack();
+    const playlistBefore = playlistState.playlists.find(
+      (p) => p.id === CHANNEL_VIDEO_PLAYLIST_ID
+    );
 
-      debug("handleTrackClick START", {
-        index,
-        isChannelPlaylistActive,
-        currentActualTrackIndex,
-        currentPlaylistId,
-        currentTrackIndex,
-        trackBefore: trackBefore?.id ?? null,
-        playlistExists: !!playlistBefore,
-        playlistTrackCount: playlistBefore?.tracks.length ?? 0,
-        playerReady: playerState.playerReady,
-        apiReady: playerState.apiReady,
-        mode: playerState.mode,
-        desiredPlayback: playerState.desiredPlayback,
-      });
-
-      // If viewing a different playlist than the one currently playing, switch to it
-      if (!isChannelPlaylistActive) {
-        debug("handleTrackClick: switching playlist, then setting index", index);
-        setCurrentPlaylist(CHANNEL_VIDEO_PLAYLIST_ID);
-        // setCurrentPlaylist resets to index 0, so we need to set the correct index
-        setCurrentTrackIndex(index);
-        const afterPlaylist = usePlaylistStore.getState();
-        debug("handleTrackClick: after setCurrentPlaylist+setIndex", {
-          currentTrackIndex: afterPlaylist.currentTrackIndex,
-          trackNow: afterPlaylist.getCurrentTrack()?.id ?? null,
-        });
-      } else if (currentActualTrackIndex === index) {
-        // Clicking current track toggles play/pause
-        debug("handleTrackClick: toggling play/pause");
-        dispatch({ type: "UserTogglePlay" });
-      } else {
-        // Switch to new track
-        debug("handleTrackClick: switching to track index", index);
-        setCurrentTrackIndex(index);
-      }
-    },
-    [
+    debug("handleTrackClick START", {
+      index,
       isChannelPlaylistActive,
       currentActualTrackIndex,
-      dispatch,
-      setCurrentPlaylist,
-      setCurrentTrackIndex,
-    ]
-  );
+      currentPlaylistId,
+      currentTrackIndex,
+      trackBefore: trackBefore?.id ?? null,
+      playlistExists: !!playlistBefore,
+      playlistTrackCount: playlistBefore?.tracks.length ?? 0,
+      playerReady: playerState.playerReady,
+      apiReady: playerState.apiReady,
+      mode: playerState.mode,
+      desiredPlayback: playerState.desiredPlayback,
+    });
+
+    // If viewing a different playlist than the one currently playing, switch to it
+    if (!isChannelPlaylistActive) {
+      debug("handleTrackClick: switching playlist, then setting index", index);
+      setCurrentPlaylist(CHANNEL_VIDEO_PLAYLIST_ID);
+      // setCurrentPlaylist resets to index 0, so we need to set the correct index
+      setCurrentTrackIndex(index);
+      const afterPlaylist = usePlaylistStore.getState();
+      debug("handleTrackClick: after setCurrentPlaylist+setIndex", {
+        currentTrackIndex: afterPlaylist.currentTrackIndex,
+        trackNow: afterPlaylist.getCurrentTrack()?.id ?? null,
+      });
+    } else if (currentActualTrackIndex === index) {
+      // Clicking current track toggles play/pause
+      debug("handleTrackClick: toggling play/pause");
+      dispatch({ type: "UserTogglePlay" });
+    } else {
+      // Switch to new track
+      debug("handleTrackClick: switching to track index", index);
+      setCurrentTrackIndex(index);
+    }
+  };
 
   if (channels.length === 0) {
     return (
@@ -304,19 +298,37 @@ export function LatestVideosGrid() {
       {/* Header - horizontal list of channels */}
       <div className="flex-none">
         <div className="flex items-start gap-6 flex-1 min-w-0 overflow-x-auto py-3 mb-7">
-          {displayChannels.map((channel) => (
-            <ChannelFilterButton
+          {displayChannels.map((channel, index) => (
+            <motion.div
               key={channel.id}
-              channel={channel}
-              isSelected={selectedChannelId === channel.id}
-              onToggle={() =>
-                setSelectedChannelId((prev) =>
-                  prev === channel.id ? null : channel.id
-                )
-              }
-            />
+              className="motion-preset-blur-up-sm shrink-0"
+              style={{ "--motion-delay": `${index * 40}ms` } as React.CSSProperties}
+              layout
+              transition={{
+                duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+                ease: reduceMotion ? "linear" : EASING_EASE_OUT,
+              }}
+            >
+              <ChannelFilterButton
+                channel={channel}
+                isSelected={selectedChannelId === channel.id}
+                onToggle={() =>
+                  setSelectedChannelId((prev) =>
+                    prev === channel.id ? null : channel.id
+                  )
+                }
+              />
+            </motion.div>
           ))}
-          <div className="flex flex-col items-center gap-2 w-12 shrink-0">
+          <motion.div
+            className="motion-preset-blur-up-sm flex flex-col items-center gap-2 w-12 shrink-0"
+            style={{ "--motion-delay": `${displayChannels.length * 40}ms` } as React.CSSProperties}
+            layout
+            transition={{
+              duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+              ease: reduceMotion ? "linear" : EASING_EASE_OUT,
+            }}
+          >
             <ManageChannelsDialog
               trigger={
                 <button
@@ -329,7 +341,7 @@ export function LatestVideosGrid() {
               }
             />
             <span className="text-xs text-center truncate w-full max-w-12 font-medium invisible" aria-hidden>MC</span>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -369,8 +381,18 @@ export function LatestVideosGrid() {
           </div> */}
 
           <div className="flex-1 min-h-0 space-y-5 overflow-y-auto sm:space-y-6">
-            {groupedTracks.map((group) => (
-              <div key={group.dateKey} className="space-y-2">
+            {groupedTracks.map((group, groupIndex) => (
+              <motion.div
+                key={group.dateKey}
+                className="motion-preset-blur-up-sm space-y-2"
+                style={{ "--motion-delay": `${groupIndex * 60}ms` } as React.CSSProperties}
+                layout
+                layoutId={`video-group-${group.dateKey}`}
+                transition={{
+                  duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+                  ease: reduceMotion ? "linear" : EASING_EASE_OUT,
+                }}
+              >
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-medium text-foreground/80">
                     {group.label}
@@ -387,21 +409,32 @@ export function LatestVideosGrid() {
                   </h3>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {group.tracks.map(({ track, originalIndex }) => (
-                    <TrackItemMedium
+                  {group.tracks.map(({ track, originalIndex }, trackIndex) => (
+                    <motion.div
                       key={track.id}
-                      track={track}
-                      isCurrentTrack={
-                        isChannelPlaylistActive &&
-                        currentActualTrackIndex === originalIndex
-                      }
-                      onClick={() => handleTrackClick(originalIndex)}
-                      onRemove={() => removeTrack(track.id)}
-                    // card={false}
-                    />
+                      className="motion-preset-blur-up-sm"
+                      style={{ "--motion-delay": `${groupIndex * 60 + trackIndex * 30}ms` } as React.CSSProperties}
+                      layout
+                      layoutId={`video-track-${track.id}`}
+                      transition={{
+                        duration: reduceMotion ? 0 : EASING_DURATION_CARD,
+                        ease: reduceMotion ? "linear" : EASING_EASE_OUT,
+                      }}
+                    >
+                      <TrackItemMedium
+                        track={track}
+                        isCurrentTrack={
+                          isChannelPlaylistActive &&
+                          currentActualTrackIndex === originalIndex
+                        }
+                        onClick={() => handleTrackClick(originalIndex)}
+                        onRemove={() => removeTrack(track.id)}
+                      // card={false}
+                      />
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             <div className="h-(--bottom-spacing) flex-none"></div>

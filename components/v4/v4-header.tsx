@@ -3,10 +3,11 @@
 import * as React from "react";
 import { Loader2, Search, X } from "lucide-react";
 import { PlayUrlDialog } from "@/components/player/play-url-dialog";
-import { searchYouTubeUnofficial, type SearchVideoResult } from "@/app/actions/youtube-search-unofficial";
 import {
-  useYouTubeSearchStore,
-} from "@/lib/store/youtube-search-store";
+  searchYouTubeUnofficial,
+  type SearchVideoResult,
+} from "@/app/actions/youtube-search-unofficial";
+import { useYouTubeSearchStore } from "@/lib/store/youtube-search-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { V4TabsSection } from "./v4-tabs-list";
@@ -33,7 +34,7 @@ export function V4Header() {
       const { results, error } = await searchYouTubeUnofficial(
         normalizedQuery,
         "video",
-        "any"
+        "any",
       );
       if (error) {
         setSearchError(error);
@@ -41,13 +42,15 @@ export function V4Header() {
       }
 
       const videoResults = results.filter(
-        (result): result is SearchVideoResult => "videoId" in result
+        (result): result is SearchVideoResult => "videoId" in result,
       );
-      const filteredResults = videoResults.filter(
-        (result) => /^[a-zA-Z0-9_-]{11}$/.test(result.videoId)
+      const filteredResults = videoResults.filter((result) =>
+        /^[a-zA-Z0-9_-]{11}$/.test(result.videoId),
       );
       const uniqueResults = Array.from(
-        new Map(filteredResults.map((result) => [result.videoId, result])).values()
+        new Map(
+          filteredResults.map((result) => [result.videoId, result]),
+        ).values(),
       );
       setSearchResults(uniqueResults);
     } catch (error) {
@@ -57,7 +60,7 @@ export function V4Header() {
   }, [query, clearSearch, setSearchError, setSearchResults, startSearch]);
 
   return (
-    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center sticky top-0 bg-background/0 backdrop-blur-xl z-10">
+    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center sticky top-0 bg-background/0 backdrop-blur-xl z-10">
       <div className="flex flex-row items-center gap-3 flex-1 min-w-0">
         {/* Site name */}
         <h1 className="text-base font-light leading-none md:text-lg">
@@ -102,6 +105,6 @@ export function V4Header() {
           <PlayUrlDialog />
         </div>
       </div>
-    </div >
+    </div>
   );
 }
