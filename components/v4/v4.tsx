@@ -14,7 +14,6 @@ import { MiniPlayerViewDesktop } from "@/components/v3/mini-player-view";
 import { MiniPlayerViewMobile } from "@/components/v3/mini-player-view-mobile";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { YouTubePlayerContainer } from "@/components/player/youtube-player-container";
-import { FloatingPlayerPlaceholder } from "@/components/player/floating-player-placeholder";
 import { ChannelsDataLoader } from "@/components/data-loaders/channels-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
@@ -85,7 +84,6 @@ export default function Home() {
 
       <KeyboardShortcutsDialog />
       <KeyboardFeedback />
-      <FloatingPlayerPlaceholder />
 
       <div
         className={cn(
