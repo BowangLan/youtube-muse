@@ -5,7 +5,7 @@ import type { Playlist } from "@/lib/types/playlist";
 import type { IntentMetadata } from "@/lib/store/custom-intents-store";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -21,7 +21,7 @@ interface IntentCardProps {
 export function IntentCard({ playlist, intent }: IntentCardProps) {
   const reduceMotion = useReducedMotion();
   const dispatch = usePlayerStore((state) => state.dispatch);
-  const openIntent = useAppStateStore((state) => state.openIntent);
+  const openIntentDetail = useV4AppStateStore((state) => state.openIntentDetail);
   const trackCount = playlist.tracks.length;
   const setCurrentPlaylist = usePlaylistStore(
     (state) => state.setCurrentPlaylist,
@@ -68,7 +68,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          openIntent(playlist.id);
+          openIntentDetail(playlist.id);
         }}
         className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black/60"
       />

@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAppStateStore } from "@/lib/store/app-state-store";
+import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
@@ -34,8 +34,8 @@ import { EditIntentDialog } from "./edit-intent-dialog";
 import { AddTrackByUrlDialog } from "./add-track-by-url-dialog";
 
 export function IntentDetailSection() {
-  const activePlaylistId = useAppStateStore((state) => state.activePlaylistId);
-  const returnToGrid = useAppStateStore((state) => state.returnToGrid);
+  const activePlaylistId = useV4AppStateStore((state) => state.activePlaylistId);
+  const closeIntentDetail = useV4AppStateStore((state) => state.closeIntentDetail);
 
   const playlists = usePlaylistStore((state) => state.playlists);
   const currentPlaylistId = usePlaylistStore(
@@ -257,7 +257,7 @@ export function IntentDetailSection() {
     deletePlaylist(activePlaylistId);
 
     // Navigate back to grid view
-    returnToGrid("intents");
+    closeIntentDetail();
   }, [
     activePlaylistId,
     activeIntent,
@@ -265,7 +265,7 @@ export function IntentDetailSection() {
     currentPlaylistId,
     setCurrentPlaylist,
     deletePlaylist,
-    returnToGrid,
+    closeIntentDetail,
   ]);
 
   const handleSwitchGradient = React.useCallback(() => {
@@ -309,7 +309,7 @@ export function IntentDetailSection() {
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              returnToGrid("intents");
+              closeIntentDetail();
             }}
             size="icon"
             className="h-11 w-11 sm:h-10 sm:w-10"

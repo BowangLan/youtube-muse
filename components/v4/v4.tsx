@@ -4,19 +4,12 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
-import {
-  AppFooterMobileBottom,
-  AppFooterFixed,
-} from "@/components/layout/app-footer";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useAppStateStore } from "@/lib/store/app-state-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { AnimatedBackground } from "@/components/player/animated-background";
 import { useHasMounted } from "@/hooks/use-has-mounted";
-import { IntentGridSection } from "@/components/intent/intent-grid-section";
-import { IntentDetailSection } from "@/components/intent/intent-detail-section";
 import { MiniPlayerViewDesktop } from "@/components/v3/mini-player-view";
 import { MiniPlayerViewMobile } from "@/components/v3/mini-player-view-mobile";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -25,29 +18,18 @@ import { FloatingPlayerPlaceholder } from "@/components/player/floating-player-p
 import { ChannelsDataLoader } from "@/components/data-loaders/channels-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
-import { LatestVideosSidebar } from "@/components/channels/latest-videos-sidebar";
 import { parseDuration } from "@/lib/utils/youtube";
 import {
   SEARCH_RESULTS_PLAYLIST_ID,
   useYouTubeSearchStore,
 } from "@/lib/store/youtube-search-store";
-import { YouTubeSearchResultsSection } from "@/components/search/youtube-search-results-section";
 import { cn } from "@/lib/utils";
-import { V4TabsSection } from "./v4-tabs-list";
 import { V4TabsContent } from "./v4-tabs-content";
 import { V4Header } from "./v4-header";
 
 export default function Home() {
   const hasMounted = useHasMounted();
   const isMobile = useIsMobile();
-
-  const playlists = usePlaylistStore((state) => state.playlists);
-  const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
-  const currentTrackIndex = usePlaylistStore((state) => state.currentTrackIndex);
-  const isShuffleEnabled = usePlaylistStore((state) => state.isShuffleEnabled);
-  const shuffleOrder = usePlaylistStore((state) => state.shuffleOrder);
-  const setCurrentPlaylist = usePlaylistStore((state) => state.setCurrentPlaylist);
-  const setCurrentTrackIndex = usePlaylistStore((state) => state.setCurrentTrackIndex);
   const ensurePlaylist = usePlaylistStore((state) => state.ensurePlaylist);
   const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
 
@@ -56,31 +38,8 @@ export default function Home() {
   useInitializePlaylist();
 
   const apiReady = usePlayerStore((state) => state.apiReady);
-  const dispatch = usePlayerStore((state) => state.dispatch);
 
-  const view = useAppStateStore((state) => state.view);
-  const setGridTab = useAppStateStore((state) => state.setGridTab);
-  const intentMetadataByPlaylistId = useCustomIntentsStore(
-    (state) => state.intentMetadataByPlaylistId
-  );
-  const intentPlaylistOrder = useCustomIntentsStore(
-    (state) => state.intentPlaylistOrder
-  );
-  const hiddenBuiltInIntents = useCustomIntentsStore(
-    (state) => state.hiddenBuiltInIntents
-  );
-  const searchError = useYouTubeSearchStore((state) => state.error);
   const searchResults = useYouTubeSearchStore((state) => state.results);
-  const query = useYouTubeSearchStore((state) => state.query);
-  const isSearchActive = useYouTubeSearchStore((state) => state.isActive);
-  const isSearching = useYouTubeSearchStore((state) => state.isSearching);
-
-  React.useEffect(() => {
-    if (view === "intent") {
-      setGridTab("intents");
-    }
-  }, [view, setGridTab]);
-
 
   const searchTracks = React.useMemo(
     () =>
@@ -126,6 +85,7 @@ export default function Home() {
 
       <KeyboardShortcutsDialog />
       <KeyboardFeedback />
+      <FloatingPlayerPlaceholder />
 
       <div
         className={cn(
@@ -134,11 +94,6 @@ export default function Home() {
       >
         <V4Header />
         <V4TabsContent />
-
-        {/* {isMobile ? <AppFooterMobileBottom /> : <AppFooterFixed />} */}
-        <div className="h-3 w-full" />
-
-        <FloatingPlayerPlaceholder />
       </div>
     </main>
   );

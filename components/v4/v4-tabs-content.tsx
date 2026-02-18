@@ -1,6 +1,7 @@
-import { useAppStateStore, V4Tab } from "@/lib/store/app-state-store";
+import { useV4AppStateStore, V4Tab } from "@/lib/store/v4-app-state-store";
 import { AnimatePresence } from "motion/react";
 import { IntentGridSection } from "../intent/intent-grid-section";
+import { IntentDetailSection } from "../intent/intent-detail-section";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { useMemo } from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -38,10 +39,11 @@ function V4TabsContentChannels() {
 const TAB_TO_COMPONENT: Record<V4Tab, React.ComponentType> = {
   intents: V4TabsContentIntents,
   channels: V4TabsContentChannels,
+  "intent-detail": IntentDetailSection,
 };
 
 export function V4TabsContent() {
-  const activeTab = useAppStateStore((state) => state.activeTab);
+  const activeTab = useV4AppStateStore((state) => state.activeTab);
 
   const Component = TAB_TO_COMPONENT[activeTab];
 

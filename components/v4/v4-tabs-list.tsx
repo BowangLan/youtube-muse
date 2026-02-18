@@ -1,14 +1,14 @@
 import { V4TAB_ITEMS } from "./v4-tabs-config";
 import { V4TabsSectionView } from "./v4-tabs-section.view";
-import { useAppStateStore, V4Tab } from "@/lib/store/app-state-store";
+import { useV4AppStateStore, V4Tab } from "@/lib/store/v4-app-state-store";
 
 export function V4TabsSection({
   className,
 }: {
   className?: string;
 }) {
-  const activeTab = useAppStateStore((state) => state.activeTab);
-  const setActiveTab = useAppStateStore((state) => state.setActiveTab);
+  const activeTab = useV4AppStateStore((state) => state.activeTab);
+  const setActiveTab = useV4AppStateStore((state) => state.setActiveTab);
 
   const handleItemClick = (item: V4Tab) => {
     setActiveTab(item);
