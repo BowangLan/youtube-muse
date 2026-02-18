@@ -65,7 +65,26 @@ export default function Home() {
       "YouTube video search results",
       searchTracks
     );
-    setPlaylistTracks(SEARCH_RESULTS_PLAYLIST_ID, searchTracks);
+    const playlistState = usePlaylistStore.getState();
+    const isPlayingFromSearch =
+      playlistState.currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID;
+    const currentTrack = isPlayingFromSearch
+      ? playlistState.getCurrentTrack()
+      : null;
+
+    // Keep the currently playing search track in the playlist if it is not in the new results,
+    // so a new search cannot implicitly switch playback to the same index in the new list.
+    const nextTracks =
+      currentTrack &&
+      !searchTracks.some((track) => track.id === currentTrack.id)
+        ? [
+            ...searchTracks.slice(0, playlistState.currentTrackIndex),
+            currentTrack,
+            ...searchTracks.slice(playlistState.currentTrackIndex),
+          ]
+        : searchTracks;
+
+    setPlaylistTracks(SEARCH_RESULTS_PLAYLIST_ID, nextTracks);
   }, [ensurePlaylist, searchTracks, setPlaylistTracks]);
 
   if (!hasMounted || !apiReady) {

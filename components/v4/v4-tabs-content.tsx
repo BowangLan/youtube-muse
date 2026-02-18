@@ -48,13 +48,13 @@ function V4TabsContentSearch() {
   const results = useYouTubeSearchStore((state) => state.results);
 
   const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
-  const currentTrackIndex = usePlaylistStore((state) => state.currentTrackIndex);
+  const currentTrackId = usePlaylistStore((state) => state.getCurrentTrack()?.id ?? null);
   const setCurrentPlaylist = usePlaylistStore((state) => state.setCurrentPlaylist);
   const setCurrentTrackIndex = usePlaylistStore((state) => state.setCurrentTrackIndex);
 
   const currentVideoId =
     currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID
-      ? (results[currentTrackIndex]?.videoId ?? null)
+      ? currentTrackId
       : null;
 
   const handleResultClick = (index: number) => {
