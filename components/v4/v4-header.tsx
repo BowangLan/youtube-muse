@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { V4TabsSection } from "./v4-tabs-list";
 import { SearchIcon } from "../ui/search";
 import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
+import { cn } from "@/lib/utils";
 
 export function V4Header() {
   const query = useYouTubeSearchStore((state) => state.query);
@@ -25,7 +26,6 @@ export function V4Header() {
   const clearSearch = useYouTubeSearchStore((state) => state.clearSearch);
   const openSearch = useV4AppStateStore((state) => state.openSearch);
   const closeSearch = useV4AppStateStore((state) => state.closeSearch);
-  const [isSearchHovered, setIsSearchHovered] = React.useState(false);
 
   const handleSearchSubmit = React.useCallback(async () => {
     const normalizedQuery = query.trim();
@@ -68,7 +68,7 @@ export function V4Header() {
 
   return (
     <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center sticky top-0 bg-background/0 backdrop-blur-xl z-10">
-      <div className="flex flex-row items-center gap-3 flex-1 min-w-0">
+      <div className="flex flex-row items-center gap-3 flex-1 min-w-0 relative">
         {/* Site name */}
         <h1 className="text-base font-light leading-none md:text-lg">
           YouTube Muse
@@ -79,20 +79,23 @@ export function V4Header() {
 
         <div className="flex justify-end items-center gap-3 ml-auto">
           <form
-            className="flex w-full items-center gap-2 sm:max-w-2xl"
+            className={cn(
+              "flex w-fit items-center gap-2 trans",
+              isSearchActive && "absolute left-1/2 -translate-x-1/2",
+            )}
             onSubmit={(event) => {
               event.preventDefault();
               void handleSearchSubmit();
             }}
           >
             <div
-              className="relative flex-none w-xs focus-within:w-sm trans group"
-              onMouseEnter={() => setIsSearchHovered(true)}
-              onMouseLeave={() => setIsSearchHovered(false)}
+              className={cn(
+                "relative flex-none w-[20rem] focus-within:w-[calc(20rem+1rem)] trans group"
+              )}
             >
               <SearchIcon
                 size={16}
-                animate={isSearchHovered}
+                animate={isSearching}
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45"
               />
               <Input
@@ -101,9 +104,9 @@ export function V4Header() {
                 placeholder="Search YouTube videos..."
                 className="h-10 rounded-xl focus-visible:ring-0 border-white/10 dark:border-white/10 dark:focus-visible:bg-white/10 bg-white/5 dark:bg-white/5 pl-9 pr-10 text-white placeholder:text-white/35 dark:placeholder:text-white/35"
               />
-              {isSearching ? (
+              {/* {isSearching ? (
                 <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/45" />
-              ) : null}
+              ) : null} */}
             </div>
             {isSearchActive ? (
               <Button
