@@ -34,12 +34,11 @@ export function IntentGridSection({
             <motion.div
               key={playlist.id}
               className={cn(
-                "motion-preset-blur-up-lg",
-                `motion-delay-[${index * 50}ms]`,
+                "motion-preset-blur-up-md",
               )}
               style={
                 {
-                  "--motion-delay": `${index * 50}ms`,
+                  "--motion-delay": `${index * 40}ms`,
                 } as React.CSSProperties
               }
               layout
@@ -57,9 +56,10 @@ export function IntentGridSection({
         {/* Create Intent Button */}
         <motion.div
           key="create-intent"
+          className="motion-preset-blur-up-md"
           style={
             {
-              "--motion-delay": `${intentPlaylists.length * 100}ms`,
+              "--motion-delay": `${intentPlaylists.length * 40}ms`,
             } as React.CSSProperties
           }
           layout
