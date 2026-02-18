@@ -135,7 +135,7 @@ export default function Home() {
         <V4Header />
         <V4TabsContent />
 
-        {isMobile ? <AppFooterMobileBottom /> : <AppFooterFixed />}
+        {/* {isMobile ? <AppFooterMobileBottom /> : <AppFooterFixed />} */}
         <div className="h-3 w-full" />
 
         <FloatingPlayerPlaceholder />

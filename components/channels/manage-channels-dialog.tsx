@@ -95,9 +95,9 @@ export function ManageChannelsDialog({ trigger }: ManageChannelsDialogProps) {
       thumbnailUrl: result.thumbnail || "",
       customUrl: result.customUrl || undefined,
     });
-    setChannelQuery("");
-    setSearchResults([]);
-    setError(null);
+    // setChannelQuery("");
+    // setSearchResults([]);
+    // setError(null);
   };
 
   const resetForm = () => {

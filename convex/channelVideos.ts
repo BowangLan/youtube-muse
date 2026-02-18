@@ -29,8 +29,7 @@ export const getLatestVideosByChannelIds = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? 10, MAX_VIDEOS_PER_CHANNEL) // Cap at 30 videos
-    const videosPerChannel = Math.ceil(limit / args.channelIds.length) + 5 // Get a bit more per channel to ensure we have enough after sorting
+    const videosPerChannel = Math.min(args.limit ?? 20, MAX_VIDEOS_PER_CHANNEL)
 
     // Get latest videos from each channel
     const channelPromises = args.channelIds.map(channelId =>
@@ -43,12 +42,11 @@ export const getLatestVideosByChannelIds = query({
 
     const channelResults = await Promise.all(channelPromises)
 
-    // Merge all videos and sort by publishedAtMs desc
+    // Merge all channels' videos and sort by publishedAtMs desc
     const allVideos = channelResults
       .flat()
       .filter(video => video.publishedAtMs) // Only include videos with publish time
       .sort((a, b) => (b.publishedAtMs ?? 0) - (a.publishedAtMs ?? 0))
-      .slice(0, limit) // Take only the first N items
 
     return allVideos
   },

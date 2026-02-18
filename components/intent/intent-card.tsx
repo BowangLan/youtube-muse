@@ -49,7 +49,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
   return (
     <div
       className={cn(
-        "relative group trans w-full flex min-h-36 flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left sm:min-h-40",
+        "relative group trans w-full flex flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
         "hover:scale-[101%]",
         "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",

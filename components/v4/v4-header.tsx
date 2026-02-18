@@ -57,8 +57,8 @@ export function V4Header() {
   }, [query, clearSearch, setSearchError, setSearchResults, startSearch]);
 
   return (
-    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center">
-      <div className="flex flex-row items-center gap-3">
+    <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg motion-delay-500 sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center sticky top-0 bg-background/0 backdrop-blur-xl z-10">
+      <div className="flex flex-row items-center gap-3 flex-1 min-w-0">
         {/* Site name */}
         <h1 className="text-base font-light leading-none md:text-lg">
           YouTube Muse
@@ -67,8 +67,7 @@ export function V4Header() {
 
         <V4TabsSection className="mx-8 flex-none" />
 
-        <div className="flex flex-1 items-center gap-3">
-          <PlayUrlDialog />
+        <div className="flex justify-end items-center gap-3 ml-auto">
           <form
             className="flex w-full items-center gap-2 sm:max-w-2xl"
             onSubmit={(event) => {
@@ -99,6 +98,8 @@ export function V4Header() {
               </Button>
             ) : null}
           </form>
+
+          <PlayUrlDialog />
         </div>
       </div>
     </div >

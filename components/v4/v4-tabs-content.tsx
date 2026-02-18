@@ -19,9 +19,10 @@ function V4TabsContentIntents() {
 
 
   return (
-    <div className="mx-auto max-w-6xl sm:my-16">
+    <div className="mx-auto max-w-6xl sm:my-8">
       <V4TabContentHeader title="Latest Videos" />
       <IntentGridSection intentPlaylists={intentPlaylists} />
+      <div className="h-(--bottom-spacing) flex-none"></div>
     </div>
   );
 }

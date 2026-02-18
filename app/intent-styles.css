@@ -1,3 +1,8 @@
+.intent-card,
+.intent-card-active {
+  aspect-ratio: 4/3;
+}
+
 /* Metallic-like border sheen for intent cards.
    Uses inset shadows (not pseudo-elements) to avoid clobbering existing ::before/::after effects. */
 .intent-card {

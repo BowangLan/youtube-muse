@@ -13,7 +13,7 @@ import {
   CHANNEL_VIDEO_PLAYLIST_ID,
 } from "@/lib/store/channels-video-playlist-store";
 import { cn } from "@/lib/utils";
-import { Plus, Radio, Settings2, X } from "lucide-react";
+import { Plus, Radio, Settings2 } from "lucide-react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { ManageChannelsDialog } from "@/components/channels/manage-channels-dialog";
@@ -21,6 +21,7 @@ import { TrackCard } from "@/components/playlist/track-card";
 import type { Track } from "@/lib/types/playlist";
 import { V4TabContentHeader } from "../v4-tab-content-header";
 import { TrackItemMedium } from "@/components/playlist/track-item-medium";
+import { ChannelFilterButton } from "./channel-filter-button";
 
 
 type GroupedTracks = {
@@ -302,45 +303,19 @@ export function LatestVideosGrid() {
       <V4TabContentHeader title="Latest Videos" />
       {/* Header - horizontal list of channels */}
       <div className="flex-none">
-        <div className="flex items-start gap-6 flex-1 min-w-0 overflow-x-auto py-3 mb-6">
-          {displayChannels.map((channel) => {
-            const isSelected = selectedChannelId === channel.id;
-            return (
-              <button
-                key={channel.id}
-                type="button"
-                onClick={() =>
-                  setSelectedChannelId((prev) =>
-                    prev === channel.id ? null : channel.id
-                  )
-                }
-                className={cn(
-                  "flex flex-col items-center relative gap-2 w-16 shrink-0 group cursor-pointer select-none rounded-lg p-1 -m-1 transition-colors",
-                  isSelected && "rounded-full"
-                )}
-              >
-                <div className="relative">
-                  <img
-                    src={channel.thumbnailUrl}
-                    alt={channel.title}
-                    className={cn(
-                      "size-13 rounded-full object-cover trans"
-                    )}
-                  />
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                      <X className="size-4 text-white" />
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs text-center truncate w-full max-w-12 font-medium text-foreground/60 group-hover:text-foreground trans">
-                  {channel.title}
-                </span>
-
-                {/* an overlay that shows up when a channel is selected and hovered, with a X icon */}
-              </button>
-            );
-          })}
+        <div className="flex items-start gap-6 flex-1 min-w-0 overflow-x-auto py-3 mb-7">
+          {displayChannels.map((channel) => (
+            <ChannelFilterButton
+              key={channel.id}
+              channel={channel}
+              isSelected={selectedChannelId === channel.id}
+              onToggle={() =>
+                setSelectedChannelId((prev) =>
+                  prev === channel.id ? null : channel.id
+                )
+              }
+            />
+          ))}
           <div className="flex flex-col items-center gap-2 w-12 shrink-0">
             <ManageChannelsDialog
               trigger={
@@ -411,7 +386,7 @@ export function LatestVideosGrid() {
                     )}
                   </h3>
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-col gap-2">
                   {group.tracks.map(({ track, originalIndex }) => (
                     <TrackItemMedium
                       key={track.id}
