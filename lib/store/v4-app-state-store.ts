@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type V4Tab = "intents" | "channels" | "intent-detail";
+export type V4Tab = "intents" | "channels" | "intent-detail" | "search";
 
 export type V4AppState = {
   activeTab: V4Tab;
@@ -12,6 +12,8 @@ export type V4AppStateActions = {
   setActivePlaylist: (id: string | null) => void;
   openIntentDetail: (playlistId: string) => void;
   closeIntentDetail: () => void;
+  openSearch: () => void;
+  closeSearch: () => void;
 };
 
 export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
@@ -24,5 +26,7 @@ export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
       set({ activeTab: "intent-detail", activePlaylistId: playlistId }),
     closeIntentDetail: () =>
       set({ activeTab: "intents", activePlaylistId: null }),
+    openSearch: () => set({ activeTab: "search" }),
+    closeSearch: () => set({ activeTab: "intents" }),
   })
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { PlayUrlDialog } from "@/components/player/play-url-dialog";
 import {
   searchYouTubeUnofficial,
@@ -11,6 +11,8 @@ import { useYouTubeSearchStore } from "@/lib/store/youtube-search-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { V4TabsSection } from "./v4-tabs-list";
+import { SearchIcon } from "../ui/search";
+import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 
 export function V4Header() {
   const query = useYouTubeSearchStore((state) => state.query);
@@ -21,6 +23,9 @@ export function V4Header() {
   const setSearchResults = useYouTubeSearchStore((state) => state.setResults);
   const setSearchError = useYouTubeSearchStore((state) => state.setError);
   const clearSearch = useYouTubeSearchStore((state) => state.clearSearch);
+  const openSearch = useV4AppStateStore((state) => state.openSearch);
+  const closeSearch = useV4AppStateStore((state) => state.closeSearch);
+  const [isSearchHovered, setIsSearchHovered] = React.useState(false);
 
   const handleSearchSubmit = React.useCallback(async () => {
     const normalizedQuery = query.trim();
@@ -53,11 +58,13 @@ export function V4Header() {
         ).values(),
       );
       setSearchResults(uniqueResults);
+      openSearch();
     } catch (error) {
       console.error("YouTube search failed:", error);
       setSearchError("Failed to search videos. Please try again.");
+      openSearch();
     }
-  }, [query, clearSearch, setSearchError, setSearchResults, startSearch]);
+  }, [query, clearSearch, openSearch, setSearchError, setSearchResults, startSearch]);
 
   return (
     <div className="space-y-1.5 text-left motion-opacity-in-0 motion-blur-in-lg sm:space-y-2 px-page h-20 border-b border-white/10 flex items-center sticky top-0 bg-background/0 backdrop-blur-xl z-10">
@@ -78,8 +85,16 @@ export function V4Header() {
               void handleSearchSubmit();
             }}
           >
-            <div className="relative flex-none w-full sm:max-w-sm focus-within:max-w-md trans">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+            <div
+              className="relative flex-none w-xs focus-within:w-sm trans group"
+              onMouseEnter={() => setIsSearchHovered(true)}
+              onMouseLeave={() => setIsSearchHovered(false)}
+            >
+              <SearchIcon
+                size={16}
+                animate={isSearchHovered}
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45"
+              />
               <Input
                 value={query}
                 onChange={(event) => setSearchQuery(event.target.value)}
@@ -94,7 +109,7 @@ export function V4Header() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={clearSearch}
+                onClick={() => { clearSearch(); closeSearch(); }}
                 className="h-10 rounded-xl border-white/15 bg-white/5 px-3 text-white hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
