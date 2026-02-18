@@ -26,12 +26,12 @@ export function YouTubeSearchResultsSection({
 
   return (
     <section className="h-full min-h-0 overflow-y-auto pb-(--bottom-spacing)">
-      <div className="sticky top-0 z-10 mb-4 flex h-12 items-center backdrop-blur">
+      <div className="sticky top-0 mb-4 flex h-12 items-center backdrop-blur">
         <h2 className="h2">Search Results</h2>
       </div>
 
       {isSearching ? (
-        <div className="flex h-[50vh] items-center justify-center text-white/60">
+        <div className="flex h-[61.8vh] items-center justify-center text-white/60">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Searching YouTube...
         </div>
