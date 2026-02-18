@@ -27,385 +27,188 @@
 }
 
 .intent-card::before {
-  transition: background-image 0.3s ease-in-out;
+  transition: background 0.3s ease-in-out;
 }
 .intent-card-active::before {
-  transition: background-image 0.3s ease-in-out;
+  transition: background 0.3s ease-in-out;
 }
 
 /* Intent-specific gradients.
-   These are plain CSS so they don't rely on Tailwind class generation. */
+   Each uses a dark hue-tinted gradient following the pattern:
+   linear-gradient(135deg, <dark-hue-mid> 0%, <near-black-hue> 100%) */
 
-/* 1: Deep Focus - sky */
+/* 1: Deep Focus - dark blue */
 .intent-gradient-1::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(56, 189, 248, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1e3a4a 0%, #141e2a 100%);
 }
-
 .intent-gradient-1-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(56, 189, 248, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #2a4e64 0%, #141e2a 100%);
 }
 
-/* 2: Momentum - emerald */
+/* 2: Momentum - dark emerald */
 .intent-gradient-2::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(52, 211, 153, 0.16),
-    transparent
-  );
+  background: linear-gradient(135deg, #1e3d2a 0%, #141e18 100%);
 }
-
 .intent-gradient-2-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(52, 211, 153, 0.50),
-    transparent
-  );
+  background: linear-gradient(135deg, #2a5438 0%, #141e18 100%);
 }
 
-/* 3: Sprint - amber */
+/* 3: Sprint - dark amber */
 .intent-gradient-3::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(252, 211, 77, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #4a3d1e 0%, #2a2414 100%);
 }
-
 .intent-gradient-3-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(252, 211, 77, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #625228 0%, #2a2414 100%);
 }
 
-/* 4: Float - violet */
+/* 4: Float - dark violet */
 .intent-gradient-4::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(167, 139, 250, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #302040 0%, #1c1628 100%);
 }
-
 .intent-gradient-4-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(167, 139, 250, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #422c58 0%, #1c1628 100%);
 }
 
-/* 5: Background - zinc */
+/* 5: Background - dark zinc */
 .intent-gradient-5::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(212, 212, 216, 0.10),
-    transparent
-  );
+  background: linear-gradient(135deg, #2e2e32 0%, #1c1c1e 100%);
 }
-
 .intent-gradient-5-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(212, 212, 216, 0.38),
-    transparent
-  );
+  background: linear-gradient(135deg, #3e3e44 0%, #1c1c1e 100%);
 }
 
-/* 6: Grind - red */
+/* 6: Grind - dark red */
 .intent-gradient-6::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(248, 113, 113, 0.16),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d2020 0%, #221414 100%);
 }
-
 .intent-gradient-6-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(248, 113, 113, 0.50),
-    transparent
-  );
+  background: linear-gradient(135deg, #542a2a 0%, #221414 100%);
 }
 
-/* 7: Ultraviolet - purple */
+/* 7: Ultraviolet - deep purple */
 .intent-gradient-7::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(168, 85, 247, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #28183c 0%, #160e24 100%);
 }
-
 .intent-gradient-7-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(168, 85, 247, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #381e54 0%, #160e24 100%);
 }
 
-/* 8: Rainforest - cyan */
+/* 8: Rainforest - dark cyan */
 .intent-gradient-8::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(34, 211, 238, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1a3038 0%, #101e22 100%);
 }
-
 .intent-gradient-8-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(34, 211, 238, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #22404e 0%, #101e22 100%);
 }
 
-/* 9: Crimson Dusk - rose */
+/* 9: Crimson Dusk - dark rose */
 .intent-gradient-9::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(244, 63, 94, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d1e28 0%, #221218 100%);
 }
-
 .intent-gradient-9-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(244, 63, 94, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #542838 0%, #221218 100%);
 }
 
-/* 10: Solar Flare - amber */
+/* 10: Solar Flare - dark gold */
 .intent-gradient-10::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(245, 158, 11, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d3010 0%, #22200a 100%);
 }
-
 .intent-gradient-10-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(245, 158, 11, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #544216 0%, #22200a 100%);
 }
 
-/* 11: Electric Blue - cyan */
+/* 11: Electric Blue - dark blue-cyan */
 .intent-gradient-11::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(6, 182, 212, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1a2c3d 0%, #101820 100%);
 }
-
 .intent-gradient-11-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(6, 182, 212, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #223c52 0%, #101820 100%);
 }
 
-/* 12: Coral Sunset - pink */
+/* 12: Coral Sunset - dark pink */
 .intent-gradient-12::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(236, 72, 153, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d1e32 0%, #22121c 100%);
 }
-
 .intent-gradient-12-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(236, 72, 153, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #542844 0%, #22121c 100%);
 }
 
-/* 13: Ocean Depths - teal */
+/* 13: Ocean Depths - dark teal */
 .intent-gradient-13::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(20, 184, 166, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1a2e2e 0%, #101c1c 100%);
 }
-
 .intent-gradient-13-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(20, 184, 166, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #223e3e 0%, #101c1c 100%);
 }
 
-/* 14: Aurora Borealis - mint */
+/* 14: Aurora Borealis - dark mint */
 .intent-gradient-14::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(52, 211, 153, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1e2e28 0%, #121c18 100%);
 }
-
 .intent-gradient-14-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(52, 211, 153, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #283e36 0%, #121c18 100%);
 }
 
-/* 15: Sunset Beach - coral */
+/* 15: Sunset Beach - dark coral */
 .intent-gradient-15::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(251, 113, 133, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d2818 0%, #22180e 100%);
 }
-
 .intent-gradient-15-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(251, 113, 133, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #543820 0%, #22180e 100%);
 }
 
-/* 16: Emerald Forest - emerald */
+/* 16: Emerald Forest - dark emerald */
 .intent-gradient-16::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(16, 185, 129, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1a2e20 0%, #101c12 100%);
 }
-
 .intent-gradient-16-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(16, 185, 129, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #22402c 0%, #101c12 100%);
 }
 
-/* 17: Neon Nights - hot pink */
+/* 17: Neon Nights - dark hot pink */
 .intent-gradient-17::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(236, 72, 153, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3d1a30 0%, #221020 100%);
 }
-
 .intent-gradient-17-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(236, 72, 153, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #542242 0%, #221020 100%);
 }
 
-/* 18: Golden Hour - amber */
+/* 18: Golden Hour - dark amber */
 .intent-gradient-18::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(245, 158, 11, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #3a2c10 0%, #201a08 100%);
 }
-
 .intent-gradient-18-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(245, 158, 11, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #503c16 0%, #201a08 100%);
 }
 
-/* 19: Lavender Dreams - lilac */
+/* 19: Lavender Dreams - dark lilac */
 .intent-gradient-19::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(192, 132, 252, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #2c2038 0%, #1a1422 100%);
 }
-
 .intent-gradient-19-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(192, 132, 252, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #3c2c50 0%, #1a1422 100%);
 }
 
-/* 20: Cherry Blossom - soft pink */
+/* 20: Cherry Blossom - dark cherry pink */
 .intent-gradient-20::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(251, 207, 232, 0.20),
-    transparent
-  );
+  background: linear-gradient(135deg, #38202e 0%, #201418 100%);
 }
-
 .intent-gradient-20-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(251, 207, 232, 0.58),
-    transparent
-  );
+  background: linear-gradient(135deg, #4e2c40 0%, #201418 100%);
 }
 
-/* 21: Midnight Galaxy - deep purple */
+/* 21: Midnight Galaxy - very deep purple */
 .intent-gradient-21::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(126, 34, 206, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #1e0e3c 0%, #100820 100%);
 }
-
 .intent-gradient-21-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(126, 34, 206, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #2a1254 0%, #100820 100%);
 }
 
-/* 22: Tropical Paradise - lime */
+/* 22: Tropical Paradise - dark lime */
 .intent-gradient-22::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(163, 230, 53, 0.18),
-    transparent
-  );
+  background: linear-gradient(135deg, #283c1a 0%, #18240e 100%);
 }
-
 .intent-gradient-22-active::before {
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(163, 230, 53, 0.55),
-    transparent
-  );
+  background: linear-gradient(135deg, #385220 0%, #18240e 100%);
 }

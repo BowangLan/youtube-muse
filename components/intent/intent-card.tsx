@@ -24,16 +24,16 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
   const openIntent = useAppStateStore((state) => state.openIntent);
   const trackCount = playlist.tracks.length;
   const setCurrentPlaylist = usePlaylistStore(
-    (state) => state.setCurrentPlaylist
+    (state) => state.setCurrentPlaylist,
   );
   const setCurrentTrackIndex = usePlaylistStore(
-    (state) => state.setCurrentTrackIndex
+    (state) => state.setCurrentTrackIndex,
   );
   const currentPlaylistId = usePlaylistStore(
-    (state) => state.currentPlaylistId
+    (state) => state.currentPlaylistId,
   );
   const gradientOverrides = useCustomIntentsStore(
-    (state) => state.gradientOverrides
+    (state) => state.gradientOverrides,
   );
 
   const isPlaying = useIsPlaying();
@@ -49,7 +49,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
   return (
     <div
       className={cn(
-        "relative group trans w-full flex flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-4 text-left",
+        "relative group trans w-full flex flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-5 text-left",
         "hover:scale-[101%]",
         "transition-colors hover:bg-white/6 active:bg-white/8",
         "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90 before:transition-opacity before:duration-300",
@@ -57,9 +57,11 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
         "active:scale-95",
         isActive ? "intent-card-active" : "intent-card",
         gradientClassName &&
-        (isActive ? `${gradientClassName}-active` : gradientClassName)
+          (isActive ? `${gradientClassName}-active` : gradientClassName),
       )}
     >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+
       <button
         type="button"
         aria-label={`Open ${playlist.name} intent`}
@@ -146,7 +148,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
               >
                 <div
                   className={cn(
-                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-0"
+                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-0",
                   )}
                   style={{
                     animationPlayState: isCurrentlyPlaying
@@ -156,7 +158,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
                 />
                 <div
                   className={cn(
-                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-150"
+                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-150",
                   )}
                   style={{
                     animationPlayState: isCurrentlyPlaying
@@ -166,7 +168,7 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
                 />
                 <div
                   className={cn(
-                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300"
+                    "w-[3px] rounded-full bg-white/90 h-full motion-scale-y-loop-50 motion-duration-1500 motion-linear motion-delay-300",
                   )}
                   style={{
                     animationPlayState: isCurrentlyPlaying
@@ -178,7 +180,12 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             )}
           </AnimatePresence>
           <motion.div
-            className={cn("text-lg/tight md:text-xl/tight font-normal text-foreground trans", isActive ? "text-primary" : "text-foreground/80 hover:text-foreground")}
+            className={cn(
+              "text-lg/tight md:text-2xl/tight font-medium text-foreground trans",
+              isActive
+                ? "text-primary"
+                : "text-foreground/80 hover:text-foreground",
+            )}
             layoutId={`intent-name-${playlist.id}`}
             layout="position"
             transition={
@@ -190,11 +197,11 @@ export function IntentCard({ playlist, intent }: IntentCardProps) {
             {playlist.name}
           </motion.div>
         </div>
-        <div className="line-clamp-2 text-[12px]/[16px] text-muted-foreground md:text-xs/tight">
+        <div className="line-clamp-2 text-xs/tight text-muted-foreground md:text-sm/tight trans">
           {intent?.description ?? ""}
         </div>
       </div>
-      <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs text-muted-foreground font-mono">
+      <div className="relative z-20 pointer-events-none flex items-center justify-between text-xs md:text-sm/tight text-muted-foreground font-mono">
         <span>{trackCount} tracks</span>
       </div>
     </div>

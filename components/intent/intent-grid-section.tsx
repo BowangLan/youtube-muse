@@ -16,15 +16,13 @@ export function IntentGridSection({
 }) {
   const reduceMotion = useReducedMotion();
   const intentMetadataByPlaylistId = useCustomIntentsStore(
-    (state) => state.intentMetadataByPlaylistId
+    (state) => state.intentMetadataByPlaylistId,
   );
 
   return (
     <section aria-label="Intent Grid" className="space-y-6 md:space-y-8">
       <div
-        className={cn(
-          "grid gap-4"
-        )}
+        className={cn("grid gap-4 md:gap-5")}
         style={{
           gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
         }}
@@ -37,7 +35,7 @@ export function IntentGridSection({
               key={playlist.id}
               className={cn(
                 "motion-preset-blur-up-lg",
-                `motion-delay-[${index * 50}ms]`
+                `motion-delay-[${index * 50}ms]`,
               )}
               style={
                 {
