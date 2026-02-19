@@ -3,7 +3,10 @@ import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 
-export function V4TabsSectionView<T extends string>({
+export function V4TabsSectionView<
+  TItem extends TActive,
+  TActive extends string = TItem,
+>({
   items,
   activeItem,
   onItemClick,
@@ -11,10 +14,10 @@ export function V4TabsSectionView<T extends string>({
 }: {
   items: {
     label: string;
-    value: T;
+    value: TItem;
   }[];
-  activeItem: T;
-  onItemClick: (item: T) => void;
+  activeItem: TActive;
+  onItemClick: (item: TItem) => void;
   className?: string;
 }) {
   return (
