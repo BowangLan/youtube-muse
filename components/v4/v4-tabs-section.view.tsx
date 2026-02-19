@@ -25,8 +25,8 @@ export function V4TabsSectionView<T extends string>({
             onClick={() => onItemClick(item.value)}
             className={cn(
               "px-0 py-2 text-sm",
-              "bg-transparent hover:bg-transparent hover:text-foreground text-foreground/60 trans",
-              "data-[state=active]:bg-transparent data-[state=active]:text-foreground",
+              "bg-transparent hover:bg-transparent trans",
+              activeItem === item.value ? "text-foreground" : "text-foreground/60 hover:text-foreground"
             )}
           >
             {item.label}
@@ -34,7 +34,7 @@ export function V4TabsSectionView<T extends string>({
           {activeItem === item.value && (
             <motion.div
               layoutId="v3-tabs-section-indicator"
-              className="absolute bottom-0 left-0 right-0 h-px bg-foreground/60 group-hover:bg-foreground"
+              className="absolute bottom-0 left-0 right-0 h-px bg-foreground/60 group-hover:bg-foreground transition-colors duration-300"
               transition={{ duration: 0.3, ease: EASING_EASE_OUT }}
             />
           )}
