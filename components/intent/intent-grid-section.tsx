@@ -34,7 +34,7 @@ export function IntentGridSection({
             <motion.div
               key={playlist.id}
               className={cn(
-                "motion-preset-blur-up-md",
+                "motion-blur-in-md motion-translate-y-in-[15%] motion-opacity-in-0 motion-duration-500",
               )}
               style={
                 {
