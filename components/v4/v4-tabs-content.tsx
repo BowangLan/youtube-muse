@@ -76,10 +76,19 @@ function V4TabsContentSearch() {
   );
 }
 
+function V4TabsContentIntentDetail() {
+  return (
+    <>
+      <IntentDetailSection />
+      <div className="h-(--bottom-spacing) flex-none"></div>
+    </>
+  );
+}
+
 const TAB_TO_COMPONENT: Record<V4Tab, React.ComponentType> = {
   intents: V4TabsContentIntents,
   channels: V4TabsContentChannels,
-  "intent-detail": IntentDetailSection,
+  "intent-detail": V4TabsContentIntentDetail,
   search: V4TabsContentSearch,
 };
 

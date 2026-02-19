@@ -295,7 +295,7 @@ export function IntentDetailSection() {
         <div
           className={cn(
             // Layout & spacing
-            "relative flex flex-1 flex-col gap-3 overflow-hidden overflow-y-auto rounded-2xl p-3 sm:h-[60vh] md:p-3",
+            "relative flex flex-1 flex-col gap-3 overflow-hidden overflow-y-auto rounded-2xl p-3 md:p-3",
             // Border & background
             "border border-white/5 bg-white/3",
           // Gradients & layer effects
