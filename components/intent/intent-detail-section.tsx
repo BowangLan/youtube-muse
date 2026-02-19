@@ -417,7 +417,7 @@ export function IntentDetailSection() {
               className="motion-preset-blur-down"
               style={
                 {
-                  "--motion-delay": `${index * 50 + 450}ms`,
+                  "--motion-delay": `${index * 50 + 400}ms`,
                 } as React.CSSProperties
               }
             >

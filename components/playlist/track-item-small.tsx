@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
+import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,9 @@ export function TrackItemSmall({
   const hiddenBuiltInIntents = useCustomIntentsStore(
     (state) => state.hiddenBuiltInIntents
   );
+  const customPlaylistIds = useCustomPlaylistsStore(
+    (state) => state.customPlaylistIds
+  );
 
   const intentPlaylists = React.useMemo(() => {
     const hiddenNames = new Set(hiddenBuiltInIntents);
@@ -100,7 +104,15 @@ export function TrackItemSmall({
     return intentPlaylists.filter((playlist) => playlist.id !== activePlaylistId);
   }, [intentPlaylists, activePlaylistId]);
 
-  const handleCopyToIntent = React.useCallback(
+  const otherCustomPlaylists = React.useMemo(() => {
+    const customSet = new Set(customPlaylistIds);
+    return playlists.filter(
+      (playlist) =>
+        customSet.has(playlist.id) && playlist.id !== activePlaylistId
+    );
+  }, [customPlaylistIds, playlists, activePlaylistId]);
+
+  const handleCopyToPlaylist = React.useCallback(
     (playlistId: string, playlistName: string) => {
       const { addedAt: _addedAt, ...trackPayload } = track;
       addTrackToPlaylist(playlistId, trackPayload);
@@ -109,7 +121,7 @@ export function TrackItemSmall({
     [addTrackToPlaylist, track]
   );
 
-  const handleMoveToIntent = React.useCallback(
+  const handleMoveToPlaylist = React.useCallback(
     (playlistId: string, playlistName: string) => {
       if (!activePlaylistId) return;
       moveTrackToPlaylist(activePlaylistId, track.id, playlistId);
@@ -122,7 +134,7 @@ export function TrackItemSmall({
     <motion.div
       className={cn("group flex h-11 items-center gap-2 cursor-pointer sm:h-9")}
       onClick={onClick}
-      layoutId={`track-item-${track.id}`}
+      // layoutId={`track-item-${track.id}`}
     >
       {/* Thumbnail */}
       <div className="relative shrink-0 hidden sm:block">
@@ -167,7 +179,7 @@ export function TrackItemSmall({
           {formatTime(track.duration)}
         </span>
         <motion.div
-          layout
+          // layout
           className={cn(
             "truncate text-sm text-foreground text-left md:text-right group-hover:translate-x-1 trans",
             !isCurrentTrack && "text-muted-foreground hover:text-foreground"
@@ -208,7 +220,7 @@ export function TrackItemSmall({
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isAlreadyAdded) return;
-                          handleCopyToIntent(playlist.id, playlist.name);
+                          handleCopyToPlaylist(playlist.id, playlist.name);
                         }}
                       >
                         {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
@@ -239,7 +251,7 @@ export function TrackItemSmall({
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isAlreadyAdded) return;
-                          handleMoveToIntent(playlist.id, playlist.name);
+                          handleMoveToPlaylist(playlist.id, playlist.name);
                         }}
                       >
                         {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
@@ -249,6 +261,68 @@ export function TrackItemSmall({
                   })
                 ) : (
                   <DropdownMenuItem disabled>No other intents</DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Copy className="h-3.5 w-3.5" />
+                Copy to playlist
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
+                {otherCustomPlaylists.length > 0 ? (
+                  otherCustomPlaylists.map((playlist) => {
+                    const isAlreadyAdded = trackIdSetsByPlaylist
+                      .get(playlist.id)
+                      ?.has(track.id);
+                    return (
+                      <DropdownMenuItem
+                        key={playlist.id}
+                        disabled={isAlreadyAdded}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAlreadyAdded) return;
+                          handleCopyToPlaylist(playlist.id, playlist.name);
+                        }}
+                      >
+                        {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
+                        {playlist.name}
+                      </DropdownMenuItem>
+                    );
+                  })
+                ) : (
+                  <DropdownMenuItem disabled>No other playlists</DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                Move to playlist
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
+                {otherCustomPlaylists.length > 0 ? (
+                  otherCustomPlaylists.map((playlist) => {
+                    const isAlreadyAdded = trackIdSetsByPlaylist
+                      .get(playlist.id)
+                      ?.has(track.id);
+                    return (
+                      <DropdownMenuItem
+                        key={playlist.id}
+                        disabled={isAlreadyAdded}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAlreadyAdded) return;
+                          handleMoveToPlaylist(playlist.id, playlist.name);
+                        }}
+                      >
+                        {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
+                        {playlist.name}
+                      </DropdownMenuItem>
+                    );
+                  })
+                ) : (
+                  <DropdownMenuItem disabled>No other playlists</DropdownMenuItem>
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuSub>

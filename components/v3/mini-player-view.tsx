@@ -22,12 +22,38 @@ import { cn } from "@/lib/utils";
 import { Track } from "@/lib/types/playlist";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { Icons } from "@/components/icons";
-import { MonitorPlay, Pin, PinOff, Repeat, Repeat1 } from "lucide-react";
+import {
+  Check,
+  ListPlus,
+  MonitorPlay,
+  Pin,
+  PinOff,
+  Plus,
+  Repeat,
+  Repeat1,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   MiniPlayerProvider,
   useMiniPlayerContext,
@@ -36,6 +62,8 @@ import { FEATURE_FLAGS } from "@/lib/constants";
 import { useIsPlaying } from "@/hooks/use-is-playing";
 import { useAppStateStore } from "@/lib/store/app-state-store";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
+import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
+import { toast } from "sonner";
 
 // =============================================================================
 // PlayerIconButton Component
@@ -418,9 +446,9 @@ const ProgressSection = () => {
 const PlayerControls = () => {
   const {
     isLoadingNewVideo,
-    pendingPlayState,
     apiReady,
     canPlayNext,
+    track,
     videoMode,
     onTogglePlay,
     onSkipBackward,
@@ -432,8 +460,108 @@ const PlayerControls = () => {
   const toggleShuffle = usePlaylistStore((state) => state.toggleShuffle);
   const repeatMode = usePlaylistStore((state) => state.repeatMode);
   const cycleRepeatMode = usePlaylistStore((state) => state.cycleRepeatMode);
+  const playlists = usePlaylistStore((state) => state.playlists);
+  const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
+  const addTrackToPlaylist = usePlaylistStore((state) => state.addTrackToPlaylist);
+  const addCustomPlaylist = useCustomPlaylistsStore((state) => state.addCustomPlaylist);
+  const customPlaylistIds = useCustomPlaylistsStore((state) => state.customPlaylistIds);
+  const setLastUsedPlaylist = useCustomPlaylistsStore(
+    (state) => state.setLastUsedPlaylist
+  );
 
   const isPlaying = useIsPlaying();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
+  const [newPlaylistName, setNewPlaylistName] = React.useState("");
+
+  const customPlaylists = React.useMemo(() => {
+    return customPlaylistIds
+      .map((playlistId) => playlists.find((playlist) => playlist.id === playlistId))
+      .filter((playlist): playlist is NonNullable<typeof playlist> => playlist !== undefined);
+  }, [customPlaylistIds, playlists]);
+
+  const trackIdSetsByPlaylist = React.useMemo(() => {
+    return new Map(
+      customPlaylists.map((playlist) => [
+        playlist.id,
+        new Set(playlist.tracks.map((playlistTrack) => playlistTrack.id)),
+      ])
+    );
+  }, [customPlaylists]);
+
+  const handleAddCurrentTrackToPlaylist = React.useCallback(
+    (playlistId: string, playlistName: string) => {
+      if (!track) return;
+      const trackPayload = {
+        id: track.id,
+        title: track.title,
+        author: track.author,
+        authorUrl: track.authorUrl,
+        authorThumbnail: track.authorThumbnail,
+        duration: track.duration,
+        thumbnailUrl: track.thumbnailUrl,
+        publishedAt: track.publishedAt,
+        publishedTimeText: track.publishedTimeText,
+      };
+      addTrackToPlaylist(playlistId, trackPayload);
+      setLastUsedPlaylist(playlistId);
+      toast.success(`Added to ${playlistName}`);
+    },
+    [addTrackToPlaylist, setLastUsedPlaylist, track]
+  );
+
+  const handleCreateCustomPlaylist = React.useCallback((rawName: string) => {
+    if (!track) return;
+
+    const trimmedName = rawName.trim();
+    if (!trimmedName) {
+      toast.error("Please enter a playlist name");
+      return;
+    }
+
+    const existingNames = new Set(playlists.map((playlist) => playlist.name.toLowerCase()));
+    if (existingNames.has(trimmedName.toLowerCase())) {
+      toast.error("A playlist with this name already exists");
+      return;
+    }
+
+    const existingIds = new Set(playlists.map((playlist) => playlist.id));
+    createPlaylist(trimmedName);
+
+    const latestPlaylists = usePlaylistStore.getState().playlists;
+    const createdPlaylist = latestPlaylists.find(
+      (playlist) => !existingIds.has(playlist.id)
+    );
+
+    if (!createdPlaylist) {
+      toast.error("Failed to create custom playlist");
+      return;
+    }
+
+    addCustomPlaylist(createdPlaylist.id);
+    const trackPayload = {
+      id: track.id,
+      title: track.title,
+      author: track.author,
+      authorUrl: track.authorUrl,
+      authorThumbnail: track.authorThumbnail,
+      duration: track.duration,
+      thumbnailUrl: track.thumbnailUrl,
+      publishedAt: track.publishedAt,
+      publishedTimeText: track.publishedTimeText,
+    };
+    addTrackToPlaylist(createdPlaylist.id, trackPayload);
+    setLastUsedPlaylist(createdPlaylist.id);
+    toast.success(`Created ${createdPlaylist.name}`);
+    setIsCreateDialogOpen(false);
+    setNewPlaylistName("");
+  }, [
+    addCustomPlaylist,
+    addTrackToPlaylist,
+    createPlaylist,
+    playlists,
+    setLastUsedPlaylist,
+    track,
+  ]);
 
   const repeatLabel =
     repeatMode === "one"
@@ -536,6 +664,91 @@ const PlayerControls = () => {
         />
       </StickyTooltip>
 
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <PlayerIconButton
+            label="Add to custom playlist"
+            icon={<ListPlus className="h-4 w-4" />}
+            variant="control"
+            disabled={!track}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem
+            disabled={!track}
+            onSelect={(event) => {
+              event.preventDefault();
+              setIsCreateDialogOpen(true);
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New custom playlist...
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {customPlaylists.length > 0 ? (
+            customPlaylists.map((playlist) => {
+              const isAlreadyAdded = track
+                ? trackIdSetsByPlaylist.get(playlist.id)?.has(track.id)
+                : false;
+              return (
+                <DropdownMenuItem
+                  key={playlist.id}
+                  disabled={!track || isAlreadyAdded}
+                  onClick={() =>
+                    handleAddCurrentTrackToPlaylist(playlist.id, playlist.name)
+                  }
+                >
+                  {isAlreadyAdded && <Check className="h-3.5 w-3.5" />}
+                  {playlist.name}
+                </DropdownMenuItem>
+              );
+            })
+          ) : (
+            <DropdownMenuItem disabled>No custom playlists</DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Playlist</DialogTitle>
+            <DialogDescription>
+              Create a custom playlist and add the current video to it.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleCreateCustomPlaylist(newPlaylistName);
+            }}
+          >
+            <Input
+              autoFocus
+              placeholder="Playlist name"
+              value={newPlaylistName}
+              onChange={(event) => setNewPlaylistName(event.target.value)}
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  setNewPlaylistName("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!track}>
+                Create & Add
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <VolumeControl className="text-xs shrink-0 ml-auto" />
     </div>
   );
@@ -582,7 +795,7 @@ const CollapsedStateView = ({
   glowStyle: React.CSSProperties;
 }) => {
   const reduceMotion = useReducedMotion();
-  const { track, isExpanded } = useMiniPlayerContext();
+  const { track } = useMiniPlayerContext();
 
   if (!track) return null;
 

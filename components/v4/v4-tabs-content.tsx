@@ -1,8 +1,11 @@
-import { useV4AppStateStore, V4Tab } from "@/lib/store/v4-app-state-store";
+import {
+  useV4AppStateStore,
+  V4TabWithDetail,
+} from "@/lib/store/v4-app-state-store";
 import { AnimatePresence } from "motion/react";
-import { IntentGridSection } from "../intent/intent-grid-section";
 import { IntentDetailSection } from "../intent/intent-detail-section";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
+import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
 import { useMemo } from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { LatestVideosGrid } from "./tabs/latest-videos-grid";
@@ -12,10 +15,15 @@ import {
   SEARCH_RESULTS_PLAYLIST_ID,
   useYouTubeSearchStore,
 } from "@/lib/store/youtube-search-store";
+import { PlaylistCardGrid } from "../playlist/playlist-card-grid";
+import { PlaylistDetailSection } from "../playlist/playlist-detail-section";
 
-function V4TabsContentIntents() {
+function V4TabsContentPlaylists() {
   const intents = useCustomIntentsStore(
     (state) => state.intentPlaylistOrder
+  );
+  const customPlaylistIds = useCustomPlaylistsStore(
+    (state) => state.customPlaylistIds
   );
   const playlists = usePlaylistStore((state) => state.playlists);
 
@@ -23,11 +31,24 @@ function V4TabsContentIntents() {
     return intents.map((playlistId) => playlists.find((playlist) => playlist.id === playlistId)).filter((playlist) => playlist !== undefined);
   }, [intents, playlists]);
 
+  const customPlaylists = useMemo(() => {
+    const intentIds = new Set(intentPlaylists.map((playlist) => playlist.id));
+    return customPlaylistIds
+      .map((playlistId) => playlists.find((playlist) => playlist.id === playlistId))
+      .filter(
+        (playlist): playlist is NonNullable<typeof playlist> =>
+          playlist !== undefined && !intentIds.has(playlist.id)
+      );
+  }, [customPlaylistIds, intentPlaylists, playlists]);
+
+  const displayedPlaylists = useMemo(() => {
+    return [...intentPlaylists, ...customPlaylists];
+  }, [intentPlaylists, customPlaylists]);
 
   return (
     <div className="mx-auto max-w-6xl sm:my-8">
       <V4TabContentHeader title="Latest Videos" />
-      <IntentGridSection intentPlaylists={intentPlaylists} />
+      <PlaylistCardGrid playlists={displayedPlaylists} />
       <div className="h-(--bottom-spacing) flex-none"></div>
     </div>
   );
@@ -78,17 +99,27 @@ function V4TabsContentSearch() {
 
 function V4TabsContentIntentDetail() {
   return (
-    <>
+    <div className="mx-auto max-w-4xl">
       <IntentDetailSection />
       <div className="h-(--bottom-spacing) flex-none"></div>
-    </>
+    </div>
   );
 }
 
-const TAB_TO_COMPONENT: Record<V4Tab, React.ComponentType> = {
-  intents: V4TabsContentIntents,
+function V4TabsContentPlaylistDetail() {
+  return (
+    <div className="mx-auto max-w-4xl">
+      <PlaylistDetailSection />
+      <div className="h-(--bottom-spacing) flex-none"></div>
+    </div>
+  );
+}
+
+const TAB_TO_COMPONENT: Record<V4TabWithDetail, React.ComponentType> = {
+  intents: V4TabsContentPlaylists,
   channels: V4TabsContentChannels,
   "intent-detail": V4TabsContentIntentDetail,
+  "playlist-detail": V4TabsContentPlaylistDetail,
   search: V4TabsContentSearch,
 };
 
