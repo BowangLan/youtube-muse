@@ -96,13 +96,13 @@ export function V4Header() {
               <SearchIcon
                 size={16}
                 animate={isSearching}
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50"
               />
               <Input
                 value={query}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search YouTube videos..."
-                className="h-10 rounded-xl focus-visible:ring-0 border-white/10 dark:border-white/10 dark:focus-visible:bg-white/10 bg-white/5 dark:bg-white/5 pl-9 pr-10 text-white placeholder:text-white/35 dark:placeholder:text-white/35"
+                className="h-10 rounded-xl focus-visible:ring-0 border-white/10 dark:border-white/10 dark:focus-visible:bg-white/10 bg-white/5 dark:bg-white/5 pl-9 pr-10 text-foreground placeholder:text-foreground/35 dark:placeholder:text-foreground/35"
               />
               {/* {isSearching ? (
                 <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/45" />
@@ -113,7 +113,7 @@ export function V4Header() {
                 type="button"
                 variant="outline"
                 onClick={() => { clearSearch(); closeSearch(); }}
-                className="h-10 rounded-xl border-white/15 bg-white/5 px-3 text-white hover:bg-white/10"
+                className="h-10 rounded-xl border-white/15 bg-white/5 px-3 text-foreground hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
               </Button>
