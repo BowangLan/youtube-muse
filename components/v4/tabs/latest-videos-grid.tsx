@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable no-console */
 const DEBUG_PLAYER = false;
 const debug = (...args: unknown[]) => {
   if (DEBUG_PLAYER) console.log("[LatestVideosSidebar]", ...args);
@@ -17,7 +16,6 @@ import { Plus, Radio, Settings2 } from "lucide-react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { ManageChannelsDialog } from "@/components/channels/manage-channels-dialog";
-import { TrackCard } from "@/components/playlist/track-card";
 import type { Track } from "@/lib/types/playlist";
 import { V4TabContentHeader } from "../v4-tab-content-header";
 import { TrackItemMedium } from "@/components/playlist/track-item-medium";
@@ -189,6 +187,12 @@ export function LatestVideosGrid() {
     [tracks, selectedChannelId]
   );
 
+  React.useEffect(() => {
+    if (!selectedChannelId) return;
+    const exists = channels.some((channel) => channel.id === selectedChannelId);
+    if (!exists) setSelectedChannelId(null);
+  }, [channels, selectedChannelId]);
+
   const groupedTracks = React.useMemo(
     () => groupTracksByDate(filteredTracks),
     [filteredTracks]
@@ -290,7 +294,9 @@ export function LatestVideosGrid() {
     );
   }
 
-  const displayChannels = selectedChannelId ? [channels.find((c) => c.id === selectedChannelId)!] : channels;
+  const displayChannels = selectedChannelId
+    ? channels.filter((c) => c.id === selectedChannelId)
+    : channels;
 
   return (
     <div className={cn("mx-auto max-w-3xl")}>
