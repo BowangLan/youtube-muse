@@ -28,9 +28,12 @@ export function Focus() {
         <motion.div
           key="focus"
           initial={{ opacity: 0, filter: "blur(10px)" }}
-          animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5, ease: EASING_EASE_OUT } }}
-          exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
-          className="w-full h-full min-h-0 flex-1 flex flex-col overflow-hidden z-90"
+          animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5, ease: EASING_EASE_OUT, delay: 0.1, } }}
+          exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3, ease: EASING_EASE_OUT, } }}
+          className="fixed inset-0 min-h-0 flex-1 flex flex-col overflow-hidden z-90 backdrop-blur-xl"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+          }}
         >
           <RichButton
             variant="ghost"
@@ -38,6 +41,9 @@ export function Focus() {
             onClick={() => setIsFocusMode(false)}
             className="absolute top-4 left-4 sm:top-8 sm:left-8"
             tooltip="Exit focus mode"
+            tooltipContentProps={{
+              className: "z-[95]",
+            }}
           >
             <Minimize2 className="size-4" />
           </RichButton>

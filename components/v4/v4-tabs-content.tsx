@@ -48,10 +48,10 @@ function V4TabsContentPlaylists() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 100 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 100 }}
-      transition={{ duration: 0.35, ease: EASING_EASE_OUT }}
+      // initial={{ opacity: 0, filter: "blur(10px)" }}
+      // animate={{ opacity: 1, filter: "blur(0px)" }}
+      // exit={{ opacity: 0, filter: "blur(10px)" }}
+      // transition={{ duration: 0.4, ease: EASING_EASE_OUT }}
       className="mx-auto max-w-6xl sm:my-8"
     >
       <V4TabContentHeader title="Latest Videos" />

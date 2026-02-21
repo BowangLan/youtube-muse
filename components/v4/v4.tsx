@@ -28,6 +28,7 @@ import { V4Header } from "./v4-header";
 import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { Focus } from "./focus/focus";
 import { AnimatePresence, motion } from "motion/react";
+import { EASING_EASE_OUT } from "@/lib/styles/animation";
 
 export default function Home() {
   const hasMounted = useHasMounted();
@@ -113,16 +114,18 @@ export default function Home() {
 
       <AnimatePresence initial={false}>
         {!isFocusMode ? (
-          <motion.div
-            key="main-content"
-            initial={{ opacity: 0, filter: "blur(10px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5 } }}
-            exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3 } }}
-            className={cn("flex h-fit min-h-0 w-full flex-col z-10 isolate")}
-          >
-            <V4Header />
-            <V4TabsContent />
-          </motion.div>
+          <>
+            <motion.div
+              key="main-content"
+              initial={{ opacity: 0, }}
+              animate={{ opacity: 1, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
+              exit={{ opacity: 0, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
+              className={cn("flex h-fit min-h-0 w-full flex-col z-10 isolate")}
+            >
+              <V4Header />
+              <V4TabsContent />
+            </motion.div>
+          </>
         ) : null}
       </AnimatePresence>
     </main>

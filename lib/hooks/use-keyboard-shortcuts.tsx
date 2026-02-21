@@ -4,6 +4,7 @@ import { usePlaylistStore } from "@/lib/store/playlist-store"
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store"
 import { useKeyboardFeedbackStore } from "@/lib/store/keyboard-feedback-store"
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store"
+import { useV4AppStateStore } from "@/lib/store/v4-app-state-store"
 
 declare global {
   interface Window {
@@ -33,6 +34,9 @@ declare global {
  *
  * Intent Selection:
  * - 1-9: Play intent card 1-9
+ *
+ * View Controls:
+ * - Z: Toggle Zen/Focus mode
  */
 export function useKeyboardShortcuts() {
   useEffect(() => {
@@ -61,6 +65,7 @@ export function useKeyboardShortcuts() {
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
       const { videoMode, setVideoMode } = useYouTubePlayerInstanceStore.getState()
+      const { isFocusMode, setIsFocusMode } = useV4AppStateStore.getState()
       const {
         hiddenBuiltInIntents,
         gradientOverrides,
@@ -77,7 +82,7 @@ export function useKeyboardShortcuts() {
       const shouldPreventDefault = () => {
         if (key === " " || key === "k") return true
         if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) return true
-        if (["f", "j", "l", "m", "n", "p", "v"].includes(key)) return true
+        if (["f", "j", "l", "m", "n", "p", "v", "z"].includes(key)) return true
         if (key === "s" && !ctrl && isPlaying && !sliceRepeat.isActive) return true
         if (!isNaN(Number(key))) return true
         return false
@@ -210,6 +215,15 @@ export function useKeyboardShortcuts() {
         return
       }
 
+      if (key === "z") {
+        const nextFocusMode = !isFocusMode
+        setIsFocusMode(nextFocusMode)
+        showFeedback({
+          label: nextFocusMode ? "Focus On" : "Focus Off",
+        })
+        return
+      }
+
       if (key === "s" && !ctrl) {
         if (!isPlaying || sliceRepeat.isActive) return
         dispatch({ type: "UserSetSliceRepeatEnabled", enabled: true })
@@ -218,6 +232,16 @@ export function useKeyboardShortcuts() {
           label: "Slice repeat start",
         })
         return
+      }
+
+      if (key === "escape") {
+        if (isFocusMode) {
+          setIsFocusMode(false)
+          showFeedback({
+            label: "Focus Off",
+          })
+          return
+        }
       }
 
       // Intent selection with number keys (1-9)
