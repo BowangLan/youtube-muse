@@ -148,27 +148,14 @@ export function LatestVideosGrid() {
 
   // Sync channel video tracks to main playlist store
   React.useEffect(() => {
-    // Ensure the playlist exists with the correct ID
     ensurePlaylist(
       CHANNEL_VIDEO_PLAYLIST_ID,
       "Latest Videos",
       "Latest videos from your subscribed channels",
       tracks
     );
-
-    // Sync tracks if they've changed
-    if (channelPlaylist && tracks.length > 0) {
-      const existingIds = new Set(channelPlaylist.tracks.map((t) => t.id));
-      const newIds = new Set(tracks.map((t) => t.id));
-      const hasChanged =
-        existingIds.size !== newIds.size ||
-        tracks.some((t) => !existingIds.has(t.id));
-
-      if (hasChanged) {
-        setPlaylistTracks(CHANNEL_VIDEO_PLAYLIST_ID, tracks);
-      }
-    }
-  }, [tracks, channelPlaylist, ensurePlaylist, setPlaylistTracks]);
+    setPlaylistTracks(CHANNEL_VIDEO_PLAYLIST_ID, tracks);
+  }, [tracks, ensurePlaylist, setPlaylistTracks]);
 
   // Calculate actual track index considering shuffle
   const currentActualTrackIndex =

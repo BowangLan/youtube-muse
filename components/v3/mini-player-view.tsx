@@ -289,11 +289,13 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
       }}
     >
       <div className="relative w-full h-full overflow-hidden rounded-md">
-        <Image
+        <img
           src={track.thumbnailUrl}
           alt={track.title}
-          fill
-          sizes="40px"
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
           className="object-cover"
         />
       </div>
@@ -335,11 +337,13 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
         className="relative w-full h-full overflow-hidden rounded-lg shadow-2xl"
         data-video-anchor="mini-player-cover"
       >
-        <Image
+        <img
           src={track.thumbnailUrl}
           alt={track.title}
-          fill
-          sizes={`${EXPANDED_HEIGHT - EXPANDED_PADDING * 2}px`}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
           className="object-cover"
         />
       </div>
