@@ -980,6 +980,7 @@ export function MiniPlayerViewDesktop() {
     <div
       className="w-full px-4 sm:px-6 fixed bottom-8 left-0 right-0 z-40"
       style={{ minHeight: COLLAPSED_HEIGHT }}
+      key="mini-player-desktop"
     >
       <MiniPlayerProvider
         isExpanded={isExpanded}

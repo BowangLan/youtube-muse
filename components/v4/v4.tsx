@@ -105,7 +105,20 @@ export default function Home() {
 
       <YouTubePlayerContainer />
 
-      {/* {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />} */}
+      <AnimatePresence>
+        {/* Animation didn't work yet with focus mode yet */}
+        {isFocusMode ? null : (
+          <motion.div
+            key="mini-player"
+            className="relative z-100"
+            initial={{ opacity: 0, y: -100 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
+            exit={{ opacity: 0, y: -100, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
+          >
+            {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <KeyboardShortcutsDialog />
       <KeyboardFeedback />
