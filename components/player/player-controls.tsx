@@ -150,7 +150,7 @@ export const ProgressBar = React.memo(
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
     return (
-      <div className={cn("relative h-1.5 rounded-full bg-white/10", showControlButtons ? "group h-2 bg-transparent" : "", className)}>
+      <div className={cn("relative h-1.5 rounded-full bg-white/10", showControlButtons ? "group h-4 bg-transparent" : "", className)}>
         <div
           className="absolute inset-x-0 rounded-full bg-white/10 z-5"
           style={{
