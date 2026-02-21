@@ -30,10 +30,7 @@ export function Focus() {
           initial={{ opacity: 0, filter: "blur(10px)" }}
           animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5, ease: EASING_EASE_OUT, delay: 0.1, } }}
           exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3, ease: EASING_EASE_OUT, } }}
-          className="fixed inset-0 min-h-0 flex-1 flex flex-col overflow-hidden z-90 backdrop-blur-xl"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.2)",
-          }}
+          className="fixed inset-0 min-h-0 flex-1 flex flex-col overflow-hidden z-90 bg-neutral-900"
         >
           <RichButton
             variant="ghost"
