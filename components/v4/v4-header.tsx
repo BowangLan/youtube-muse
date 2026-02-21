@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, MusicIcon, X } from "lucide-react";
 import { PlayUrlDialog } from "@/components/player/play-url-dialog";
 import {
   searchYouTubeUnofficial,
@@ -26,6 +26,7 @@ export function V4Header() {
   const clearSearch = useYouTubeSearchStore((state) => state.clearSearch);
   const openSearch = useV4AppStateStore((state) => state.openSearch);
   const closeSearch = useV4AppStateStore((state) => state.closeSearch);
+  const setActiveTab = useV4AppStateStore((state) => state.setActiveTab);
 
   const handleSearchSubmit = React.useCallback(async () => {
     const normalizedQuery = query.trim();
@@ -76,6 +77,11 @@ export function V4Header() {
         {/* <span className="text-xs text-neutral-500">curate & play & focus</span> */}
 
         <V4TabsSection className="mx-8 flex-none" />
+
+        <Button variant="ghost" size="sm" onClick={() => setActiveTab("focus")} className="flex-none">
+          <MusicIcon className="size-4" />
+          Focus
+        </Button>
 
         <div className="flex justify-end items-center gap-3 ml-auto">
           <form

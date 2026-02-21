@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type V4Tab = "intents" | "channels" | "intent-detail" | "search";
+export type V4Tab = "intents" | "channels" | "intent-detail" | "search" | "focus";
 export type V4DetailTab = "intent-detail" | "playlist-detail";
 export type V4TabWithDetail = V4Tab | "playlist-detail";
 

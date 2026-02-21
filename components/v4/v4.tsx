@@ -25,12 +25,15 @@ import {
 import { cn } from "@/lib/utils";
 import { V4TabsContent } from "./v4-tabs-content";
 import { V4Header } from "./v4-header";
+import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
+import { Focus } from "./focus/focus";
 
 export default function Home() {
   const hasMounted = useHasMounted();
   const isMobile = useIsMobile();
   const ensurePlaylist = usePlaylistStore((state) => state.ensurePlaylist);
   const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
+  const activeTab = useV4AppStateStore((state) => state.activeTab);
 
   useYouTubePlayer();
   useKeyboardShortcuts();
@@ -76,12 +79,12 @@ export default function Home() {
     // so a new search cannot implicitly switch playback to the same index in the new list.
     const nextTracks =
       currentTrack &&
-      !searchTracks.some((track) => track.id === currentTrack.id)
+        !searchTracks.some((track) => track.id === currentTrack.id)
         ? [
-            ...searchTracks.slice(0, playlistState.currentTrackIndex),
-            currentTrack,
-            ...searchTracks.slice(playlistState.currentTrackIndex),
-          ]
+          ...searchTracks.slice(0, playlistState.currentTrackIndex),
+          currentTrack,
+          ...searchTracks.slice(playlistState.currentTrackIndex),
+        ]
         : searchTracks;
 
     setPlaylistTracks(SEARCH_RESULTS_PLAYLIST_ID, nextTracks);
@@ -99,19 +102,23 @@ export default function Home() {
 
       <YouTubePlayerContainer />
 
-      {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />}
+      {/* {isMobile ? <MiniPlayerViewMobile /> : <MiniPlayerViewDesktop />} */}
 
       <KeyboardShortcutsDialog />
       <KeyboardFeedback />
 
-      <div
-        className={cn(
-          "flex h-fit min-h-0 w-full flex-col z-10 isolate"
-        )}
-      >
-        <V4Header />
-        <V4TabsContent />
-      </div>
+      {activeTab === "focus" ? (
+        <Focus />
+      ) : (
+        <div
+          className={cn(
+            "flex h-fit min-h-0 w-full flex-col z-10 isolate"
+          )}
+        >
+          <V4Header />
+          <V4TabsContent />
+        </div>
+      )}
     </main>
   );
 }

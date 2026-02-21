@@ -11,7 +11,7 @@ import {
   Repeat1,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatTime } from "@/lib/utils/youtube";
+import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { motion } from "motion/react";
@@ -143,18 +143,28 @@ export function PlayerControls() {
 }
 
 export const ProgressBar = React.memo(
-  ({ className }: { className?: string }) => {
+  ({ className, showControlButtons = false }: { className?: string; showControlButtons?: boolean }) => {
     const dispatch = usePlayerStore((state) => state.dispatch);
     const currentTime = usePlayerStore((state) => state.currentTime);
     const duration = usePlayerStore((state) => state.duration);
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
     return (
-      <div className={cn("relative h-1.5 rounded-full bg-white/10", className)}>
+      <div className={cn("relative h-1.5 rounded-full bg-white/10", showControlButtons ? "group h-2 bg-transparent" : "", className)}>
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-white transition-opacity duration-200"
-          style={{ width: `${progressPercent}%` }}
+          className="absolute inset-x-0 rounded-full bg-white/10 z-5"
+          style={{
+            height: showControlButtons ? "2px" : undefined,
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
         />
+
+        <div
+          className="absolute left-0 rounded-full bg-white transition-opacity duration-200 z-6"
+          style={{ width: `${progressPercent}%`, height: showControlButtons ? "2px" : undefined, top: "50%", transform: "translateY(-50%)" }}
+        />
+
         <input
           type="range"
           min="0"
@@ -166,6 +176,20 @@ export const ProgressBar = React.memo(
           }
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
         />
+
+        {showControlButtons && (
+          <div
+            className="absolute rounded-full bg-white pointer-events-none"
+            style={{
+              width: 16,
+              height: 16,
+              left: `${progressPercent}%`,
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              boxShadow: "0 0 10px 0 rgba(255, 255, 255, 0.5)",
+            }}>
+          </div>
+        )}
       </div>
     );
   }
@@ -212,7 +236,7 @@ export const VolumeControl = React.memo(
           typeof window === "undefined"
             ? 100
             : ((window as Window & { __previousVolume?: number })
-                .__previousVolume ?? 100);
+              .__previousVolume ?? 100);
         dispatch({ type: "UserSetVolume", volume: previousVolume });
         return;
       }
