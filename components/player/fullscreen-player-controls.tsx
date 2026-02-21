@@ -45,7 +45,7 @@ export function FullscreenPlayerControls() {
     <>
       {/* Track Info Section */}
       <div
-        className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
+        className="mt-4 mx-auto max-w-6xl w-full z-20 px-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="space-y-1">
@@ -92,23 +92,23 @@ export function FullscreenPlayerControls() {
 
       {/* Controls Section */}
       <div
-        className="mt-4 mx-auto w-full max-w-6xl z-20 px-4"
+        className="mt-4 mx-auto max-w-6xl w-full z-20 px-4"
         onClick={(e) => e.stopPropagation()}
       >
         {sliceRepeatActive ? (
           <SliceRepeatControls />
         ) : (
           <>
-            <TimeDisplay />
-            <ProgressBar className="mt-2" />
+            {/* <TimeDisplay />
+            <ProgressBar className="mt-2" /> */}
           </>
         )}
-        <div className="flex mt-6 gap-2 items-center">
+        {/* <div className="flex mt-6 gap-2 items-center">
           <PlayPauseButton className="h-10 w-10" iconClassName="size-5" />
           <div className="flex-1"></div>
           <SliceRepeatToggleButton />
           <VolumeControl />
-        </div>
+        </div> */}
       </div>
     </>
   );

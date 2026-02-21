@@ -6,7 +6,7 @@ export const V4TAB_ITEMS: { label: string; value: V4Tab }[] = [
     value: "intents",
   },
   {
-    label: "Channels",
+    label: "Feed",
     value: "channels",
   },
 ];

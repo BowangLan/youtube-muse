@@ -946,8 +946,7 @@ export function MiniPlayerViewDesktop() {
   );
 
   const [isHovered, setIsHovered] = React.useState(false);
-  const videoMode = useYouTubePlayerInstanceStore((state) => state.videoMode);
-  const isExpanded = isHovered || isPinned || videoMode !== "hidden";
+  const isExpanded = isHovered || isPinned;
 
   const isPlaying = useIsPlaying();
 

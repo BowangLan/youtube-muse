@@ -9,19 +9,12 @@ import {
   PLAYER_ELEMENT_ID,
 } from "@/components/player/youtube-player-element";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
-import { FullscreenIcon, PlayIcon } from "lucide-react";
-import { motion } from "motion/react";
-import {
-  PlayPauseButton,
-  ProgressBar,
-  TimeDisplay,
-  VolumeControl,
-} from "@/components/player/player-controls";
-import { Icons } from "../icons";
+import { AnimatePresence, motion } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useIsPlaying } from "@/hooks/use-is-playing";
 import { VideoPlaybackOverlay } from "./playback-overlay";
 import { FullscreenPlayerControls } from "./fullscreen-player-controls";
+import { FloatingPlayerControls } from "./floating-player-controls";
+import { EASING_EASE_OUT } from "@/lib/styles/animation";
 
 const getFloatingFallbackStyles = (): React.CSSProperties => ({
   position: "fixed",
@@ -29,12 +22,12 @@ const getFloatingFallbackStyles = (): React.CSSProperties => ({
   bottom: "6.5rem",
   left: "",
   top: "",
-  width: "360px",
-  height: "202px",
+  width: 360 * 1.2,
+  height: 202 * 1.2,
   opacity: "1",
   pointerEvents: "auto",
-  borderRadius: "8px",
-  boxShadow: "0 24px 60px rgba(0, 0, 0, 0.45)",
+  borderRadius: "12px",
+  boxShadow: "0 4px 8px rgba(255, 255, 255, 0.25)",
   zIndex: "60",
   overflow: "hidden",
 });
@@ -53,13 +46,12 @@ const fullscreenStyles: React.CSSProperties = {
 
 const hiddenStyles: React.CSSProperties = {
   position: "fixed",
-  display: "none",
   right: "1.5rem",
   bottom: "6.5rem",
   left: "",
   top: "",
-  width: "360px",
-  height: "202px",
+  width: 360 * 1.2,
+  height: 202 * 1.2,
   opacity: "0",
   pointerEvents: "none",
   borderRadius: "",
@@ -86,6 +78,19 @@ export function YouTubePlayerContainer() {
   const [floatingStyle, setFloatingStyle] = React.useState<React.CSSProperties>(
     getFloatingFallbackStyles()
   );
+  const [customPosition, setCustomPosition] = React.useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const dragStateRef = React.useRef<{
+    startX: number;
+    startY: number;
+    startLeft: number;
+    startTop: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const didDragRef = React.useRef(false);
 
   React.useEffect(() => {
     const element = document.getElementById(PLAYER_ELEMENT_ID);
@@ -177,39 +182,12 @@ export function YouTubePlayerContainer() {
     }
 
     const updateFromAnchor = () => {
-      const anchor = document.querySelector(
-        '[data-video-anchor="mini-player-cover"]'
-      ) as HTMLElement | null;
-      if (!anchor) {
-        setFloatingStyle(getFloatingFallbackStyles());
-        return;
-      }
-
-      const rect = anchor.getBoundingClientRect();
-      if (!rect.width || !rect.height) {
-        setFloatingStyle(getFloatingFallbackStyles());
-        return;
-      }
-
-      setFloatingStyle({
-        position: "fixed",
-        left: `${rect.left}px`,
-        top: `${rect.top}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        opacity: "1",
-        pointerEvents: "auto",
-        borderRadius: "8px",
-        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.45)",
-        zIndex: "60",
-      });
+      setFloatingStyle(getFloatingFallbackStyles());
     };
 
     updateFromAnchor();
 
-    const handleScroll = () => updateFromAnchor();
     const handleResize = () => updateFromAnchor();
-    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleResize);
 
     let observer: ResizeObserver | null = null;
@@ -222,7 +200,6 @@ export function YouTubePlayerContainer() {
     }
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
       if (observer) observer.disconnect();
     };
@@ -233,31 +210,48 @@ export function YouTubePlayerContainer() {
       return videoMode === "hidden"
         ? hiddenStyles
         : {
-            width: "100%",
-            height: "100%",
-            position: "",
-            left: "",
-            right: "",
-            top: "",
-            bottom: "",
-            opacity: "",
-            pointerEvents: "auto",
-            borderRadius: "",
-            boxShadow: "",
-            zIndex: "",
-          };
+          width: "100%",
+          height: "100%",
+          position: "",
+          left: "",
+          right: "",
+          top: "",
+          bottom: "",
+          opacity: "",
+          pointerEvents: "auto",
+          borderRadius: "",
+          boxShadow: "",
+          zIndex: "",
+        };
     }
 
-    if (videoMode === "fullscreen") {
-      return fullscreenStyles;
+    switch (videoMode) {
+      case "fullscreen":
+        return fullscreenStyles;
+      case "floating": {
+        const base = { ...floatingStyle };
+        if (customPosition) {
+          base.left = customPosition.x;
+          base.top = customPosition.y;
+          base.right = undefined;
+          base.bottom = undefined;
+        }
+        return base;
+      }
+      case "hidden":
+        return hiddenStyles;
+      default:
+        return {};
     }
-
-    return videoMode === "floating" ? floatingStyle : hiddenStyles;
-  }, [floatingStyle, isMobile, videoMode]);
+  }, [customPosition, floatingStyle, isMobile, videoMode]);
 
   if (typeof document === "undefined") return null;
 
   const handleContainerClick = () => {
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
     if (!isMobile && videoMode === "floating") {
       setVideoMode("fullscreen");
     } else if (videoMode === "fullscreen") {
@@ -265,49 +259,141 @@ export function YouTubePlayerContainer() {
     }
   };
 
-  // console.log("rednering youtube player container", videoMode);
+  const handleFloatingPointerDown = (e: React.PointerEvent) => {
+    if (isMobile || videoMode !== "floating") return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    dragStateRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rect.left,
+      startTop: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+    didDragRef.current = false;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleFloatingPointerMove = (e: React.PointerEvent) => {
+    const state = dragStateRef.current;
+    if (!state) return;
+    const dx = e.clientX - state.startX;
+    const dy = e.clientY - state.startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDragRef.current = true;
+    const padding = 8;
+    const maxX = window.innerWidth - state.width - padding;
+    const maxY = window.innerHeight - state.height - padding;
+    const x = Math.max(padding, Math.min(maxX, state.startLeft + dx));
+    const y = Math.max(padding, Math.min(maxY, state.startTop + dy));
+    setCustomPosition({ x, y });
+  };
+
+  const handleFloatingPointerUp = (e: React.PointerEvent) => {
+    if (dragStateRef.current) {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      dragStateRef.current = null;
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const snapThresholdX = Math.max(80, window.innerWidth * 0.2);
+        const snapThresholdY = Math.max(80, window.innerHeight * 0.1);
+        const padding = 16;
+        let x = rect.left;
+        let y = rect.top;
+
+        if (rect.left < snapThresholdX) x = padding;
+        if (window.innerWidth - rect.right < snapThresholdX) {
+          x = window.innerWidth - rect.width - padding;
+        }
+        if (rect.top < snapThresholdY) y = padding;
+        if (window.innerHeight - rect.bottom < snapThresholdY) {
+          y = window.innerHeight - rect.height - padding;
+        }
+
+        setCustomPosition({ x, y });
+      }
+    }
+  };
 
   const content = (
-    <motion.div
-      id={PLAYER_CONTAINER_ID}
-      ref={containerRef}
-      layout
-      className={cn(
-        "group",
-        videoMode === "fullscreen" &&
-          "flex flex-col p-6 bg-black/50 backdrop-blur-xl justify-center"
-      )}
-      style={style as React.CSSProperties}
-      onClick={handleContainerClick}
-    >
-      {/* Overlay */}
-      {videoMode === "floating" && (
-        <div className="group-hover:opacity-100 opacity-0 transition-all duration-300 ease-out absolute inset-0 rounded-lg overflow-hidden bg-black/50 flex items-center justify-center z-20">
-          {/* Full screen button */}
-          <div className="size-10 rounded-full hover:bg-white/10 hover:scale-105 trans active:scale-95 flex items-center justify-center">
-            <FullscreenIcon className="size-5 text-white" />
-          </div>
-        </div>
-      )}
-
-      {/* actual iframe container */}
+    <>
       <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        id={PLAYER_CONTAINER_ID}
+        ref={containerRef}
         layout
-        ref={iframeContainerRef}
+        transition={dragStateRef.current ? {
+          duration: 0,
+          ease: "easeOut"
+        } : {
+          duration: 0.5,
+          ease: EASING_EASE_OUT,
+        }}
         className={cn(
-          "z-10 group/iframe-container",
-          videoMode === "floating" &&
-            "h-full w-full relative rounded-lg overflow-hidden",
+          "group",
           videoMode === "fullscreen" &&
-            "w-full aspect-video max-w-6xl mx-auto rounded-2xl overflow-hidden relative"
+          "flex flex-col justify-start p-6",
+          !isMobile &&
+          videoMode === "floating" &&
+          "cursor-grab active:cursor-grabbing"
         )}
-        onClick={(e) => e.stopPropagation()}
+        style={style as React.CSSProperties}
+        onClick={handleContainerClick}
+        onPointerDown={
+          !isMobile && videoMode === "floating"
+            ? handleFloatingPointerDown
+            : undefined
+        }
+        onPointerMove={
+          !isMobile && videoMode === "floating"
+            ? handleFloatingPointerMove
+            : undefined
+        }
+        onPointerUp={
+          !isMobile && videoMode === "floating"
+            ? handleFloatingPointerUp
+            : undefined
+        }
       >
-        <VideoPlaybackOverlay videoMode={videoMode} />
+        {videoMode === "floating" && <FloatingPlayerControls />}
+
+        {/* actual iframe container */}
+        <div
+          // layout
+          ref={iframeContainerRef}
+          // transition={{ duration: 0.2, ease: "easeOut" }}
+          className={cn(
+            "z-10 group/iframe-container",
+            videoMode === "floating" &&
+            "h-full w-full relative rounded-lg overflow-hidden",
+            videoMode === "fullscreen" &&
+            "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <VideoPlaybackOverlay videoMode={videoMode} />
+        </div>
+
+        {videoMode === "fullscreen" && !isMobile && <FullscreenPlayerControls />}
       </motion.div>
 
-      {videoMode === "fullscreen" && !isMobile && <FullscreenPlayerControls />}
-    </motion.div>
+      {videoMode === "fullscreen" && (
+        <AnimatePresence>
+          <motion.div
+            key="fullscreen-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="absolute inset-0 z-70 bg-black/80 backdrop-blur-xl pointer-events-none"
+          >
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </>
   );
 
   return createPortal(content, hostElement ?? document.body);
