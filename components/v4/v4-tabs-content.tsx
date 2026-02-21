@@ -2,7 +2,7 @@ import {
   useV4AppStateStore,
   V4TabWithDetail,
 } from "@/lib/store/v4-app-state-store";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { IntentDetailSection } from "../intent/intent-detail-section";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/store/youtube-search-store";
 import { PlaylistCardGrid } from "../playlist/playlist-card-grid";
 import { PlaylistDetailSection } from "../playlist/playlist-detail-section";
+import { EASING_EASE_OUT } from "@/lib/styles/animation";
 
 function V4TabsContentPlaylists() {
   const intents = useCustomIntentsStore(
@@ -46,11 +47,17 @@ function V4TabsContentPlaylists() {
   }, [intentPlaylists, customPlaylists]);
 
   return (
-    <div className="mx-auto max-w-6xl sm:my-8">
+    <motion.div
+      initial={{ opacity: 0, y: 100 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 100 }}
+      transition={{ duration: 0.35, ease: EASING_EASE_OUT }}
+      className="mx-auto max-w-6xl sm:my-8"
+    >
       <V4TabContentHeader title="Latest Videos" />
       <PlaylistCardGrid playlists={displayedPlaylists} />
       <div className="h-(--bottom-spacing) flex-none"></div>
-    </div>
+    </motion.div>
   );
 }
 

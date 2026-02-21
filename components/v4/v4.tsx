@@ -27,6 +27,7 @@ import { V4TabsContent } from "./v4-tabs-content";
 import { V4Header } from "./v4-header";
 import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { Focus } from "./focus/focus";
+import { AnimatePresence, motion } from "motion/react";
 
 export default function Home() {
   const hasMounted = useHasMounted();
@@ -34,6 +35,7 @@ export default function Home() {
   const ensurePlaylist = usePlaylistStore((state) => state.ensurePlaylist);
   const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
   const activeTab = useV4AppStateStore((state) => state.activeTab);
+  const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
 
   useYouTubePlayer();
   useKeyboardShortcuts();
@@ -107,18 +109,22 @@ export default function Home() {
       <KeyboardShortcutsDialog />
       <KeyboardFeedback />
 
-      {activeTab === "focus" ? (
-        <Focus />
-      ) : (
-        <div
-          className={cn(
-            "flex h-fit min-h-0 w-full flex-col z-10 isolate"
-          )}
-        >
-          <V4Header />
-          <V4TabsContent />
-        </div>
-      )}
+      <Focus />
+
+      <AnimatePresence initial={false}>
+        {!isFocusMode ? (
+          <motion.div
+            key="main-content"
+            initial={{ opacity: 0, filter: "blur(10px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5 } }}
+            exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3 } }}
+            className={cn("flex h-fit min-h-0 w-full flex-col z-10 isolate")}
+          >
+            <V4Header />
+            <V4TabsContent />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }

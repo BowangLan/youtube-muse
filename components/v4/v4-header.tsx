@@ -27,6 +27,8 @@ export function V4Header() {
   const openSearch = useV4AppStateStore((state) => state.openSearch);
   const closeSearch = useV4AppStateStore((state) => state.closeSearch);
   const setActiveTab = useV4AppStateStore((state) => state.setActiveTab);
+  const setIsFocusMode = useV4AppStateStore((state) => state.setIsFocusMode);
+  const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
 
   const handleSearchSubmit = React.useCallback(async () => {
     const normalizedQuery = query.trim();
@@ -78,7 +80,7 @@ export function V4Header() {
 
         <V4TabsSection className="mx-8 flex-none" />
 
-        <Button variant="ghost" size="sm" onClick={() => setActiveTab("focus")} className="flex-none">
+        <Button variant="ghost" size="sm" onClick={() => setIsFocusMode(true)} className="flex-none">
           <MusicIcon className="size-4" />
           Focus
         </Button>

@@ -1,12 +1,14 @@
 import { create } from "zustand";
 
-export type V4Tab = "intents" | "channels" | "intent-detail" | "search" | "focus";
+export type V4Tab = "intents" | "channels" | "intent-detail" | "search";
 export type V4DetailTab = "intent-detail" | "playlist-detail";
 export type V4TabWithDetail = V4Tab | "playlist-detail";
 
 export type V4AppState = {
   activeTab: V4TabWithDetail;
   activePlaylistId: string | null;
+  isFocusMode: boolean;
+  setIsFocusMode: (isFocusMode: boolean) => void;
 };
 
 export type V4AppStateActions = {
@@ -18,12 +20,15 @@ export type V4AppStateActions = {
   closePlaylistDetail: () => void;
   openSearch: () => void;
   closeSearch: () => void;
+
+  setIsFocusMode: (isFocusMode: boolean) => void;
 };
 
 export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
   (set) => ({
     activeTab: "intents",
     activePlaylistId: null,
+    isFocusMode: false,
     setActiveTab: (tab) => set({ activeTab: tab }),
     setActivePlaylist: (id) => set({ activePlaylistId: id }),
     openIntentDetail: (playlistId) =>
@@ -36,5 +41,6 @@ export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
       set({ activeTab: "intents", activePlaylistId: null }),
     openSearch: () => set({ activeTab: "search" }),
     closeSearch: () => set({ activeTab: "intents" }),
+    setIsFocusMode: (isFocusMode) => set({ isFocusMode }),
   })
 );
