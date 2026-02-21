@@ -162,7 +162,7 @@ export const ProgressBar = React.memo(
 
         <div
           className="absolute left-0 rounded-full bg-white transition-opacity duration-200 z-6"
-          style={{ width: `${progressPercent}%`, height: showControlButtons ? "2px" : undefined, top: "50%", transform: "translateY(-50%)" }}
+          style={{ width: `${progressPercent}%`, height: showControlButtons ? "2px" : "100%", top: "50%", transform: "translateY(-50%)" }}
         />
 
         <input
