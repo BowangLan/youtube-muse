@@ -16,6 +16,13 @@ import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { RichButton } from "@/components/ui/rich-button";
 import { AnimatePresence, motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
+import {
+  FocusBgRadialBloom,
+  FocusBgDualVeil,
+  FocusBgWarmEmber,
+  FocusBgArcticFrost,
+  FocusBgGrainFilm,
+} from "@/components/v4/focus/focus-backgrounds";
 
 export function Focus() {
   const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
@@ -30,22 +37,32 @@ export function Focus() {
           initial={{ opacity: 0, filter: "blur(10px)" }}
           animate={{ opacity: 1, filter: "blur(0px)", transition: { duration: 0.5, ease: EASING_EASE_OUT, delay: 0.1, } }}
           exit={{ opacity: 0, filter: "blur(10px)", transition: { duration: 0.3, ease: EASING_EASE_OUT, } }}
-          className="fixed inset-0 min-h-0 flex-1 flex flex-col overflow-hidden z-90 bg-neutral-900"
+          className="fixed inset-0 min-h-0 flex-1 flex flex-col overflow-hidden z-90 bg-neutral-950"
         >
-          <RichButton
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsFocusMode(false)}
-            className="absolute top-4 left-4 sm:top-8 sm:left-8"
-            tooltip="Exit focus mode"
-            tooltipContentProps={{
-              className: "z-[95]",
-            }}
-          >
-            <Minimize2 className="size-4" />
-          </RichButton>
+          {/* Active background variant — swap to any of the 5 imported variants:
+              FocusBgRadialBloom | FocusBgDualVeil | FocusBgWarmEmber | FocusBgArcticFrost | FocusBgGrainFilm */}
+          {/* <FocusBgDualVeil thumbnailUrl={currentTrack.thumbnailUrl} /> */}
+          {/* <FocusBgRadialBloom thumbnailUrl={currentTrack.thumbnailUrl} /> */}
+          {/* <FocusBgWarmEmber thumbnailUrl={currentTrack.thumbnailUrl} /> */}
+          {/* <FocusBgArcticFrost thumbnailUrl={currentTrack.thumbnailUrl} /> */}
+          <FocusBgGrainFilm thumbnailUrl={currentTrack.thumbnailUrl} />
 
-          <div className="mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-center py-6">
+          <div className="z-10">
+            <RichButton
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFocusMode(false)}
+              className="absolute top-4 left-4 sm:top-8 sm:left-8"
+              tooltip="Exit focus mode"
+              tooltipContentProps={{
+                className: "z-[95]",
+              }}
+            >
+              <Minimize2 className="size-4" />
+            </RichButton>
+          </div>
+
+          <div className="z-10 mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-center py-6">
             <div className="w-full rounded-3xl">
               <div className="py-8 sm:py-12 flex flex-col items-center gap-6 text-center">
                 <div className="w-full max-w-md space-y-1.5">
