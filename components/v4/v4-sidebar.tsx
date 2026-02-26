@@ -97,7 +97,7 @@ export default function V1Sidebar() {
 
   return (
     <aside
-      className="self-stretch rounded-lg bg-foreground/10 z-40 flex flex-col group/sidebar"
+      className="self-stretch rounded-lg bg-foreground/5 z-40 flex flex-col group/sidebar"
       style={{
         paddingLeft: sidebarCollapsed ? 0 : V4_SIDEBAR_PX,
         paddingRight: sidebarCollapsed ? 0 : V4_SIDEBAR_PX,
