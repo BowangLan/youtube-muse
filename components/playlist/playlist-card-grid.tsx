@@ -7,6 +7,7 @@ import { PlaylistCard } from "./playlist-card";
 import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
+import { CreateIntentDialog } from "../intent/create-intent-dialog";
 
 export function PlaylistCardGrid({
   playlists,
@@ -71,7 +72,7 @@ export function PlaylistCardGrid({
             ease: reduceMotion ? "linear" : EASING_EASE_OUT,
           }}
         >
-          {/* <CreateIntentDialog /> */}
+          <CreateIntentDialog />
         </motion.div>
       </div>
     </section>

@@ -4,7 +4,10 @@ import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { buildIntentQuery, INTENTS } from "@/lib/intents";
-import { searchYouTubeVideos } from "@/app/actions/youtube-search-official";
+import {
+  searchYouTubeUnofficial,
+  type SearchVideoResult,
+} from "@/app/actions/youtube-search-unofficial";
 
 /**
  * Hook to initialize default playlist on first load
@@ -170,32 +173,40 @@ export function useInitializePlaylist() {
               if (!latestPlaylist || latestPlaylist.tracks.length > 0) return;
 
               const query = buildIntentQuery(intent);
-              const { results } = await searchYouTubeVideos(query);
+              const { results } = await searchYouTubeUnofficial(
+                query,
+                "video",
+                "any"
+              );
 
+              const videoResults = results.filter(
+                (r): r is SearchVideoResult => "videoId" in r
+              );
               const existingIds = new Set<string>();
-              const toAdd = results
+              const toAdd = videoResults
                 .filter((r) => {
-                  if (!r?.id) return false;
-                  if (existingIds.has(r.id)) return false;
-                  existingIds.add(r.id);
+                  if (!r?.videoId || !/^[a-zA-Z0-9_-]{11}$/.test(r.videoId))
+                    return false;
+                  if (existingIds.has(r.videoId)) return false;
+                  existingIds.add(r.videoId);
                   return true;
                 })
                 .slice(0, 5);
 
               for (const result of toAdd) {
                 const thumb =
-                  result.thumbnail?.thumbnails?.[
-                    result.thumbnail.thumbnails.length - 1
-                  ]?.url ?? `https://i.ytimg.com/vi/${result.id}/hqdefault.jpg`;
+                  result.thumbnail?.startsWith("//")
+                    ? `https:${result.thumbnail}`
+                    : result.thumbnail || `https://i.ytimg.com/vi/${result.videoId}/hqdefault.jpg`;
 
                 addTrackToPlaylist(playlist.id, {
-                  id: result.id,
+                  id: result.videoId,
                   title: result.title,
                   author: result.channelTitle,
                   // Use a safe, always-valid link (channel URL isn’t provided by this API)
-                  authorUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
-                    result.channelTitle
-                  )}`,
+                  authorUrl: result.channelId
+                    ? `https://www.youtube.com/channel/${result.channelId}`
+                    : `https://www.youtube.com/results?search_query=${encodeURIComponent(result.channelTitle)}`,
                   duration: 0,
                   thumbnailUrl: thumb,
                 });

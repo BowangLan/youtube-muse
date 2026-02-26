@@ -258,7 +258,7 @@ export function CreateIntentDialog({
       )}
     >
       <Plus className="h-6 w-6" />
-      <span className="text-xs font-medium tracking-wide">Create Intent</span>
+      <span className="text-xs font-medium tracking-wide">Create Playlist</span>
     </button>
   );
 
@@ -282,15 +282,15 @@ export function CreateIntentDialog({
         <div className="relative flex max-h-[85vh] flex-col gap-6 overflow-y-auto p-6 sm:p-8">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-white">
-              Build your intent.
+              Build your playlist.
             </DialogTitle>
             <DialogDescription>
-              Select or type keywords. The name will be generated automatically.
+              Select or type keywords. The playlist name will be generated automatically.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label>Intent Name</Label>
+            <Label>Playlist Name</Label>
             <Input
               value={name}
               onChange={(e) => {
@@ -342,7 +342,7 @@ export function CreateIntentDialog({
               disabled={!name.trim() || keywords.length === 0 || isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Intent
+              Create Playlist
             </Button>
           </div>
         </div>
