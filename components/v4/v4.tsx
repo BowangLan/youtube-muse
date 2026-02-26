@@ -25,18 +25,21 @@ import {
 import { cn } from "@/lib/utils";
 import { V4TabsContent } from "./v4-tabs-content";
 import { V4Header } from "./v4-header";
+import V1Sidebar from "./v4-sidebar";
 import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { Focus } from "./focus/focus";
 import { AnimatePresence, motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
+import { V4_HEADER_HEIGHT, V4_PAGE_P, V4_SIDEBAR_COLLAPSED_WIDTH, V4_SIDEBAR_WIDTH } from "./v4-constants";
+import { V4MainContentHeader } from "./v4-main-content-header";
 
 export default function Home() {
   const hasMounted = useHasMounted();
   const isMobile = useIsMobile();
   const ensurePlaylist = usePlaylistStore((state) => state.ensurePlaylist);
   const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
-  const activeTab = useV4AppStateStore((state) => state.activeTab);
   const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
+  const sidebarCollapsed = useV4AppStateStore((state) => state.sidebarCollapsed);
 
   useYouTubePlayer();
   useKeyboardShortcuts();
@@ -98,7 +101,17 @@ export default function Home() {
   }
 
   return (
-    <main className="h-screen w-full overflow-y-auto bg-[#050505]">
+    <main
+      className="h-screen w-screen grid grid-rows-1"
+      style={{
+        "--v4-sidebar-width": `${sidebarCollapsed ? V4_SIDEBAR_COLLAPSED_WIDTH : V4_SIDEBAR_WIDTH}px`,
+        "--v4-header-height": `${V4_HEADER_HEIGHT}px`,
+        gridTemplateColumns: `var(--v4-sidebar-width) 1fr`,
+        padding: V4_PAGE_P,
+        gap: V4_PAGE_P,
+        transition: "grid-template-columns 350ms cubic-bezier(0.4,0,0.2,1)",
+      } as React.CSSProperties}
+    >
       <AnimatedBackground />
 
       <ChannelsDataLoader />
@@ -110,7 +123,7 @@ export default function Home() {
         {isFocusMode ? null : (
           <motion.div
             key="mini-player"
-            className="relative z-100"
+            className="z-100 fixed bottom-0 left-0 right-0 pointer-events-none"
             initial={{ opacity: 0, y: -100 }}
             animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
             exit={{ opacity: 0, y: -100, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
@@ -128,15 +141,20 @@ export default function Home() {
       <AnimatePresence initial={false}>
         {!isFocusMode ? (
           <>
+            <V1Sidebar />
             <motion.div
               key="main-content"
               initial={{ opacity: 0, }}
               animate={{ opacity: 1, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
               exit={{ opacity: 0, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
-              className={cn("flex h-fit min-h-0 w-full flex-col z-10 isolate")}
+              className={cn("flex min-h-0 flex-col z-10 isolate relative")}
             >
-              <V4Header />
-              <V4TabsContent />
+              {/* <V4Header /> */}
+              <V4MainContentHeader />
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="flex-none" style={{ height: V4_HEADER_HEIGHT }}></div>
+                <V4TabsContent />
+              </div>
             </motion.div>
           </>
         ) : null}

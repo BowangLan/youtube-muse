@@ -12,6 +12,10 @@ type YouTubeSearchResultsSectionProps = {
   results: YouTubeSearchVideoResult[]
   currentVideoId: string | null
   onResultClick: (index: number) => void
+  /** Optional search bar to show above results. Always visible when provided. */
+  searchBar?: React.ReactNode
+  /** Optional content to show when empty (no results). Renders instead of default message. */
+  emptyState?: React.ReactNode
 }
 
 export function YouTubeSearchResultsSection({
@@ -21,12 +25,15 @@ export function YouTubeSearchResultsSection({
   results,
   currentVideoId,
   onResultClick,
+  searchBar,
+  emptyState,
 }: YouTubeSearchResultsSectionProps) {
   const isPlaying = useIsPlaying();
 
   return (
     <section className="h-full min-h-0 overflow-y-auto pb-(--bottom-spacing)">
-      <div className="sticky top-0 mb-4 flex h-12 items-center backdrop-blur">
+      <div className="sticky top-0 mb-4 flex flex-col gap-4 backdrop-blur">
+        {searchBar}
         <h2 className="h2">Search Results</h2>
       </div>
 
@@ -40,14 +47,16 @@ export function YouTubeSearchResultsSection({
           {error}
         </div>
       ) : results.length === 0 ? (
-        <div className="flex h-[50vh] flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 text-white/50">
-          <Search className="h-8 w-8" />
-          <p className="text-sm">
-            {query.trim()
-              ? `No videos found for "${query.trim()}".`
-              : "Search YouTube videos from the toolbar above."}
-          </p>
-        </div>
+        emptyState ?? (
+          <div className="flex h-[50vh] flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 text-white/50">
+            <Search className="h-8 w-8" />
+            <p className="text-sm">
+              {query.trim()
+                ? `No videos found for "${query.trim()}".`
+                : "Search YouTube videos from the toolbar above."}
+            </p>
+          </div>
+        )
       ) : (
         <div className="space-y-3">
           {results.map((result, index) => {

@@ -28,7 +28,7 @@ const getFloatingFallbackStyles = (): React.CSSProperties => ({
   pointerEvents: "auto",
   borderRadius: "12px",
   boxShadow: "0 4px 8px rgba(255, 255, 255, 0.25)",
-  zIndex: "60",
+  zIndex: "80",
   overflow: "hidden",
 });
 
@@ -42,6 +42,7 @@ const fullscreenStyles: React.CSSProperties = {
   borderRadius: "0",
   boxShadow: "none",
   zIndex: "80",
+  overflow: "hidden",
 };
 
 const hiddenStyles: React.CSSProperties = {
@@ -333,9 +334,7 @@ export function YouTubePlayerContainer() {
           ease: EASING_EASE_OUT,
         }}
         className={cn(
-          "group",
-          videoMode === "fullscreen" &&
-          "flex flex-col justify-start p-6",
+          "group flex flex-col justify-start",
           !isMobile &&
           videoMode === "floating" &&
           "cursor-grab active:cursor-grabbing"
@@ -367,10 +366,10 @@ export function YouTubePlayerContainer() {
           // transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
             "z-10 group/iframe-container",
-            videoMode === "floating" &&
-            "h-full w-full relative rounded-lg overflow-hidden",
-            videoMode === "fullscreen" &&
-            "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative"
+            // videoMode === "floating" &&
+            // "h-full w-full relative rounded-lg overflow-hidden",
+            // videoMode === "fullscreen" &&
+            // "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative"
           )}
           onClick={(e) => e.stopPropagation()}
         >
@@ -380,19 +379,18 @@ export function YouTubePlayerContainer() {
         {videoMode === "fullscreen" && !isMobile && <FullscreenPlayerControls />}
       </motion.div>
 
-      {videoMode === "fullscreen" && (
-        <AnimatePresence>
+      <AnimatePresence>
+        {videoMode === "fullscreen" && (
           <motion.div
             key="fullscreen-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="absolute inset-0 z-70 bg-black/80 backdrop-blur-xl pointer-events-none"
-          >
-          </motion.div>
-        </AnimatePresence>
-      )}
+            className="fixed inset-0 z-75 bg-black/80 backdrop-blur-xl pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 

@@ -8,6 +8,7 @@ export type V4AppState = {
   activeTab: V4TabWithDetail;
   activePlaylistId: string | null;
   isFocusMode: boolean;
+  sidebarCollapsed: boolean;
   setIsFocusMode: (isFocusMode: boolean) => void;
 };
 
@@ -22,6 +23,7 @@ export type V4AppStateActions = {
   closeSearch: () => void;
 
   setIsFocusMode: (isFocusMode: boolean) => void;
+  toggleSidebar: () => void;
 };
 
 export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
@@ -29,6 +31,7 @@ export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
     activeTab: "intents",
     activePlaylistId: null,
     isFocusMode: false,
+    sidebarCollapsed: false,
     setActiveTab: (tab) => set({ activeTab: tab }),
     setActivePlaylist: (id) => set({ activePlaylistId: id }),
     openIntentDetail: (playlistId) =>
@@ -42,5 +45,7 @@ export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
     openSearch: () => set({ activeTab: "search" }),
     closeSearch: () => set({ activeTab: "intents" }),
     setIsFocusMode: (isFocusMode) => set({ isFocusMode }),
+    toggleSidebar: () =>
+      set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   })
 );
