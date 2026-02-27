@@ -13,7 +13,7 @@ import { ZenIcon } from "../ui/zen-icon";
 import { AboutDialog } from "./about-dialog";
 
 const sidebarNavItemVariants = cva(
-  "flex items-center select-none gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer",
+  "flex items-center select-none gap-2 px-3 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer",
   {
     variants: {
       variant: {
@@ -112,12 +112,12 @@ export default function V1Sidebar() {
           <Link
             href="/"
             className={cn(
-              "flex items-center gap-2 flex-1 min-w-0",
+              "flex items-center gap-2 flex-1 min-w-0 ml-3",
               sidebarCollapsed && "justify-center px-0"
             )}
           >
-            <MusicIcon size={16} className="shrink-0" />
-            <span className="text-base/tight font-medium text-foreground/80 truncate">
+            <MusicIcon size={16} className="shrink-0 text-foreground" />
+            <span className="text-base/tight font-medium text-foreground truncate">
               YouTube Muse
             </span>
           </Link>
@@ -141,7 +141,7 @@ export default function V1Sidebar() {
         )}
       </div>
 
-      <nav className={cn("flex flex-col gap-1", sidebarCollapsed && "items-center")}>
+      <nav className={cn("flex flex-col gap-0.5", sidebarCollapsed && "items-center")}>
         {/* Focus mode */}
         {V4TAB_ITEMS.map((item) => (
           <SidebarNavItem
@@ -153,9 +153,6 @@ export default function V1Sidebar() {
             onSelect={() => handleItemClick(item.value)}
           />
         ))}
-      </nav>
-
-      <div className={cn("mt-5 flex flex-col gap-1", sidebarCollapsed && "items-center")}>
         <SidebarNavItem
           isCollapsed={sidebarCollapsed}
           icon={ZenIcon}
@@ -174,7 +171,7 @@ export default function V1Sidebar() {
             </button>
           }
         />
-      </div>
+      </nav>
 
       <div className={cn("mt-auto mb-4 flex flex-col gap-1", sidebarCollapsed && "items-center")}>
         <AboutDialog sidebarCollapsed={sidebarCollapsed} />
