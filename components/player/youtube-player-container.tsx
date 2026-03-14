@@ -8,7 +8,10 @@ import {
   PLAYER_CONTAINER_ID,
   PLAYER_ELEMENT_ID,
 } from "@/components/player/youtube-player-element";
-import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
+import {
+  useYouTubePlayerInstanceStore,
+  type YouTubePlayerInstanceStore,
+} from "@/lib/store/youtube-player-instance-store";
 import { AnimatePresence, motion } from "motion/react";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { VideoPlaybackOverlay } from "./playback-overlay";
@@ -60,14 +63,18 @@ const hiddenStyles: React.CSSProperties = {
 };
 
 export function YouTubePlayerContainer() {
-  const videoMode = useYouTubePlayerInstanceStore((state) => state.videoMode);
+  const videoMode = useYouTubePlayerInstanceStore(
+    (state: YouTubePlayerInstanceStore) => state.videoMode
+  );
   const hostElement = useYouTubePlayerInstanceStore(
-    (state) => state.hostElement
+    (state: YouTubePlayerInstanceStore) => state.hostElement
   );
   const setVideoMode = useYouTubePlayerInstanceStore(
-    (state) => state.setVideoMode
+    (state: YouTubePlayerInstanceStore) => state.setVideoMode
   );
-  const player = useYouTubePlayerInstanceStore((state) => state.player);
+  const player = useYouTubePlayerInstanceStore(
+    (state: YouTubePlayerInstanceStore) => state.player
+  );
   const isMobile = useIsMobile();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const iframeContainerRef = React.useRef<HTMLDivElement>(null);
@@ -372,7 +379,7 @@ export function YouTubePlayerContainer() {
             videoMode === "fullscreen" &&
             "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative"
           )}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <VideoPlaybackOverlay videoMode={videoMode} />
         </div>

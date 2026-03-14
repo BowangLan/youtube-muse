@@ -58,6 +58,18 @@ const parseRelativeTimeToMs = (publishedTime: string | undefined): number | unde
   return Date.now() - amount * unitMs;
 };
 
+const buildTracksHash = (tracks: Track[]): string =>
+  JSON.stringify(
+    tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      author: track.author,
+      duration: track.duration,
+      thumbnailUrl: track.thumbnailUrl,
+      publishedAt: track.publishedAt,
+    }))
+  );
+
 const toTrack = (video: StreamVideo, channel: Channel): Track => {
   const thumbnailList = video.thumbnail?.thumbnails ?? [];
   const thumbnailUrl =
@@ -130,17 +142,28 @@ export function ChannelsDataLoader() {
         (track, index, arr) => arr.findIndex((item) => item.id === track.id) === index
       );
 
-      const hash = JSON.stringify(
-        dedupedTracks.map((track) => ({
-          id: track.id,
-          publishedAt: track.publishedAt,
-          title: track.title,
-        }))
-      );
+      const existingTracks = useChannelVideoPlaylistStore.getState().playlist.tracks;
+      const existingTracksById = new Map(existingTracks.map((track) => [track.id, track]));
+      const reconciledTracks = dedupedTracks.map((track) => {
+        const existingTrack = existingTracksById.get(track.id);
+        if (!existingTrack) {
+          return track;
+        }
+
+        return {
+          ...track,
+          addedAt: existingTrack.addedAt,
+          // Keep the first resolved absolute timestamp stable for existing videos.
+          publishedAt: existingTrack.publishedAt ?? track.publishedAt,
+          publishedTimeText: existingTrack.publishedTimeText ?? track.publishedTimeText,
+        };
+      });
+
+      const hash = buildTracksHash(reconciledTracks);
 
       if (lastAppliedHashRef.current === hash) return;
 
-      useChannelVideoPlaylistStore.getState().setTracks(dedupedTracks);
+      useChannelVideoPlaylistStore.getState().setTracks(reconciledTracks);
       lastAppliedHashRef.current = hash;
     };
 

@@ -23,7 +23,7 @@ interface YouTubePlayerInstanceActions {
   getQualityForMode: (mode: YouTubePlayerMode) => string
 }
 
-type YouTubePlayerInstanceStore = YouTubePlayerInstanceState & YouTubePlayerInstanceActions
+export type YouTubePlayerInstanceStore = YouTubePlayerInstanceState & YouTubePlayerInstanceActions
 
 export type YouTubePlayerMode = "hidden" | "floating" | "fullscreen"
 
