@@ -1,0 +1,17 @@
+{
+  "name": "@youtube-muse/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "wait-on tcp:3000 && ELECTRON_RENDERER_URL=http://127.0.0.1:3000 electron .",
+    "start": "electron .",
+    "build": "node -e \"console.log('Desktop shell ready. Use bun run package:desktop for distributables.')\"",
+    "lint": "node -e \"process.exit(0)\"",
+    "package": "node scripts/bundle-desktop.mjs"
+  },
+  "devDependencies": {
+    "electron": "^35.1.4",
+    "wait-on": "^8.0.3"
+  }
+}
