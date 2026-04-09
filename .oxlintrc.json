@@ -1,0 +1,54 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "import",
+    "jsx-a11y",
+    "nextjs",
+    "promise",
+    "node"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "settings": {
+    "next": {
+      "rootDir": "apps/web/"
+    },
+    "react": {
+      "version": "19"
+    },
+    "jsx-a11y": {
+      "components": {
+        "Link": "a",
+        "Button": "button"
+      }
+    }
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/.electron-build/**",
+    "apps/web/convex/_generated/**"
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "warn",
+    "eslint/no-useless-escape": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "nextjs/no-img-element": "warn",
+    "jsx-a11y/anchor-has-content": "warn",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-autofocus": "warn",
+    "jsx-a11y/no-redundant-roles": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/prefer-tag-over-role": "warn"
+  }
+}

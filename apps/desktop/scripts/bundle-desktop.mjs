@@ -11,6 +11,8 @@ const bundledAppRoot = path.join(distRoot, "app");
 const bundledWebRoot = path.join(distRoot, "web");
 
 const requiredPaths = [
+  path.join(desktopRoot, ".electron-build", "main.js"),
+  path.join(desktopRoot, ".electron-build", "preload.js"),
   path.join(webRoot, ".next", "standalone"),
   path.join(webRoot, ".next", "static"),
   path.join(webRoot, "public"),
@@ -26,10 +28,19 @@ rmSync(distRoot, { recursive: true, force: true });
 mkdirSync(bundledAppRoot, { recursive: true });
 mkdirSync(bundledWebRoot, { recursive: true });
 
-cpSync(path.join(desktopRoot, "main.js"), path.join(bundledAppRoot, "main.js"));
-cpSync(path.join(desktopRoot, "preload.js"), path.join(bundledAppRoot, "preload.js"));
-cpSync(path.join(webRoot, ".next", "standalone"), path.join(bundledWebRoot, ".next", "standalone"), { recursive: true });
-cpSync(path.join(webRoot, ".next", "static"), path.join(bundledWebRoot, ".next", "static"), { recursive: true });
+cpSync(path.join(desktopRoot, ".electron-build", "main.js"), path.join(bundledAppRoot, "main.js"));
+cpSync(
+  path.join(desktopRoot, ".electron-build", "preload.js"),
+  path.join(bundledAppRoot, "preload.js"),
+);
+cpSync(
+  path.join(webRoot, ".next", "standalone"),
+  path.join(bundledWebRoot, ".next", "standalone"),
+  { recursive: true },
+);
+cpSync(path.join(webRoot, ".next", "static"), path.join(bundledWebRoot, ".next", "static"), {
+  recursive: true,
+});
 cpSync(path.join(webRoot, "public"), path.join(bundledWebRoot, "public"), { recursive: true });
 
 writeFileSync(

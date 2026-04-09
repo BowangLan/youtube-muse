@@ -11,12 +11,18 @@
     "dev:desktop": "turbo dev --filter=@youtube-muse/web --filter=@youtube-muse/desktop",
     "build": "turbo build",
     "build:web": "bun --filter @youtube-muse/web build",
-    "lint": "turbo lint",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "lint:framework": "bun run --cwd apps/web lint:next",
     "start:web": "bun --filter @youtube-muse/web start",
     "start:desktop": "bun --filter @youtube-muse/desktop start",
-    "package:desktop": "bun --filter @youtube-muse/web build && bun --filter @youtube-muse/desktop package"
+    "package:desktop": "bun --filter @youtube-muse/web build && bun --filter @youtube-muse/desktop package",
+    "format": "oxfmt \"apps/**/*.{js,cjs,mjs,ts,tsx,css,html}\" \"*.{js,mjs,cjs,ts,json,jsonc}\" --write",
+    "format:check": "oxfmt \"apps/**/*.{js,cjs,mjs,ts,tsx,css,html}\" \"*.{js,mjs,cjs,ts,json,jsonc}\" --check"
   },
   "devDependencies": {
+    "oxfmt": "^0.44.0",
+    "oxlint": "^1.59.0",
     "turbo": "^2.5.0"
   }
 }

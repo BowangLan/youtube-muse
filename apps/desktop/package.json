@@ -2,16 +2,23 @@
   "name": "@youtube-muse/desktop",
   "version": "0.1.0",
   "private": true,
-  "main": "main.js",
+  "main": ".electron-build/main.js",
   "scripts": {
-    "dev": "wait-on tcp:3000 && ELECTRON_RENDERER_URL=http://127.0.0.1:3000 electron .",
-    "start": "electron .",
-    "build": "node -e \"console.log('Desktop shell ready. Use bun run package:desktop for distributables.')\"",
-    "lint": "node -e \"process.exit(0)\"",
-    "package": "node scripts/bundle-desktop.mjs"
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "build:ts": "tsc --project tsconfig.json",
+    "dev": "bun run build:ts && wait-on tcp:3000 && ELECTRON_RENDERER_URL=http://127.0.0.1:3000 electron .",
+    "start": "bun run build:ts && electron .",
+    "build": "bun run build:ts && node -e \"console.log('Desktop shell ready. Use bun run package:desktop for distributables.')\"",
+    "lint": "bun run typecheck && oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt \"*.ts\" \"scripts/**/*.{js,mjs}\" --write",
+    "format:check": "oxfmt \"*.ts\" \"scripts/**/*.{js,mjs}\" --check",
+    "package": "bun run build:ts && node scripts/bundle-desktop.mjs"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "electron": "^35.1.4",
+    "typescript": "5.9.3",
     "wait-on": "^8.0.3"
   }
 }

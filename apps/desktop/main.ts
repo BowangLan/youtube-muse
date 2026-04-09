@@ -1,12 +1,12 @@
-const { app, BrowserWindow } = require("electron");
-const { existsSync } = require("node:fs");
-const { spawn } = require("node:child_process");
-const net = require("node:net");
-const path = require("node:path");
+import { spawn, type ChildProcess } from "node:child_process";
+import { existsSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+import { app, BrowserWindow } from "electron";
 
-let nextServerProcess = null;
+let nextServerProcess: ChildProcess | null = null;
 
-function findOpenPort() {
+function findOpenPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
     server.once("error", reject);
@@ -29,14 +29,14 @@ function findOpenPort() {
   });
 }
 
-function waitForServer(url, timeoutMs = 15000) {
+function waitForServer(url: string, timeoutMs = 15_000): Promise<void> {
   const startedAt = Date.now();
 
   return new Promise((resolve, reject) => {
     const attempt = () => {
       fetch(url)
         .then(() => resolve())
-        .catch((error) => {
+        .catch((error: unknown) => {
           if (Date.now() - startedAt > timeoutMs) {
             reject(error);
             return;
@@ -50,9 +50,19 @@ function waitForServer(url, timeoutMs = 15000) {
   });
 }
 
-function getStandaloneEntrypoint() {
+function getStandaloneEntrypoint(): string | undefined {
   const candidates = [
-    path.join(process.resourcesPath, "app", "apps", "web", ".next", "standalone", "apps", "web", "server.js"),
+    path.join(
+      process.resourcesPath,
+      "app",
+      "apps",
+      "web",
+      ".next",
+      "standalone",
+      "apps",
+      "web",
+      "server.js",
+    ),
     path.join(process.resourcesPath, "app", "apps", "web", ".next", "standalone", "server.js"),
     path.join(__dirname, "..", "web", ".next", "standalone", "apps", "web", "server.js"),
     path.join(__dirname, "..", "web", ".next", "standalone", "server.js"),
@@ -61,7 +71,7 @@ function getStandaloneEntrypoint() {
   return candidates.find((candidate) => existsSync(candidate));
 }
 
-async function ensureRendererUrl() {
+async function ensureRendererUrl(): Promise<string> {
   if (process.env.ELECTRON_RENDERER_URL) {
     return process.env.ELECTRON_RENDERER_URL;
   }
@@ -74,7 +84,7 @@ async function ensureRendererUrl() {
   const port = await findOpenPort();
   const url = `http://127.0.0.1:${port}`;
 
-  nextServerProcess = spawn(process.execPath, [standaloneEntrypoint], {
+  const serverProcess = spawn(process.execPath, [standaloneEntrypoint], {
     cwd: path.dirname(standaloneEntrypoint),
     env: {
       ...process.env,
@@ -85,15 +95,16 @@ async function ensureRendererUrl() {
     stdio: "inherit",
   });
 
-  nextServerProcess.once("exit", () => {
+  serverProcess.once("exit", () => {
     nextServerProcess = null;
   });
+  nextServerProcess = serverProcess;
 
   await waitForServer(url);
   return url;
 }
 
-async function createMainWindow() {
+async function createMainWindow(): Promise<void> {
   const rendererUrl = await ensureRendererUrl();
 
   const window = new BrowserWindow({

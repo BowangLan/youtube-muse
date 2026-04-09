@@ -23,6 +23,7 @@ apps/*/out/
 # production
 /build
 apps/*/dist
+apps/*/.electron-build
 
 # misc
 .DS_Store

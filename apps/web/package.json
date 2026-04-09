@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "lint:next": "eslint .",
+    "format": "oxfmt \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx,html}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"convex/**/*.{ts,tsx}\" \"scripts/**/*.{js,mjs,ts}\" --write",
+    "format:check": "oxfmt \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx,html}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" \"convex/**/*.{ts,tsx}\" \"scripts/**/*.{js,mjs,ts}\" --check",
     "test:youtube-unofficial": "node scripts/test-unofficial-latest-videos.mjs",
     "test:youtube-official": "node scripts/test-official-latest-videos.mjs",
     "typecheck": "tsc --noEmit"
