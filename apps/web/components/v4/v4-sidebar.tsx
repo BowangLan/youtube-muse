@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 import { V4_HEADER_HEIGHT, V4_SIDEBAR_COLLAPSED_WIDTH, V4_SIDEBAR_PX, V4_SIDEBAR_WIDTH } from "./v4-constants";
 import { V4TAB_ITEMS } from "./v4-tabs-config";
 import { useV4AppStateStore, V4Tab } from "@/lib/store/v4-app-state-store";
-import { Link2, MusicIcon, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Link2, MusicIcon, PanelLeftClose, PanelLeft, PictureInPicture2 } from "lucide-react";
 import { SearchIcon } from "@/components/ui/search";
 import { PlayUrlDialog } from "@/components/player/play-url-dialog";
 import { ZenIcon } from "../ui/zen-icon";
 import { AboutDialog } from "./about-dialog";
+import { useDesktopRuntime } from "@/components/desktop/desktop-runtime-provider";
 
 const sidebarNavItemVariants = cva(
   "flex items-center select-none gap-2 px-3 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer",
@@ -84,6 +85,30 @@ function SidebarSearchButton({ isCollapsed }: { isCollapsed: boolean }) {
   );
 }
 
+function DesktopMiniPlayerButton({ isCollapsed }: { isCollapsed: boolean }) {
+  const { hasDesktopBridge, windowRole, miniPlayerVisible, toggleMiniPlayer } =
+    useDesktopRuntime();
+
+  if (!hasDesktopBridge || windowRole !== "desktop-main") return null;
+
+  return (
+    <button
+      onClick={() => void toggleMiniPlayer()}
+      className={cn(
+        sidebarNavItemVariants({
+          variant: "secondary",
+          isActive: miniPlayerVisible,
+          isCollapsed,
+        })
+      )}
+      aria-pressed={miniPlayerVisible}
+    >
+      <PictureInPicture2 size={16} />
+      {!isCollapsed && <span>Mini Player</span>}
+    </button>
+  );
+}
+
 export default function V1Sidebar() {
   const activeTab = useV4AppStateStore((state) => state.activeTab);
   const setActiveTab = useV4AppStateStore((state) => state.setActiveTab);
@@ -142,7 +167,6 @@ export default function V1Sidebar() {
       </div>
 
       <nav className={cn("flex flex-col gap-0.5", sidebarCollapsed && "items-center")}>
-        {/* Focus mode */}
         {V4TAB_ITEMS.map((item) => (
           <SidebarNavItem
             key={item.value}
@@ -171,11 +195,12 @@ export default function V1Sidebar() {
             </button>
           }
         />
+        <DesktopMiniPlayerButton isCollapsed={sidebarCollapsed} />
       </nav>
 
       <div className={cn("mt-auto mb-4 flex flex-col gap-1", sidebarCollapsed && "items-center")}>
         <AboutDialog sidebarCollapsed={sidebarCollapsed} />
       </div>
-    </aside >
+    </aside>
   );
 }

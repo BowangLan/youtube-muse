@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "build:ts": "tsc --project tsconfig.json",
-    "dev": "bun run build:ts && wait-on tcp:3000 && ELECTRON_RENDERER_URL=http://127.0.0.1:3000 electron .",
+    "dev": "bun run build:ts && wait-on tcp:3333 && ELECTRON_RENDERER_URL=http://127.0.0.1:3333 electron .",
     "start": "bun run build:ts && electron .",
     "build": "bun run build:ts && node -e \"console.log('Desktop shell ready. Use bun run package:desktop for distributables.')\"",
     "lint": "bun run typecheck && oxlint .",

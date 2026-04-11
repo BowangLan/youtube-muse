@@ -1,6 +1,7 @@
 "use client";
 
 import { ConvexAppProvider } from "@/components/convex-provider";
+import { DesktopRuntimeProvider } from "@/components/desktop/desktop-runtime-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 type ProvidersProps = {
@@ -9,8 +10,10 @@ type ProvidersProps = {
 
 export const Providers = ({ children }: ProvidersProps) => {
   return (
-    <ConvexAppProvider>
-      <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
-    </ConvexAppProvider>
+    <DesktopRuntimeProvider>
+      <ConvexAppProvider>
+        <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+      </ConvexAppProvider>
+    </DesktopRuntimeProvider>
   );
 };

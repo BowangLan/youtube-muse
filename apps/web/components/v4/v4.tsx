@@ -17,6 +17,7 @@ import { YouTubePlayerContainer } from "@/components/player/youtube-player-conta
 import { ChannelsDataLoader } from "@/components/data-loaders/channels-data-loader";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
+import { DesktopPlayerSync } from "@/components/desktop/desktop-player-sync";
 import { parseDuration } from "@/lib/utils/youtube";
 import {
   SEARCH_RESULTS_PLAYLIST_ID,
@@ -115,6 +116,7 @@ export default function Home() {
       <AnimatedBackground />
 
       <ChannelsDataLoader />
+      <DesktopPlayerSync />
 
       <YouTubePlayerContainer />
 
