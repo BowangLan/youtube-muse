@@ -42,6 +42,11 @@ export interface YouTubeMuseDesktopBridge {
     isVisible: () => Promise<boolean>;
     onVisibilityChange: (callback: (visible: boolean) => void) => () => void;
   };
+  mainWindow: {
+    toggleCompact: () => Promise<void>;
+    isCompact: () => Promise<boolean>;
+    onCompactChange: (callback: (isCompact: boolean) => void) => () => void;
+  };
   player: {
     publishState: (state: DesktopPlayerSnapshot) => void;
     getState: () => Promise<DesktopPlayerSnapshot | null>;

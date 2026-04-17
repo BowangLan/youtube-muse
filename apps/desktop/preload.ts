@@ -19,6 +19,17 @@ try {
         };
       },
     },
+    mainWindow: {
+      toggleCompact: () => ipcRenderer.invoke(DESKTOP_IPC_CHANNELS.mainWindowCompactToggle),
+      isCompact: () => ipcRenderer.invoke(DESKTOP_IPC_CHANNELS.mainWindowIsCompact),
+      onCompactChange: (callback: (isCompact: boolean) => void) => {
+        const listener = (_event: unknown, isCompact: boolean) => callback(isCompact);
+        ipcRenderer.on(DESKTOP_IPC_CHANNELS.mainWindowCompactChanged, listener);
+        return () => {
+          ipcRenderer.removeListener(DESKTOP_IPC_CHANNELS.mainWindowCompactChanged, listener);
+        };
+      },
+    },
     player: {
       publishState: (state: unknown) =>
         ipcRenderer.send(DESKTOP_IPC_CHANNELS.playerStatePublish, state),

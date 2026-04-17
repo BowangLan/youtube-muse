@@ -86,22 +86,22 @@ function SidebarSearchButton({ isCollapsed }: { isCollapsed: boolean }) {
 }
 
 function DesktopMiniPlayerButton({ isCollapsed }: { isCollapsed: boolean }) {
-  const { hasDesktopBridge, windowRole, miniPlayerVisible, toggleMiniPlayer } =
+  const { hasDesktopBridge, windowRole, isCompact, toggleCompact } =
     useDesktopRuntime();
 
   if (!hasDesktopBridge || windowRole !== "desktop-main") return null;
 
   return (
     <button
-      onClick={() => void toggleMiniPlayer()}
+      onClick={() => void toggleCompact()}
       className={cn(
         sidebarNavItemVariants({
           variant: "secondary",
-          isActive: miniPlayerVisible,
+          isActive: isCompact,
           isCollapsed,
         })
       )}
-      aria-pressed={miniPlayerVisible}
+      aria-pressed={isCompact}
     >
       <PictureInPicture2 size={16} />
       {!isCollapsed && <span>Mini Player</span>}
@@ -115,6 +115,7 @@ export default function V1Sidebar() {
   const setIsFocusMode = useV4AppStateStore((state) => state.setIsFocusMode);
   const sidebarCollapsed = useV4AppStateStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useV4AppStateStore((state) => state.toggleSidebar);
+  const { hasDesktopBridge } = useDesktopRuntime();
 
   const handleItemClick = (item: V4Tab) => {
     setActiveTab(item);
@@ -128,10 +129,10 @@ export default function V1Sidebar() {
         paddingRight: sidebarCollapsed ? 0 : V4_SIDEBAR_PX,
       }}
     >
-      {/* Top */}
+      {/* Top - Web */}
       <div
         className="flex items-center justify-between shrink-0"
-        style={{ height: V4_HEADER_HEIGHT, justifyContent: sidebarCollapsed ? "center" : "flex-start" }}
+        style={{ height: V4_HEADER_HEIGHT, justifyContent: sidebarCollapsed ? "center" : "flex-start", display: hasDesktopBridge ? "none" : "flex" }}
       >
         {!sidebarCollapsed && (
           <Link
@@ -164,6 +165,34 @@ export default function V1Sidebar() {
             <PanelLeftClose size={18} />
           </button>
         )}
+      </div>
+
+      {/* Top - Desktop App */}
+      <div
+        className="flex items-center justify-between shrink-0"
+        style={{ height: V4_HEADER_HEIGHT, justifyContent: sidebarCollapsed ? "center" : "flex-start", display: hasDesktopBridge ? "flex" : "none" }}
+      >
+
+        {/* {sidebarCollapsed ? (
+          <button
+            onClick={toggleSidebar}
+            className="items-center flex justify-center rounded-md hover:bg-foreground/10 text-foreground/60 hover:text-foreground transition-colors shrink-0 size-9 select-none cursor-pointer"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeft size={18} />
+          </button>
+        ) : (
+          <>
+            <div className="flex-1"></div>
+            <button
+              onClick={toggleSidebar}
+              className="items-center flex justify-center rounded-md hover:bg-foreground/10 text-foreground/60 hover:text-foreground transition-colors shrink-0 size-9 opacity-0 group-hover/sidebar:opacity-100 trans select-none cursor-pointer"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          </>
+        )} */}
       </div>
 
       <nav className={cn("flex flex-col gap-0.5", sidebarCollapsed && "items-center")}>

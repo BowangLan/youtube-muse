@@ -15,6 +15,8 @@ interface DesktopRuntimeContextValue {
   openMiniPlayer: () => Promise<void>;
   closeMiniPlayer: () => Promise<void>;
   toggleMiniPlayer: () => Promise<void>;
+  isCompact: boolean;
+  toggleCompact: () => Promise<void>;
 }
 
 const DesktopRuntimeContext =
@@ -31,6 +33,7 @@ export function DesktopRuntimeProvider({
   const [hasDesktopBridge, setHasDesktopBridge] = React.useState(false);
   const [electronShell, setElectronShell] = React.useState(false);
   const [miniPlayerVisible, setMiniPlayerVisible] = React.useState(false);
+  const [isCompact, setIsCompact] = React.useState(false);
 
   React.useLayoutEffect(() => {
     setHasDesktopBridge(isDesktopBridgePresent());
@@ -60,6 +63,19 @@ export function DesktopRuntimeProvider({
     });
   }, [hasDesktopBridge]);
 
+  React.useEffect(() => {
+    if (!hasDesktopBridge) {
+      setIsCompact(false);
+      return;
+    }
+    void window.youtubeMuseDesktop?.mainWindow
+      .isCompact()
+      .then((compact) => setIsCompact(compact));
+    return window.youtubeMuseDesktop?.mainWindow.onCompactChange((compact) => {
+      setIsCompact(compact);
+    });
+  }, [hasDesktopBridge]);
+
   const value = React.useMemo<DesktopRuntimeContextValue>(
     () => ({
       isDesktopApp,
@@ -75,8 +91,12 @@ export function DesktopRuntimeProvider({
       toggleMiniPlayer: hasDesktopBridge
         ? () => window.youtubeMuseDesktop!.miniPlayer.toggle()
         : noopAsync,
+      isCompact,
+      toggleCompact: hasDesktopBridge
+        ? () => window.youtubeMuseDesktop!.mainWindow.toggleCompact()
+        : noopAsync,
     }),
-    [isDesktopApp, hasDesktopBridge, miniPlayerVisible, windowRole],
+    [isDesktopApp, hasDesktopBridge, miniPlayerVisible, isCompact, windowRole],
   );
 
   return (

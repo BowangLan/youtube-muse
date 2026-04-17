@@ -2,14 +2,53 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain, screen } from "electron";
 import { DESKTOP_IPC_CHANNELS } from "./ipc";
+
+const APP_DISPLAY_NAME = "YouTube Muse";
 
 let nextServerProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
 let miniPlayerWindow: BrowserWindow | null = null;
 let isQuitting = false;
 let latestPlayerState: unknown = null;
+let mainWindowNormalBounds: Electron.Rectangle | null = null;
+let isMainWindowCompact = false;
+
+const MAIN_WINDOW_COMPACT = { width: 480, height: 400 };
+const ANIMATION_DURATION_MS = 300;
+
+function animateWindowBounds(
+  win: BrowserWindow,
+  target: { width: number; height: number; x?: number; y?: number },
+  duration = ANIMATION_DURATION_MS,
+) {
+  const current = win.getBounds();
+  const bounds = {
+    x: target.x ?? current.x,
+    y: target.y ?? current.y,
+    width: target.width,
+    height: target.height,
+  };
+
+  if (process.platform === "darwin") {
+    win.setBounds(bounds, true);
+    return;
+  }
+
+  const startTime = Date.now();
+  const tick = setInterval(() => {
+    const t = Math.min((Date.now() - startTime) / duration, 1);
+    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    win.setBounds({
+      x: Math.round(current.x + (bounds.x - current.x) * ease),
+      y: Math.round(current.y + (bounds.y - current.y) * ease),
+      width: Math.round(current.width + (bounds.width - current.width) * ease),
+      height: Math.round(current.height + (bounds.height - current.height) * ease),
+    });
+    if (t >= 1) clearInterval(tick);
+  }, 16);
+}
 
 function findOpenPort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -118,7 +157,12 @@ async function createMainWindow(): Promise<void> {
     minWidth: 1100,
     minHeight: 760,
     backgroundColor: "#09090b",
-    title: "YouTube Muse",
+    title: APP_DISPLAY_NAME,
+    frame: false,
+    transparent: true,
+    autoHideMenuBar: true,
+    titleBarStyle: "hiddenInset",
+    trafficLightPosition: { x: 24, y: 30 },
     webPreferences: {
       preload: path.resolve(__dirname, "preload.js"),
       contextIsolation: true,
@@ -207,6 +251,44 @@ function broadcastMiniPlayerVisibility() {
   }
 }
 
+function broadcastMainWindowCompact() {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) {
+      win.webContents.send(DESKTOP_IPC_CHANNELS.mainWindowCompactChanged, isMainWindowCompact);
+    }
+  }
+}
+
+function toggleMainWindowCompact() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+
+  if (!isMainWindowCompact) {
+    mainWindowNormalBounds = mainWindow.getBounds();
+    const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+    mainWindow.setMinimumSize(MAIN_WINDOW_COMPACT.width, MAIN_WINDOW_COMPACT.height);
+    animateWindowBounds(mainWindow, {
+      ...MAIN_WINDOW_COMPACT,
+      x: sw - MAIN_WINDOW_COMPACT.width - 20,
+      y: sh - MAIN_WINDOW_COMPACT.height - 20,
+    });
+    isMainWindowCompact = true;
+  } else {
+    if (mainWindowNormalBounds) {
+      const restored = mainWindowNormalBounds;
+      mainWindowNormalBounds = null;
+      animateWindowBounds(mainWindow, restored);
+      setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.setMinimumSize(1100, 760);
+        }
+      }, ANIMATION_DURATION_MS + 50);
+    }
+    isMainWindowCompact = false;
+  }
+
+  broadcastMainWindowCompact();
+}
+
 async function showMiniPlayerWindow() {
   const window = await createMiniPlayerWindow();
   if (!window.isVisible()) {
@@ -252,6 +334,12 @@ function registerIpcHandlers() {
     return !!miniPlayerWindow && !miniPlayerWindow.isDestroyed() && miniPlayerWindow.isVisible();
   });
 
+  ipcMain.handle(DESKTOP_IPC_CHANNELS.mainWindowCompactToggle, () => {
+    toggleMainWindowCompact();
+  });
+
+  ipcMain.handle(DESKTOP_IPC_CHANNELS.mainWindowIsCompact, () => isMainWindowCompact);
+
   ipcMain.on(DESKTOP_IPC_CHANNELS.playerStatePublish, (_event, state) => {
     latestPlayerState = state;
     if (miniPlayerWindow && !miniPlayerWindow.isDestroyed()) {
@@ -272,6 +360,10 @@ app.whenReady().then(async () => {
   registerIpcHandlers();
   await createMainWindow();
 
+  globalShortcut.register("CommandOrControl+M", () => {
+    toggleMainWindowCompact();
+  });
+
   app.on("activate", async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       await createMainWindow();
@@ -287,6 +379,7 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", () => {
   isQuitting = true;
+  globalShortcut.unregisterAll();
   if (nextServerProcess) {
     nextServerProcess.kill();
     nextServerProcess = null;
