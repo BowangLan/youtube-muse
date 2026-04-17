@@ -7,7 +7,7 @@ const debug = (...args: unknown[]) => {
   if (DEBUG_PLAYER) console.log("[player-reduce]", ...args)
 }
 
-const SEEK_STEP_SECONDS = 10
+export const SEEK_STEP_SECONDS = 10
 
 const clamp = (value: number, min: number, max: number) => {
   if (Number.isNaN(value)) return min

@@ -18,6 +18,7 @@ import {
   setYouTubePlayerElement,
 } from "@/components/player/youtube-player-element"
 import { useVideoQuality } from "@/hooks/use-video-quality"
+import { useMediaSession } from "@/hooks/use-media-session"
 import "@/lib/types/youtube"
 
 export function useYouTubePlayer() {
@@ -32,6 +33,14 @@ export function useYouTubePlayer() {
 
   // Enable automatic video quality management
   useVideoQuality()
+
+  // Wire OS-level media controls (macOS Now Playing, Windows SMTC, Linux MPRIS,
+  // headphone keys, lock screen, etc.). Registering action handlers here is
+  // critical: without them, Chromium's default Media Session behavior plays the
+  // YouTube <video> element directly, bypassing our state machine. The reducer
+  // would then observe `desiredPlayback === "paused"` while the player reports
+  // "playing" and immediately re-pause the track.
+  useMediaSession()
 
   const syncTrackMetadataFromPlayer = React.useCallback(
     (playerInstance: YTPlayer, metadata?: { duration?: number }) => {
