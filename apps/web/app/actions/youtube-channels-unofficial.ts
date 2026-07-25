@@ -45,9 +45,42 @@ interface YouTubeTabRenderer {
           richItemRenderer?: {
             content?: {
               videoRenderer?: YouTubeUnofficialVideoRenderer;
+              lockupViewModel?: YouTubeLockupViewModel;
             };
           };
         }>;
+      };
+    };
+  };
+}
+
+// Newer "lockup" view-model format YouTube is rolling out for channel video grids
+interface YouTubeLockupViewModel {
+  contentId?: string;
+  contentType?: string;
+  contentImage?: {
+    thumbnailViewModel?: {
+      image?: {
+        sources?: Array<{ url?: string; width?: number; height?: number }>;
+      };
+      overlays?: Array<{
+        thumbnailBottomOverlayViewModel?: {
+          badges?: Array<{
+            thumbnailBadgeViewModel?: { text?: string };
+          }>;
+        };
+      }>;
+    };
+  };
+  metadata?: {
+    lockupMetadataViewModel?: {
+      title?: { content?: string };
+      metadata?: {
+        contentMetadataViewModel?: {
+          metadataRows?: Array<{
+            metadataParts?: Array<{ text?: { content?: string } }>;
+          }>;
+        };
       };
     };
   };
@@ -374,6 +407,51 @@ export type YouTubeUnofficialVideoRenderer = {
 }
 
 /**
+ * Normalize the newer lockupViewModel grid item into the subset of the legacy
+ * videoRenderer shape that the client consumes (videoId, title, thumbnail,
+ * lengthText, publishedTimeText).
+ */
+const lockupViewModelToVideoRenderer = (
+  lockup: YouTubeLockupViewModel | undefined
+): YouTubeUnofficialVideoRenderer | undefined => {
+  const videoId = lockup?.contentId;
+  if (!videoId) return undefined;
+  if (lockup.contentType && lockup.contentType !== "LOCKUP_CONTENT_TYPE_VIDEO") {
+    return undefined;
+  }
+
+  const thumbnailViewModel = lockup.contentImage?.thumbnailViewModel;
+  const thumbnails = (thumbnailViewModel?.image?.sources ?? [])
+    .filter((source): source is { url: string; width?: number; height?: number } =>
+      Boolean(source?.url)
+    )
+    .map((source) => ({
+      url: source.url,
+      width: source.width ?? 0,
+      height: source.height ?? 0,
+    }));
+
+  const lengthBadge = thumbnailViewModel?.overlays
+    ?.flatMap((overlay) => overlay?.thumbnailBottomOverlayViewModel?.badges ?? [])
+    .map((badge) => badge?.thumbnailBadgeViewModel?.text)
+    .find((text) => Boolean(text && /^\d+(:\d+)+$/.test(text)));
+
+  const metadataViewModel = lockup.metadata?.lockupMetadataViewModel;
+  const publishedTimeText = metadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows
+    ?.flatMap((row) => row?.metadataParts ?? [])
+    .map((part) => part?.text?.content)
+    .find((text) => Boolean(text && /\bago\b/i.test(text)));
+
+  return {
+    videoId,
+    title: { runs: [{ text: metadataViewModel?.title?.content ?? "" }] },
+    thumbnail: { thumbnails },
+    lengthText: lengthBadge ? { simpleText: lengthBadge } : undefined,
+    publishedTimeText: publishedTimeText ? { simpleText: publishedTimeText } : undefined,
+  } as YouTubeUnofficialVideoRenderer;
+};
+
+/**
  * Fetch latest video ID from a YouTube channel using unofficial YouTube API
  */
 export async function getChannelLatestVideoIdUnofficial(
@@ -471,7 +549,13 @@ export async function getChannelLatestVideoIdUnofficial(
       videosTab?.tabRenderer?.content?.richGridRenderer?.contents ?? [];
 
     const videos = gridItems
-      .map((item) => item?.richItemRenderer?.content?.videoRenderer)
+      .map((item) => {
+        const content = item?.richItemRenderer?.content;
+        return (
+          content?.videoRenderer ??
+          lockupViewModelToVideoRenderer(content?.lockupViewModel)
+        );
+      })
       .filter((video): video is YouTubeUnofficialVideoRenderer => Boolean(video?.videoId));
 
     if (videos.length > 0) {
