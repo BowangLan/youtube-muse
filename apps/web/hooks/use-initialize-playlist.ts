@@ -8,6 +8,55 @@ import {
   searchYouTubeUnofficial,
   type SearchVideoResult,
 } from "@/app/actions/youtube-search-unofficial";
+import { getYouTubeVideoDetailUnofficial } from "@/app/actions/youtube-video-detail-unofficial";
+import { parseDuration } from "@/lib/utils/youtube";
+
+/**
+ * Fetch full video details for the given tracks and merge them into the
+ * playlist. Search results only carry title/channel/thumbnail, so duration,
+ * author thumbnail and publish date have to come from the detail endpoint.
+ */
+function enrichTrackDetails(playlistId: string, trackIds: string[]) {
+  void Promise.allSettled(
+    trackIds.map(async (trackId) => {
+      const { result } = await getYouTubeVideoDetailUnofficial(
+        `https://www.youtube.com/watch?v=${trackId}`
+      );
+      if (!result) return;
+
+      usePlaylistStore.getState().updateTrackInfo(playlistId, trackId, {
+        title: result.title || undefined,
+        author: result.channel.title || undefined,
+        authorUrl: result.channel.url || undefined,
+        authorThumbnail: result.channel.thumbnail || undefined,
+        duration: result.durationSeconds || undefined,
+        thumbnailUrl: result.thumbnail || undefined,
+        publishedAt: result.publishTime
+          ? new Date(result.publishTime).toISOString()
+          : undefined,
+        publishedTimeText: result.publishTime
+          ? new Date(result.publishTime).toLocaleDateString()
+          : undefined,
+      });
+    })
+  );
+}
+
+/**
+ * Backfill details for tracks that were seeded before details were loaded
+ * (duration 0 means the detail fetch never happened or failed).
+ */
+function backfillMissingTrackDetails() {
+  const { playlists } = usePlaylistStore.getState();
+  for (const playlist of playlists) {
+    const missingIds = playlist.tracks
+      .filter((track) => !track.duration)
+      .map((track) => track.id);
+    if (missingIds.length > 0) {
+      enrichTrackDetails(playlist.id, missingIds);
+    }
+  }
+}
 
 /**
  * Hook to initialize default playlist on first load
@@ -207,10 +256,18 @@ export function useInitializePlaylist() {
                   authorUrl: result.channelId
                     ? `https://www.youtube.com/channel/${result.channelId}`
                     : `https://www.youtube.com/results?search_query=${encodeURIComponent(result.channelTitle)}`,
-                  duration: 0,
+                  duration: result.lengthText ? parseDuration(result.lengthText) : 0,
                   thumbnailUrl: thumb,
+                  publishedTimeText: result.publishedTime || undefined,
                 });
               }
+
+              // Search results are shallow — pull full details (exact duration,
+              // author thumbnail, publish date) in the background.
+              enrichTrackDetails(
+                playlist.id,
+                toAdd.map((result) => result.videoId)
+              );
             })
           );
         })();
@@ -226,6 +283,10 @@ export function useInitializePlaylist() {
       if (!currentPlaylistId && nextState.playlists.length > 0) {
         setCurrentPlaylist(nextState.playlists[0]!.id);
       }
+
+      // Tracks seeded before details were fetched still have duration 0 —
+      // load their full info now.
+      backfillMissingTrackDetails();
     }
   }, [hasHydrated, createPlaylist, updatePlaylist, setCurrentPlaylist, addTrackToPlaylist]);
 }
