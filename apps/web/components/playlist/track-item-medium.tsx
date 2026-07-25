@@ -1,9 +1,8 @@
 "use client";
 
-import { usePlayerStore } from "@/lib/store/player-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
-import { formatTime, formatDate, extractChannelId } from "@/lib/utils/youtube";
+import { formatTime, extractChannelId } from "@/lib/utils/youtube";
 import { PlayingIndicatorSmall } from "./playing-indicator";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";

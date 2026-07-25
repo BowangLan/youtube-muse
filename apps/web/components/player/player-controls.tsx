@@ -11,7 +11,7 @@ import {
   Repeat1,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatTime, getThumbnailUrl } from "@/lib/utils/youtube";
+import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { motion } from "motion/react";
@@ -310,10 +310,9 @@ VolumeControl.displayName = "VolumeControl";
 export const PreviousButton = React.memo(
   ({ className }: { className?: string }) => {
     const dispatch = usePlayerStore((state) => state.dispatch);
-    const { playlists, currentPlaylistId, currentTrackIndex } =
+    const { currentTrackIndex } =
       usePlaylistStore();
 
-    const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
     const canPlayPrevious = currentTrackIndex > 0;
 
     return (

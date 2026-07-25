@@ -5,7 +5,6 @@ import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { usePlayerStore } from "@/lib/store/player-store";
-import { useCustomIntentsStore } from "@/lib/store/custom-intents-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { AnimatedBackground } from "@/components/player/animated-background";
@@ -25,7 +24,6 @@ import {
 } from "@/lib/store/youtube-search-store";
 import { cn } from "@/lib/utils";
 import { V4TabsContent } from "./v4-tabs-content";
-import { V4Header } from "./v4-header";
 import V1Sidebar from "./v4-sidebar";
 import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { Focus } from "./focus/focus";

@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import type { Track } from "@/lib/types/playlist";
-import { Button } from "@/components/ui/button";
-import { ClockIcon, Music, Trash2, Plus } from "lucide-react";
-import Link from "next/link";
+import { Music, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddTrackDialogContent } from "@/components/playlist/add-track-dialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";

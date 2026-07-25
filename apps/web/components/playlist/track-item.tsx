@@ -1,4 +1,3 @@
-import { usePlayerStore } from "@/lib/store/player-store";
 import { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import Image from "next/image";

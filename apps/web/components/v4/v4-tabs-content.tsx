@@ -17,7 +17,6 @@ import {
 } from "@/lib/store/youtube-search-store";
 import { PlaylistCardGrid } from "../playlist/playlist-card-grid";
 import { PlaylistDetailSection } from "../playlist/playlist-detail-section";
-import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import { searchYouTubeUnofficial, type SearchVideoResult } from "@/app/actions/youtube-search-unofficial";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/ui/search";

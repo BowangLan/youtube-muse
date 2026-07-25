@@ -10,7 +10,6 @@ import {
 } from "@/components/player/player-controls";
 import { SliceRepeatControls, SliceRepeatToggleButton } from "./slice-repeat-controls";
 import { formatDate } from "@/lib/utils/youtube";
-import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import Link from "next/link";
 
 export function FullscreenPlayerControls() {

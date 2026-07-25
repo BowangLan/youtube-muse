@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { V4_HEADER_HEIGHT, V4_SIDEBAR_COLLAPSED_WIDTH, V4_SIDEBAR_PX, V4_SIDEBAR_WIDTH } from "./v4-constants";
+import { V4_HEADER_HEIGHT, V4_SIDEBAR_PX } from "./v4-constants";
 import { V4TAB_ITEMS } from "./v4-tabs-config";
 import { useV4AppStateStore, V4Tab } from "@/lib/store/v4-app-state-store";
 import { Link2, MusicIcon, PanelLeftClose, PanelLeft, PictureInPicture2 } from "lucide-react";

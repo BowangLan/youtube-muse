@@ -7,7 +7,6 @@ import { Play, Pause, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export function StickyMiniPlayer() {
   const track = usePlaylistStore((state) => state.getCurrentTrack());
@@ -23,7 +22,7 @@ export function StickyMiniPlayer() {
   const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
   // const hasMounted = useHasMounted();
 
-  const [isPlayerHidden, setIsPlayerHidden] = React.useState(false);
+  const [isPlayerHidden] = React.useState(false);
 
   // Intersection Observer to detect when player is hidden
   // TODO: Refine this

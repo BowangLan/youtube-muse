@@ -65,7 +65,6 @@ export function PlaylistSection() {
   const {
     playlists,
     currentPlaylistId,
-    currentTrackIndex,
     getCurrentActualTrackIndex,
     setCurrentTrackIndex,
     addTrackToPlaylist,

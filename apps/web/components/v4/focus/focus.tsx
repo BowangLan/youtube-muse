@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
-import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 import {
   NextButton,
@@ -17,10 +15,6 @@ import { RichButton } from "@/components/ui/rich-button";
 import { AnimatePresence, motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
 import {
-  FocusBgRadialBloom,
-  FocusBgDualVeil,
-  FocusBgWarmEmber,
-  FocusBgArcticFrost,
   FocusBgGrainFilm,
 } from "@/components/v4/focus/focus-backgrounds";
 

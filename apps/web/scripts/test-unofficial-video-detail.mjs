@@ -14,8 +14,6 @@
  *   node test-unofficial-video-detail.mjs "https://youtu.be/dQw4w9WgXcQ"
  */
 
-import { readFileSync } from "fs";
-
 // Get YouTube URL from command line arguments
 const youtubeUrl = process.argv[2];
 
@@ -476,7 +474,7 @@ function extractMetaData(html) {
     if (descriptionMatch) {
       metaData.description = descriptionMatch[1];
     }
-  } catch (error) {
+  } catch {
     // Meta tag extraction failed, continue
   }
 

@@ -7,7 +7,7 @@ import { useIsPlaying } from "@/hooks/use-is-playing";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import { AnimatePresence } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ProgressBar, VolumeControl } from "./player-controls";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatTime } from "@/lib/utils/youtube";

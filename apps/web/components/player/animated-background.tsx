@@ -2,11 +2,10 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePlayerStore } from "@/lib/store/player-store";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
 
 export function AnimatedBackground() {
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
+
   const currentTrack = usePlaylistStore((state) => state.getCurrentTrack());
 
   const thumbnailUrl = currentTrack?.thumbnailUrl;

@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+
 /**
  * YouTube Video Detail Unofficial API - Server Action
  *
@@ -295,7 +297,9 @@ const FIELD_SCRAPERS = {
           // Return timestamp in milliseconds since epoch
           return date.getTime();
         } catch (error) {
-          console.warn("Failed to parse publish date:", publishDate, error);
+          after(() =>
+            console.warn("Failed to parse publish date:", publishDate, error)
+          );
           return 0;
         }
       }
@@ -314,7 +318,9 @@ const FIELD_SCRAPERS = {
           // Return timestamp in milliseconds since epoch
           return date.getTime();
         } catch (error) {
-          console.warn("Failed to parse upload date:", uploadDate, error);
+          after(() =>
+            console.warn("Failed to parse upload date:", uploadDate, error)
+          );
           return 0;
         }
       }
@@ -493,7 +499,7 @@ function extractMetaData(html: string) {
     if (descriptionMatch) {
       metaData.description = descriptionMatch[1];
     }
-  } catch (error) {
+  } catch {
     // Meta tag extraction failed, continue
   }
 
@@ -537,7 +543,9 @@ function extractVideoDetails(metaData: any, youtubeData: any): YouTubeVideoDetai
     try {
       result[fieldName] = scraper.extract(youtubeData);
     } catch (error) {
-      console.warn(`Failed to extract field ${fieldName}:`, error instanceof Error ? error.message : String(error));
+      after(() =>
+        console.warn(`Failed to extract field ${fieldName}:`, error instanceof Error ? error.message : String(error))
+      );
       result[fieldName] =
         scraper.source === "videoDetails"
           ? []

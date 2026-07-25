@@ -51,15 +51,6 @@ interface KeywordSelectorProps {
   onError?: (error: string | null) => void;
 }
 
-const getKeywordColorClasses = (keyword: string) => {
-  if (
-    SUGGESTED_KEYWORDS.includes(keyword as (typeof SUGGESTED_KEYWORDS)[number])
-  ) {
-    return "bg-white/5 text-white/80 border-white/15";
-  }
-  return "bg-white/10 text-white border-white/20";
-};
-
 export function KeywordSelector({
   keywords,
   onChange,

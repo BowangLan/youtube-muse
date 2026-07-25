@@ -8,14 +8,10 @@ import { PlaylistSection } from "./playlist-section";
 import { AppFooterInner } from "@/components/layout/app-footer";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
-import { StickyMiniPlayer } from "@/components/player/sticky-mini-player";
 import {
   CurrentTrackPlayer,
-  CurrentTrackPlayerMini,
 } from "@/components/player/current-track-player";
 import { useAppStateStore } from "@/lib/store/app-state-store";
-import { toast } from "sonner";
-import { AppHeader } from "@/components/layout/app-header";
 
 const ClockAndDate = () => {
   const [time, setTime] = React.useState(new Date());
@@ -44,9 +40,6 @@ const ClockAndDate = () => {
     </div>
   );
 };
-
-const PAGE_PADDING_X = 16 * 4;
-const PAGE_PADDING_Y = 16 * 4;
 
 export default function Home() {
   // Initialize YouTube player

@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ChevronDown,
   MoreHorizontal,
-  MonitorPlay,
   Repeat,
   Repeat1,
 } from "lucide-react";
@@ -120,119 +119,6 @@ const GlowLayer = ({ glowStyle, variant }: GlowLayerProps) => {
         />
       )}
     </AnimatePresence>
-  );
-};
-
-const InternalGlassGlow = ({
-  isPlaying,
-  glowStyle,
-  variant,
-}: {
-  isPlaying: boolean;
-  glowStyle: React.CSSProperties;
-  variant: "collapsed" | "expanded";
-}) => {
-  if (!isPlaying) return null;
-
-  if (variant === "collapsed") return null;
-
-  const parseColorVar = (varName: string) => {
-    const colorValue = glowStyle[varName as keyof React.CSSProperties] as
-      | string
-      | undefined;
-    return colorValue || "rgba(255, 255, 255, 0.3)";
-  };
-
-  const color1 = parseColorVar("--glow-color-1");
-  const color2 = parseColorVar("--glow-color-2");
-  const color3 = parseColorVar("--glow-color-3");
-
-  const isExpanded = variant === "expanded";
-  const ambientOpacity = isExpanded ? 0.55 : 0.3;
-  const glowBlendMode = isExpanded ? "screen" : "normal";
-
-  return (
-    <motion.div
-      initial={false}
-      className="absolute inset-0 pointer-events-none overflow-hidden"
-      style={{
-        zIndex: 1,
-        borderRadius: isExpanded ? "0" : "0.75rem",
-      }}
-    >
-      {/* Ambient wash */}
-      <div
-        className="absolute inset-0 animate-internal-glow-2"
-        style={{
-          background: `radial-gradient(120% 120% at 50% 15%, ${color1} 0%, transparent 62%),
-            radial-gradient(120% 120% at 15% 85%, ${color2} 0%, transparent 58%),
-            radial-gradient(120% 120% at 85% 85%, ${color3} 0%, transparent 60%)`,
-          opacity: ambientOpacity,
-          mixBlendMode: glowBlendMode,
-          filter: "blur(40px)",
-        }}
-      />
-
-      {/* Top glow */}
-      <div
-        className="absolute animate-internal-glow-1"
-        style={{
-          top: isExpanded ? "-35%" : "-25%",
-          left: "50%",
-          width: isExpanded ? "85%" : "60%",
-          height: isExpanded ? "360px" : "150px",
-          background: `radial-gradient(ellipse, ${color1} 0%, transparent 70%)`,
-          transform: "translateX(-50%)",
-          filter: "blur(50px)",
-          mixBlendMode: glowBlendMode,
-        }}
-      />
-
-      {/* Right glow */}
-      <div
-        className="absolute animate-internal-glow-2"
-        style={{
-          top: "50%",
-          right: isExpanded ? "-25%" : "-20%",
-          width: isExpanded ? "360px" : "150px",
-          height: isExpanded ? "80%" : "50%",
-          background: `radial-gradient(ellipse, ${color2} 0%, transparent 70%)`,
-          transform: "translateY(-50%)",
-          filter: "blur(50px)",
-          mixBlendMode: glowBlendMode,
-        }}
-      />
-
-      {/* Bottom glow */}
-      <div
-        className="absolute animate-internal-glow-3"
-        style={{
-          bottom: isExpanded ? "-35%" : "-25%",
-          left: "50%",
-          width: isExpanded ? "85%" : "60%",
-          height: isExpanded ? "360px" : "150px",
-          background: `radial-gradient(ellipse, ${color1} 0%, transparent 70%)`,
-          transform: "translateX(-50%)",
-          filter: "blur(50px)",
-          mixBlendMode: glowBlendMode,
-        }}
-      />
-
-      {/* Left glow */}
-      <div
-        className="absolute animate-internal-glow-1"
-        style={{
-          top: "50%",
-          left: isExpanded ? "-25%" : "-20%",
-          width: isExpanded ? "360px" : "150px",
-          height: isExpanded ? "80%" : "50%",
-          background: `radial-gradient(ellipse, ${color3} 0%, transparent 70%)`,
-          transform: "translateY(-50%)",
-          filter: "blur(50px)",
-          mixBlendMode: glowBlendMode,
-        }}
-      />
-    </motion.div>
   );
 };
 
@@ -374,12 +260,10 @@ const PlayerControls = () => {
     isLoadingNewVideo,
     apiReady,
     canPlayNext,
-    videoMode,
     onTogglePlay,
     onSkipBackward,
     onPlayNext,
-    onToggleVideo,
-  } = useMiniPlayerContext();
+    } = useMiniPlayerContext();
 
   const isPlaying = useIsPlaying();
 

@@ -26,7 +26,7 @@ export function useVideoQuality() {
       try {
         // Check if method exists before calling (YouTube API may not have it ready)
         if (typeof player.getAvailableQualityLevels !== "function") return
-        
+
         const qualities = player.getAvailableQualityLevels()
         if (qualities && qualities.length > 0) {
           setAvailableQualities(qualities)
@@ -44,13 +44,13 @@ export function useVideoQuality() {
       try {
         // Check if method exists before calling
         if (typeof player.getAvailableQualityLevels !== "function") return
-        
+
         const currentQualities = player.getAvailableQualityLevels()
         if (currentQualities && currentQualities.length > 0) {
           setAvailableQualities(currentQualities)
           clearInterval(interval)
         }
-      } catch (error) {
+      } catch {
         // Silently ignore errors in interval - will retry
       }
     }, 500)

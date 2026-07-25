@@ -62,7 +62,6 @@ export function IntentDetailSection() {
   const dispatch = usePlayerStore((state) => state.dispatch);
 
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
-  const updatePlaylist = usePlaylistStore((state) => state.updatePlaylist);
 
   const gradientOverrides = useCustomIntentsStore(
     (state) => state.gradientOverrides
@@ -104,7 +103,6 @@ export function IntentDetailSection() {
   }, [activePlaylistId, gradientOverrides, activeIntent?.gradientClassName]);
 
   // Get minimum duration
-  const minDuration = activeIntent?.minDuration ?? 20;
 
   const handleTrackClick = React.useCallback(
     (index: number) => {

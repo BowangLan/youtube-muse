@@ -60,7 +60,7 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      const { dispatch, volume, duration, isPlaying, currentTime, sliceRepeat } =
+      const { dispatch, volume, isPlaying, currentTime, sliceRepeat } =
         usePlayerStore.getState()
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()

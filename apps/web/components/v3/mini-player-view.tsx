@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -61,7 +60,6 @@ import {
 import { FEATURE_FLAGS } from "@/lib/constants";
 import { useIsPlaying } from "@/hooks/use-is-playing";
 import { useAppStateStore } from "@/lib/store/app-state-store";
-import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
 import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
 import { toast } from "sonner";
 

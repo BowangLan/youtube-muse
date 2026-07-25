@@ -1,5 +1,7 @@
 "use server"
 
+import { after } from "next/server"
+
 // URL Constants
 const YOUTUBE_URLS = {
   BASE: "https://www.youtube.com",
@@ -382,7 +384,9 @@ export async function getChannelLatestVideoIdUnofficial(
       ? `${YOUTUBE_URLS.BASE}/${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`
       : `${YOUTUBE_URLS.BASE}/${YOUTUBE_URLS.CHANNEL_PATH}${channelId}${YOUTUBE_URLS.VIDEOS_PATH}`;
 
-    console.log(`[getChannelLatestVideoIdUnofficial] Fetching URL: ${url}`);
+    after(() =>
+      console.log(`[getChannelLatestVideoIdUnofficial] Fetching URL: ${url}`)
+    );
 
     const response = await fetch(url, {
       headers: {
@@ -391,7 +395,9 @@ export async function getChannelLatestVideoIdUnofficial(
       },
     });
 
-    console.log(`[getChannelLatestVideoIdUnofficial] Response: ${response.status} ${response.statusText}`);
+    after(() =>
+      console.log(`[getChannelLatestVideoIdUnofficial] Response: ${response.status} ${response.statusText}`)
+    );
 
     if (!response.ok) {
       return {
