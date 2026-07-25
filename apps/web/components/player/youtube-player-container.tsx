@@ -377,7 +377,9 @@ export function YouTubePlayerContainer() {
             videoMode === "floating" &&
             "h-full w-full relative rounded-lg overflow-hidden",
             videoMode === "fullscreen" &&
-            "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative"
+            "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative",
+            videoMode === "hidden" &&
+            "hidden"
           )}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
