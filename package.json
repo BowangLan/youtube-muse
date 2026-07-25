@@ -18,7 +18,8 @@
     "start:desktop": "bun --filter @youtube-muse/desktop start",
     "package:desktop": "bun --filter @youtube-muse/web build && bun --filter @youtube-muse/desktop package",
     "format": "oxfmt \"apps/**/*.{js,cjs,mjs,ts,tsx,css,html}\" \"*.{js,mjs,cjs,ts,json,jsonc}\" --write",
-    "format:check": "oxfmt \"apps/**/*.{js,cjs,mjs,ts,tsx,css,html}\" \"*.{js,mjs,cjs,ts,json,jsonc}\" --check"
+    "format:check": "oxfmt \"apps/**/*.{js,cjs,mjs,ts,tsx,css,html}\" \"*.{js,mjs,cjs,ts,json,jsonc}\" --check",
+    "doctor": "npx react-doctor@latest"
   },
   "devDependencies": {
     "oxfmt": "^0.44.0",
