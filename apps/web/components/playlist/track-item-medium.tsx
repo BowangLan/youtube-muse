@@ -139,7 +139,7 @@ export function TrackItemMedium({
             ) : (
               <User className="h-3 w-3 shrink-0" />
             )}
-            <span className="truncate">{channel?.title}</span>
+            <span className="truncate">{channel?.title ?? track.author}</span>
           </span>
           <span className="shrink-0">•</span>
           <span className="shrink-0">{formatTime(track.duration)}</span>

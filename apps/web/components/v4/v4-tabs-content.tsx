@@ -20,6 +20,7 @@ import { PlaylistDetailSection } from "../playlist/playlist-detail-section";
 import { searchYouTubeUnofficial, type SearchVideoResult } from "@/app/actions/youtube-search-unofficial";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/ui/search";
+import { SpotifyFavoritesSection } from "../spotify/spotify-favorites-section";
 
 function V4TabsContentPlaylists() {
   const intents = useCustomIntentsStore(
@@ -58,6 +59,7 @@ function V4TabsContentPlaylists() {
     >
       <V4TabContentHeader title="Latest Videos" />
       <PlaylistCardGrid playlists={displayedPlaylists} />
+      <SpotifyFavoritesSection />
       <div className="h-(--bottom-spacing) flex-none"></div>
     </motion.div>
   );

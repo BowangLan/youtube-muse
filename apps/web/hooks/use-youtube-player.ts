@@ -14,6 +14,11 @@ import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instan
 import { runPlayerCommands } from "@/lib/player-shell/cmd-runner"
 import { createPlaylistQueueAdapter } from "@/lib/player-shell/queue-adapter"
 import {
+  registerPlaybackAdapter,
+  unregisterPlaybackAdapter,
+} from "@/lib/player-shell/playback-adapters"
+import { createYouTubeAdapter } from "@/lib/player-shell/youtube-adapter"
+import {
   ensureYouTubePlayerElement,
   setYouTubePlayerElement,
 } from "@/components/player/youtube-player-element"
@@ -64,13 +69,21 @@ export function useYouTubePlayer() {
   const runCommands = React.useCallback(
     (commands: Parameters<typeof runPlayerCommands>[0]) => {
       runPlayerCommands(commands, {
-        getPlayer,
+        getActiveSource: () => usePlayerStore.getState().activeSource,
         dispatch,
         queueAdapter,
       })
     },
-    [dispatch, queueAdapter, getPlayer]
+    [dispatch, queueAdapter]
   )
+
+  // Register the YouTube backend with the source-routing command runner
+  React.useEffect(() => {
+    registerPlaybackAdapter("youtube", createYouTubeAdapter(getPlayer))
+    return () => {
+      unregisterPlaybackAdapter("youtube")
+    }
+  }, [getPlayer])
 
   // Load YouTube IFrame API
   React.useEffect(() => {
@@ -168,6 +181,12 @@ export function useYouTubePlayer() {
           dispatch({ type: "PlayerReady", duration: dur })
         },
         onStateChange: (event: YTPlayerEvent) => {
+          // Only the active source may feed observed playback state into the
+          // reducer — e.g. the "paused" event YT emits when Spotify takes over
+          // must not fight the reducer's desiredPlayback reconciliation.
+          if (usePlayerStore.getState().activeSource !== "youtube") {
+            return
+          }
           const stateMap: Record<number, "unstarted" | "ended" | "playing" | "paused" | "buffering" | "cued"> = {
             [-1]: "unstarted",
             0: "ended",
@@ -191,6 +210,9 @@ export function useYouTubePlayer() {
         },
         onError: (event: YTPlayerEvent) => {
           console.error("YouTube player load error:", event.data)
+          if (usePlayerStore.getState().activeSource !== "youtube") {
+            return
+          }
           dispatch({
             type: "PlayerLoadFailed",
             reason: `YouTube player error code: ${event.data}`,
@@ -203,9 +225,11 @@ export function useYouTubePlayer() {
   }, [apiReady, dispatch, syncTrackMetadataFromPlayer, setPlayer])
 
 
+  const activeSource = usePlayerStore((state) => state.activeSource)
+
   // Update current time
   React.useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || activeSource !== "youtube") {
       return
     }
 
@@ -218,7 +242,7 @@ export function useYouTubePlayer() {
     }, 250)
 
     return () => clearInterval(interval)
-  }, [dispatch, isPlaying])
+  }, [dispatch, isPlaying, activeSource])
 
   const lastTrackIdRef = React.useRef<string | null>(null)
   const hasHadUserInteractionRef = React.useRef(false)
@@ -268,13 +292,15 @@ export function useYouTubePlayer() {
     // Only autoplay if user has interacted with the page (to comply with browser autoplay policies)
     // OR if we're already playing (track transition)
     const shouldAutoplay = hasHadUserInteractionRef.current || isPlaying
+    const source = currentTrack?.source ?? "youtube"
     debug("TrackSelected effect: dispatching", {
       videoId: nextTrackId,
       shouldAutoplay,
+      source,
       reason: hasHadUserInteractionRef.current ? "user-interacted" : isPlaying ? "was-playing" : "no-autoplay",
     })
-    dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: shouldAutoplay })
-  }, [currentTrack?.id, dispatch, isPlaying])
+    dispatch({ type: "TrackSelected", videoId: nextTrackId, autoplay: shouldAutoplay, source })
+  }, [currentTrack?.id, currentTrack?.source, dispatch, isPlaying])
 
   // Slice repeat monitoring - check if we've reached the slice end boundary
   const sliceRepeat = usePlayerStore((state) => state.sliceRepeat)

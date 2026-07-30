@@ -19,6 +19,8 @@ interface MiniPlayerContextValue {
   pendingPlayState: boolean | null;
   apiReady: boolean;
   videoMode: YouTubePlayerMode;
+  /** Video modes only exist for the YouTube backend; false while Spotify plays */
+  canToggleVideo: boolean;
 
   // Computed values
   canPlayNext: boolean;
@@ -67,6 +69,7 @@ export function MiniPlayerProvider({
   const apiReady = usePlayerStore((state) => state.apiReady);
   const pendingPlayState = usePlayerStore((state) => state.pendingPlayState);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const activeSource = usePlayerStore((state) => state.activeSource);
   const videoMode = useYouTubePlayerInstanceStore((state) => state.videoMode);
   const toggleVideoMode = useYouTubePlayerInstanceStore(
     (state) => state.toggleVideoMode
@@ -91,6 +94,7 @@ export function MiniPlayerProvider({
     pendingPlayState,
     apiReady,
     videoMode,
+    canToggleVideo: activeSource !== "spotify",
     canPlayNext,
     isExpanded,
     isPinned,

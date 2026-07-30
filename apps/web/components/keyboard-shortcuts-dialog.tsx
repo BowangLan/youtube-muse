@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Keyboard } from "lucide-react";
+import { usePlayerStore } from "@/lib/store/player-store";
 
 interface ShortcutGroup {
   title: string;
@@ -55,6 +56,12 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 
 export function KeyboardShortcutsDialog() {
   const [open, setOpen] = React.useState(false);
+  const activeSource = usePlayerStore((state) => state.activeSource);
+  // Video shortcuts (V/F) only apply to YouTube playback
+  const shortcutGroups =
+    activeSource === "spotify"
+      ? SHORTCUT_GROUPS.filter((group) => group.title !== "Video")
+      : SHORTCUT_GROUPS;
 
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -97,7 +104,7 @@ export function KeyboardShortcutsDialog() {
           </DialogTitle>
         </DialogHeader>
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-8">
-          {SHORTCUT_GROUPS.map((group) => (
+          {shortcutGroups.map((group) => (
             <div key={group.title} className="space-y-3">
               <h3 className="text-xs font-normal uppercase tracking-wider text-white/60">
                 {group.title}

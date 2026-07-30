@@ -8,17 +8,30 @@ export type PlaybackState =
 
 export type DesiredPlayback = "playing" | "paused"
 
+/**
+ * Which playback backend a track plays through. The reducer treats track ids
+ * as opaque refs (YouTube video id or Spotify track id) — the shell routes
+ * commands to the adapter registered for the active source.
+ */
+export type PlaybackSource = "youtube" | "spotify"
+
 export type PlayerMode =
   | { tag: "uninitialized" }
-  | { tag: "loading"; videoId: string; requestId: number; autoplay: boolean }
-  | { tag: "ready"; videoId: string }
+  | {
+      tag: "loading"
+      videoId: string
+      requestId: number
+      autoplay: boolean
+      source: PlaybackSource
+    }
+  | { tag: "ready"; videoId: string; source: PlaybackSource }
   | { tag: "error"; reason: string }
 
 export type PlayerCommand =
   | { type: "Play" }
   | { type: "Pause" }
   | { type: "Seek"; seconds: number }
-  | { type: "Load"; videoId: string; autoplay: boolean }
+  | { type: "Load"; videoId: string; autoplay: boolean; source: PlaybackSource }
   | { type: "SetVolume"; volume: number }
   | { type: "RequestNextTrack" }
   | { type: "RequestPreviousTrack" }
@@ -29,7 +42,12 @@ export type PlayerEvent =
   | { type: "PlayerStateChanged"; state: PlaybackState; duration?: number }
   | { type: "PlayerLoadFailed"; reason?: string }
   | { type: "TimeTick"; currentTime: number }
-  | { type: "TrackSelected"; videoId: string; autoplay: boolean }
+  | {
+      type: "TrackSelected"
+      videoId: string
+      autoplay: boolean
+      source: PlaybackSource
+    }
   | { type: "UserTogglePlay" }
   | { type: "UserPlay" }
   | { type: "UserPause" }
@@ -58,6 +76,8 @@ export interface PlayerState {
   volume: number
   desiredPlayback: DesiredPlayback
   observedPlayback: PlaybackState
+  /** Backend the currently selected track plays through */
+  activeSource: PlaybackSource
   mode: PlayerMode
   loadRequestId: number
   sliceRepeat: {
@@ -80,6 +100,7 @@ export const initialPlayerState: PlayerState = {
   volume: 100,
   desiredPlayback: "paused",
   observedPlayback: "paused",
+  activeSource: "youtube",
   mode: { tag: "uninitialized" },
   loadRequestId: 0,
   sliceRepeat: {

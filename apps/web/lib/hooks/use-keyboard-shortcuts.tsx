@@ -60,8 +60,10 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      const { dispatch, volume, isPlaying, currentTime, sliceRepeat } =
+      const { dispatch, volume, isPlaying, currentTime, sliceRepeat, activeSource } =
         usePlayerStore.getState()
+      // Video modes only apply to the YouTube backend — Spotify playback is audio-only
+      const videoShortcutsEnabled = activeSource !== "spotify"
       const { playlists, setCurrentPlaylist, setCurrentTrackIndex } =
         usePlaylistStore.getState()
       const { videoMode, setVideoMode } = useYouTubePlayerInstanceStore.getState()
@@ -82,7 +84,8 @@ export function useKeyboardShortcuts() {
       const shouldPreventDefault = () => {
         if (key === " " || key === "k") return true
         if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) return true
-        if (["f", "j", "l", "m", "n", "p", "v", "z"].includes(key)) return true
+        if (["j", "l", "m", "n", "p", "z"].includes(key)) return true
+        if (["f", "v"].includes(key)) return videoShortcutsEnabled
         if (key === "s" && !ctrl && isPlaying && !sliceRepeat.isActive) return true
         if (!isNaN(Number(key))) return true
         return false
@@ -193,6 +196,7 @@ export function useKeyboardShortcuts() {
       }
 
       if (key === "v") {
+        if (!videoShortcutsEnabled) return
         const nextMode = videoMode === "hidden" ? "floating" : "hidden"
         setVideoMode(nextMode)
         showFeedback({
@@ -202,6 +206,7 @@ export function useKeyboardShortcuts() {
       }
 
       if (key === "f") {
+        if (!videoShortcutsEnabled) return
         const nextMode =
           videoMode === "hidden"
             ? "fullscreen"

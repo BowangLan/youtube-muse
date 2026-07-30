@@ -12,6 +12,7 @@ const TrackSchema = z.object({
   duration: z.number(),
   thumbnailUrl: z.string(),
   addedAt: z.number(),
+  source: z.enum(["youtube", "spotify"]).optional(),
 })
 
 const PlaylistSchema = z.object({

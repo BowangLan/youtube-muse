@@ -1,6 +1,10 @@
-import type { PlayerCommand, PlayerEvent } from "@/lib/player-core/types"
-import type { YTPlayer } from "@/lib/types/youtube"
+import type {
+  PlayerCommand,
+  PlayerEvent,
+  PlaybackSource,
+} from "@/lib/player-core/types"
 import type { QueueAdapter } from "./queue-adapter"
+import { getPlaybackAdapter, pauseOtherSources } from "./playback-adapters"
 
 /* eslint-disable no-console */
 const DEBUG_PLAYER = true
@@ -9,13 +13,10 @@ const debug = (...args: unknown[]) => {
 }
 
 interface CommandContext {
-  getPlayer: () => YTPlayer | null
+  /** Source the reducer currently considers active — transport commands route here */
+  getActiveSource: () => PlaybackSource
   dispatch: (event: PlayerEvent) => void
   queueAdapter?: QueueAdapter
-}
-
-const normalizeVolume = (volume: number) => {
-  return ((Math.exp(volume / 100) - 1) / (Math.E - 1)) * 100
 }
 
 export function runPlayerCommands(
@@ -24,46 +25,37 @@ export function runPlayerCommands(
 ) {
   if (!commands.length) return
 
+  const activeAdapter = () => getPlaybackAdapter(context.getActiveSource())
+
   for (const command of commands) {
     switch (command.type) {
       case "Play": {
-        context.getPlayer()?.playVideo()
+        activeAdapter()?.play()
         break
       }
       case "Pause": {
-        context.getPlayer()?.pauseVideo()
+        activeAdapter()?.pause()
         break
       }
       case "Seek": {
-        context.getPlayer()?.seekTo(command.seconds, true)
+        activeAdapter()?.seek(command.seconds)
         break
       }
       case "Load": {
-        const player = context.getPlayer()
+        const adapter = getPlaybackAdapter(command.source)
         debug("Load command", {
-          videoId: command.videoId,
+          trackRef: command.videoId,
           autoplay: command.autoplay,
-          hasPlayer: !!player,
+          source: command.source,
+          hasAdapter: !!adapter,
         })
-        if (!player) break
-
-        if (command.autoplay) {
-          debug("Load: loadVideoById (autoplay)")
-          player.loadVideoById(command.videoId)
-        } else if (typeof player.cueVideoById === "function") {
-          debug("Load: cueVideoById (no autoplay)")
-          player.cueVideoById(command.videoId)
-        } else {
-          debug("Load: loadVideoById + pause (fallback)")
-          player.loadVideoById(command.videoId)
-          player.pauseVideo()
-        }
+        // Switching backends: silence whichever source was playing before
+        pauseOtherSources(command.source)
+        adapter?.load(command.videoId, command.autoplay)
         break
       }
       case "SetVolume": {
-        const player = context.getPlayer()
-        if (!player) break
-        player.setVolume(normalizeVolume(command.volume))
+        activeAdapter()?.setVolume(command.volume)
         break
       }
       case "RequestNextTrack": {

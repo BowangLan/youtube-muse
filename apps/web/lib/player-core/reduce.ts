@@ -90,6 +90,7 @@ export function reducePlayerState(
           type: "Load",
           videoId: state.mode.videoId,
           autoplay: state.mode.autoplay,
+          source: state.mode.source,
         })
       } else if (
         state.mode.tag === "ready" &&
@@ -100,13 +101,16 @@ export function reducePlayerState(
       break
     }
     case "TrackSelected": {
+      const source = event.source
       const requestId = state.loadRequestId + 1
       nextState.loadRequestId = requestId
+      nextState.activeSource = source
       nextState.mode = {
         tag: "loading",
         videoId: event.videoId,
         requestId,
         autoplay: event.autoplay,
+        source,
       }
       nextState.currentTime = 0
       nextState.duration = 0
@@ -118,6 +122,7 @@ export function reducePlayerState(
       debug("TrackSelected", {
         videoId: event.videoId,
         autoplay: event.autoplay,
+        source,
         playerReady: state.playerReady,
         willEmitLoad: state.playerReady,
       })
@@ -127,7 +132,12 @@ export function reducePlayerState(
           type: "Load",
           videoId: event.videoId,
           autoplay: event.autoplay,
+          source,
         })
+        // Each backend holds its own volume; sync it when the source changes
+        if (source !== state.activeSource) {
+          commands.push({ type: "SetVolume", volume: state.volume })
+        }
       } else {
         debug("TrackSelected: Load DEFERRED (player not ready)")
       }
@@ -226,7 +236,11 @@ export function reducePlayerState(
         state.mode.tag === "loading" &&
         ["unstarted", "cued", "playing", "paused", "buffering"].includes(event.state)
       ) {
-        nextState.mode = { tag: "ready", videoId: state.mode.videoId }
+        nextState.mode = {
+          tag: "ready",
+          videoId: state.mode.videoId,
+          source: state.mode.source,
+        }
       }
 
       if (

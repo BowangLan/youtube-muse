@@ -4,7 +4,7 @@ import * as React from "react";
 import type { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
-import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +19,12 @@ import { motion } from "motion/react";
 import { EASING_DURATION_CARD, EASING_EASE_OUT } from "@/lib/styles/animation";
 import { AddTrackByUrlDialog } from "@/components/intent/add-track-by-url-dialog";
 import { useCustomPlaylistsStore } from "@/lib/store/custom-playlists-store";
+import {
+  isSpotifyPlaylistId,
+  spotifySourcePlaylistId,
+  useSpotifyStore,
+} from "@/lib/store/spotify-store";
+import { toSpotifyTrack } from "@/lib/spotify/convert";
 
 export function PlaylistDetailSection() {
   const activePlaylistId = useV4AppStateStore((state) => state.activePlaylistId);
@@ -34,9 +40,11 @@ export function PlaylistDetailSection() {
   const addTrackToPlaylist = usePlaylistStore((state) => state.addTrackToPlaylist);
   const removeTrackFromPlaylist = usePlaylistStore((state) => state.removeTrackFromPlaylist);
   const deletePlaylist = usePlaylistStore((state) => state.deletePlaylist);
-  const removeCustomPlaylist = useCustomPlaylistsStore(
-    (state) => state.removeCustomPlaylist
-  );
+  const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
+  const loadSpotifyPlaylistContents = useSpotifyStore((state) => state.loadPlaylistContents);
+  const loadingSpotifyPlaylistIds = useSpotifyStore((state) => state.loadingPlaylistIds);
+  const spotifyPlaylistErrors = useSpotifyStore((state) => state.playlistErrors);
+  const removeCustomPlaylist = useCustomPlaylistsStore((state) => state.removeCustomPlaylist);
 
   const dispatch = usePlayerStore((state) => state.dispatch);
 
@@ -44,6 +52,24 @@ export function PlaylistDetailSection() {
     if (!activePlaylistId) return undefined;
     return playlists.find((p) => p.id === activePlaylistId);
   }, [activePlaylistId, playlists]);
+  const spotifyContentId = activePlaylistId ? spotifySourcePlaylistId(activePlaylistId) : null;
+  const isLoadingSpotifyContent =
+    spotifyContentId !== null && loadingSpotifyPlaylistIds.includes(spotifyContentId);
+  const spotifyLoadError =
+    spotifyContentId === null ? null : (spotifyPlaylistErrors[spotifyContentId] ?? null);
+
+  React.useEffect(() => {
+    if (!activePlaylistId || !spotifyContentId || activePlaylist?.tracks.length) return;
+    void loadSpotifyPlaylistContents(spotifyContentId).then((tracks) => {
+      if (tracks) setPlaylistTracks(activePlaylistId, tracks.map(toSpotifyTrack));
+    });
+  }, [
+    activePlaylist?.tracks.length,
+    activePlaylistId,
+    loadSpotifyPlaylistContents,
+    setPlaylistTracks,
+    spotifyContentId,
+  ]);
 
   const currentActualTrackIndex =
     isShuffleEnabled && shuffleOrder.length > 0
@@ -70,7 +96,7 @@ export function PlaylistDetailSection() {
       dispatch,
       setCurrentPlaylist,
       setCurrentTrackIndex,
-    ]
+    ],
   );
 
   const handleRemoveTrack = React.useCallback(
@@ -78,7 +104,7 @@ export function PlaylistDetailSection() {
       if (!activePlaylistId) return;
       removeTrackFromPlaylist(activePlaylistId, trackId);
     },
-    [activePlaylistId, removeTrackFromPlaylist]
+    [activePlaylistId, removeTrackFromPlaylist],
   );
 
   const handleAddTrackByUrl = React.useCallback(
@@ -86,7 +112,7 @@ export function PlaylistDetailSection() {
       if (!activePlaylistId) return;
       addTrackToPlaylist(activePlaylistId, track);
     },
-    [activePlaylistId, addTrackToPlaylist]
+    [activePlaylistId, addTrackToPlaylist],
   );
 
   const handleDelete = React.useCallback(() => {
@@ -111,6 +137,8 @@ export function PlaylistDetailSection() {
 
   if (!activePlaylist) return null;
 
+  const isReadOnly = isSpotifyPlaylistId(activePlaylist.id);
+
   return (
     <motion.section
       aria-label={`Playlist - ${activePlaylist.name}`}
@@ -124,7 +152,7 @@ export function PlaylistDetailSection() {
           "relative flex flex-1 flex-col gap-3 overflow-hidden overflow-y-auto rounded-2xl p-3 md:p-3",
           "border border-white/5 bg-white/3",
           "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-linear-to-br before:opacity-90",
-          "before:from-neutral-900 before:to-neutral-800"
+          "before:from-neutral-900 before:to-neutral-800",
         )}
       >
         <div className="relative w-full flex items-center justify-between gap-3">
@@ -159,7 +187,7 @@ export function PlaylistDetailSection() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-1">
-            {activePlaylistId && activePlaylist && (
+            {!isReadOnly && activePlaylistId && activePlaylist && (
               <AddTrackByUrlDialog
                 playlistId={activePlaylistId}
                 currentTracks={activePlaylist.tracks}
@@ -167,30 +195,37 @@ export function PlaylistDetailSection() {
               />
             )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-11 w-11 sm:h-10 sm:w-10"
-                >
-                  <MoreVertical className="h-5 w-5 sm:h-4 sm:w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-red-400 focus:text-red-400"
-                >
-                  <Trash2 className="text-red-400" />
-                  Delete Playlist
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {!isReadOnly && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-10 sm:w-10">
+                    <MoreVertical className="h-5 w-5 sm:h-4 sm:w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-red-400 focus:text-red-400"
+                  >
+                    <Trash2 className="text-red-400" />
+                    Delete Playlist
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
         <div className="mt-4 mb-2 flex-1 space-y-2 overflow-y-auto px-2 sm:space-y-1 sm:px-3">
+          {isLoadingSpotifyContent && activePlaylist.tracks.length === 0 && (
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading playlist…
+            </div>
+          )}
+          {!isLoadingSpotifyContent && spotifyLoadError && activePlaylist.tracks.length === 0 && (
+            <p className="py-12 text-center text-sm text-red-300">{spotifyLoadError}</p>
+          )}
           {activePlaylist.tracks.map((track, index) => (
             <div
               key={`${track.id}-${track.addedAt}`}
@@ -204,12 +239,12 @@ export function PlaylistDetailSection() {
               <TrackItemSmall
                 track={track}
                 isCurrentTrack={
-                  currentPlaylistId === activePlaylistId &&
-                  currentActualTrackIndex === index
+                  currentPlaylistId === activePlaylistId && currentActualTrackIndex === index
                 }
                 onClick={() => handleTrackClick(index)}
-                onRemove={() => handleRemoveTrack(track.id)}
+                onRemove={isReadOnly ? undefined : () => handleRemoveTrack(track.id)}
                 align="left"
+                readOnly={isReadOnly}
               />
             </div>
           ))}

@@ -36,12 +36,14 @@ export function TrackItemSmall({
   onClick,
   onRemove,
   align = "left",
+  readOnly = false,
 }: {
   track: Track;
   isCurrentTrack: boolean;
   onClick: () => void;
-  onRemove: () => void;
+  onRemove?: () => void;
   align?: "left" | "right";
+  readOnly?: boolean;
 }) {
   // Use selectors to only subscribe to specific properties
   const isPlaying = useIsPlaying();
@@ -189,8 +191,9 @@ export function TrackItemSmall({
         </motion.div>
       </div>
 
-      <div className="flex items-center gap-2 justify-end ml-2">
-        <DropdownMenu>
+      {!readOnly && (
+        <div className="flex items-center gap-2 justify-end ml-2">
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -343,8 +346,9 @@ export function TrackItemSmall({
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          </DropdownMenu>
+        </div>
+      )}
     </motion.div>
   );
 }

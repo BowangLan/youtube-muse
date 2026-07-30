@@ -1,5 +1,7 @@
+import type { PlaybackSource } from "@/lib/player-core/types"
+
 export interface Track {
-  id: string // YouTube video ID
+  id: string // Source-specific track ref: YouTube video ID or Spotify track ID
   title: string
   author: string
   authorUrl: string
@@ -9,6 +11,7 @@ export interface Track {
   addedAt: number
   publishedAt?: string // ISO 8601 date string from YouTube
   publishedTimeText?: string // Formatted relative time (e.g., "2 days ago")
+  source?: PlaybackSource // Playback backend; undefined = "youtube" (pre-existing persisted tracks)
 }
 
 export interface Playlist {
