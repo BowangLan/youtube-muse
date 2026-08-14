@@ -4,7 +4,7 @@ import * as React from "react";
 import type { Track } from "@/lib/types/playlist";
 import { cn } from "@/lib/utils";
 import { TrackItemSmall } from "@/components/playlist/track-item-small";
-import { ArrowLeft, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, MoreVertical, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +25,33 @@ import {
   useSpotifyStore,
 } from "@/lib/store/spotify-store";
 import { toSpotifyTrack } from "@/lib/spotify/convert";
+import { toast } from "sonner";
+
+function countTrackOccurrences(tracks: Track[]) {
+  const counts = new Map<string, number>();
+  tracks.forEach((track) => counts.set(track.id, (counts.get(track.id) ?? 0) + 1));
+  return counts;
+}
+
+function countPlaylistChanges(previousTracks: Track[], nextTracks: Track[]) {
+  const previousCounts = countTrackOccurrences(previousTracks);
+  const nextCounts = countTrackOccurrences(nextTracks);
+  let addedCount = 0;
+  let removedCount = 0;
+
+  nextCounts.forEach((count, id) => {
+    addedCount += Math.max(0, count - (previousCounts.get(id) ?? 0));
+  });
+  previousCounts.forEach((count, id) => {
+    removedCount += Math.max(0, count - (nextCounts.get(id) ?? 0));
+  });
+
+  const orderChanged =
+    previousTracks.length === nextTracks.length &&
+    previousTracks.some((track, index) => track.id !== nextTracks[index]?.id);
+
+  return { addedCount, removedCount, orderChanged };
+}
 
 export function PlaylistDetailSection() {
   const activePlaylistId = useV4AppStateStore((state) => state.activePlaylistId);
@@ -135,6 +162,56 @@ export function PlaylistDetailSection() {
     setCurrentPlaylist,
   ]);
 
+  const handleSpotifyRefresh = React.useCallback(async () => {
+    if (!activePlaylistId || !activePlaylist || !spotifyContentId) return;
+
+    const spotifyTracks = await loadSpotifyPlaylistContents(spotifyContentId, { force: true });
+
+    if (!spotifyTracks) {
+      toast.error("Couldn't sync this Spotify playlist");
+      return;
+    }
+
+    const nextTracks = spotifyTracks.map(toSpotifyTrack);
+    const { addedCount, removedCount, orderChanged } = countPlaylistChanges(
+      activePlaylist.tracks,
+      nextTracks,
+    );
+
+    setPlaylistTracks(activePlaylistId, nextTracks);
+
+    const refreshError = useSpotifyStore.getState().playlistErrors[spotifyContentId];
+    if (refreshError) {
+      toast.warning("Spotify returned partial updates", {
+        description: refreshError,
+      });
+      return;
+    }
+
+    if (addedCount === 0 && removedCount === 0 && !orderChanged) {
+      toast.success("Playlist is up to date", {
+        description: `${nextTracks.length.toLocaleString()} tracks synced from Spotify`,
+      });
+      return;
+    }
+
+    const changes = [
+      addedCount > 0 ? `${addedCount} added` : null,
+      removedCount > 0 ? `${removedCount} removed` : null,
+      orderChanged ? "order updated" : null,
+    ].filter(Boolean);
+
+    toast.success("Spotify updates synced", {
+      description: changes.join(", "),
+    });
+  }, [
+    activePlaylist,
+    activePlaylistId,
+    loadSpotifyPlaylistContents,
+    setPlaylistTracks,
+    spotifyContentId,
+  ]);
+
   if (!activePlaylist) return null;
 
   const isReadOnly = isSpotifyPlaylistId(activePlaylist.id);
@@ -187,6 +264,21 @@ export function PlaylistDetailSection() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-1">
+            {isReadOnly && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-11"
+                aria-label={`Sync ${activePlaylist.name} from Spotify`}
+                title="Sync updates from Spotify"
+                disabled={isLoadingSpotifyContent}
+                onClick={() => void handleSpotifyRefresh()}
+              >
+                <RefreshCw className={cn("size-4", isLoadingSpotifyContent && "animate-spin")} />
+              </Button>
+            )}
+
             {!isReadOnly && activePlaylistId && activePlaylist && (
               <AddTrackByUrlDialog
                 playlistId={activePlaylistId}

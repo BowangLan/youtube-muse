@@ -303,7 +303,7 @@ const TrackCoverCollapsed = ({ glowStyle }: TrackCoverProps) => {
 
   const transition = {
     duration: reduceMotion ? 0 : COLLAPSE_DURATION,
-    ease: [0.4, 0, 0.2, 1],
+    ease: [0.4, 0, 0.2, 1] as const,
   };
 
   if (showVideoAffordance) {
@@ -373,7 +373,7 @@ const TrackCoverExpanded = ({ glowStyle }: TrackCoverProps) => {
 
   const transition = {
     duration: reduceMotion ? 0 : EXPAND_DURATION,
-    ease: [0.4, 0, 0.2, 1],
+    ease: [0.4, 0, 0.2, 1] as const,
   };
 
   if (showVideoAffordance) {

@@ -59,9 +59,17 @@ function V4TabsContentPlaylists() {
     >
       <V4TabContentHeader title="Latest Videos" />
       <PlaylistCardGrid playlists={displayedPlaylists} />
-      <SpotifyFavoritesSection />
       <div className="h-(--bottom-spacing) flex-none"></div>
     </motion.div>
+  );
+}
+
+function V4TabsContentSpotify() {
+  return (
+    <div className="mx-auto max-w-6xl">
+      <SpotifyFavoritesSection />
+      <div className="h-(--bottom-spacing) flex-none"></div>
+    </div>
   );
 }
 
@@ -203,6 +211,7 @@ function V4TabsContentPlaylistDetail() {
 const TAB_TO_COMPONENT: Record<V4TabWithDetail, React.ComponentType> = {
   intents: V4TabsContentPlaylists,
   channels: V4TabsContentChannels,
+  spotify: V4TabsContentSpotify,
   "intent-detail": V4TabsContentIntentDetail,
   "playlist-detail": V4TabsContentPlaylistDetail,
   search: V4TabsContentSearch,

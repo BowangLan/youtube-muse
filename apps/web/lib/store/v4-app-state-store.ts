@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type V4Tab = "intents" | "channels" | "intent-detail" | "search";
+export type V4Tab = "intents" | "channels" | "spotify" | "intent-detail" | "search";
 export type V4DetailTab = "intent-detail" | "playlist-detail";
 export type V4TabWithDetail = V4Tab | "playlist-detail";
 
@@ -41,7 +41,10 @@ export const useV4AppStateStore = create<V4AppState & V4AppStateActions>(
     closeIntentDetail: () =>
       set({ activeTab: "intents", activePlaylistId: null }),
     closePlaylistDetail: () =>
-      set({ activeTab: "intents", activePlaylistId: null }),
+      set((state) => ({
+        activeTab: state.activePlaylistId?.startsWith("spotify:") ? "spotify" : "intents",
+        activePlaylistId: null,
+      })),
     openSearch: () => set({ activeTab: "search" }),
     closeSearch: () => set({ activeTab: "intents" }),
     setIsFocusMode: (isFocusMode) => set({ isFocusMode }),

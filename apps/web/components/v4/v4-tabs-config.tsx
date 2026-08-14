@@ -1,5 +1,6 @@
 import { V4Tab } from "@/lib/store/v4-app-state-store";
 import { ListMusic, RssIcon } from "lucide-react";
+import { SpotifyLogo } from "@/components/spotify/spotify-logo";
 
 export type V4TabItem = {
   icon: (props: { size?: number }) => React.ReactNode;
@@ -18,4 +19,13 @@ export const V4TAB_ITEMS: V4TabItem[] = [
     label: "Feed",
     value: "channels",
   },
+  ...(process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID
+    ? [
+        {
+          icon: SpotifyLogo,
+          label: "Spotify",
+          value: "spotify" as V4Tab,
+        },
+      ]
+    : []),
 ];

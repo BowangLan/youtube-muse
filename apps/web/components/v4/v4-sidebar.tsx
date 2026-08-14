@@ -56,6 +56,9 @@ type SidebarNavItemProps = {
 function SidebarNavItem({ isCollapsed, icon: Icon, label, variant = "secondary", isActive, onSelect }: SidebarNavItemProps) {
   return (
     <button
+      type="button"
+      aria-label={label}
+      aria-current={isActive ? "page" : undefined}
       onClick={onSelect}
       className={cn(sidebarNavItemVariants({ variant, isActive, isCollapsed }))}
     >
@@ -74,6 +77,9 @@ function SidebarSearchButton({ isCollapsed }: { isCollapsed: boolean }) {
 
   return (
     <button
+      type="button"
+      aria-label="Search"
+      aria-current={isActive ? "page" : undefined}
       onClick={openSearch}
       className={cn(sidebarNavItemVariants({ variant: "secondary", isActive, isCollapsed }))}
     >
@@ -111,6 +117,7 @@ function DesktopMiniPlayerButton({ isCollapsed }: { isCollapsed: boolean }) {
 
 export default function V1Sidebar() {
   const activeTab = useV4AppStateStore((state) => state.activeTab);
+  const activePlaylistId = useV4AppStateStore((state) => state.activePlaylistId);
   const setActiveTab = useV4AppStateStore((state) => state.setActiveTab);
   const setIsFocusMode = useV4AppStateStore((state) => state.setIsFocusMode);
   const sidebarCollapsed = useV4AppStateStore((state) => state.sidebarCollapsed);
@@ -119,6 +126,13 @@ export default function V1Sidebar() {
 
   const handleItemClick = (item: V4Tab) => {
     setActiveTab(item);
+  };
+
+  const isNavItemActive = (item: V4Tab) => {
+    if (activeTab === item) return true;
+    if (activeTab !== "playlist-detail") return false;
+    const isSpotifyPlaylist = activePlaylistId?.startsWith("spotify:") ?? false;
+    return item === (isSpotifyPlaylist ? "spotify" : "intents");
   };
 
   return (
@@ -202,7 +216,7 @@ export default function V1Sidebar() {
             isCollapsed={sidebarCollapsed}
             icon={item.icon}
             label={item.label}
-            isActive={activeTab === item.value}
+            isActive={isNavItemActive(item.value)}
             onSelect={() => handleItemClick(item.value)}
           />
         ))}

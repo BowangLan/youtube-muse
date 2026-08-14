@@ -26,22 +26,16 @@ import { useIsPlaying } from "@/hooks/use-is-playing";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { cn } from "@/lib/utils";
-
-function SpotifyLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.502 17.308a.747.747 0 0 1-1.029.249c-2.818-1.722-6.365-2.111-10.542-1.157a.748.748 0 1 1-.333-1.458c4.571-1.045 8.492-.595 11.655 1.338.352.215.464.676.249 1.028zm1.469-3.267a.935.935 0 0 1-1.286.308c-3.226-1.983-8.144-2.558-11.96-1.4a.936.936 0 0 1-.543-1.79c4.36-1.323 9.78-.682 13.481 1.596.44.27.578.846.308 1.286zm.126-3.403C15.23 8.34 8.876 8.129 5.186 9.25a1.122 1.122 0 1 1-.652-2.148c4.237-1.286 11.28-1.038 15.73 1.605a1.123 1.123 0 0 1-1.147 1.931z" />
-    </svg>
-  );
-}
+import { SpotifyLogo } from "@/components/spotify/spotify-logo";
 
 function toPlaylist(playlist: SpotifyPlaylist): Playlist {
   const now = Date.now();
+  const tracks = playlist.tracks ?? [];
   return {
     id: spotifyPlaylistId(playlist.id),
     name: playlist.name,
     description: playlist.description || `Spotify playlist by ${playlist.ownerName}`,
-    tracks: playlist.tracks.map(toSpotifyTrack),
+    tracks: tracks.map(toSpotifyTrack),
     createdAt: now,
     updatedAt: now,
   };
@@ -84,9 +78,7 @@ function SpotifyPlaylistCard({
     return normalizedTracks;
   };
 
-  const openPlaylist = async () => {
-    const tracks = await ensureContent();
-    if (!tracks) return;
+  const openPlaylist = () => {
     openPlaylistDetail(playlist.id);
   };
 
@@ -105,7 +97,7 @@ function SpotifyPlaylistCard({
   return (
     <div
       className={cn(
-        "group relative flex min-h-40 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-5 text-left transition hover:scale-[1.01] hover:bg-white/6 active:scale-95",
+        "group relative flex min-h-44 w-full flex-col justify-between overflow-hidden rounded-2xl bg-white/3 p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/6 active:translate-y-0 active:scale-[0.98]",
         isActive && "intent-card-active",
       )}
     >
@@ -121,9 +113,9 @@ function SpotifyPlaylistCard({
       <button
         type="button"
         aria-label={`Open ${playlist.name} playlist`}
+        aria-busy={isLoading}
         className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-        disabled={isLoading}
-        onClick={() => void openPlaylist()}
+        onClick={openPlaylist}
       />
 
       <div className="relative z-20 pointer-events-none flex items-start gap-2">
@@ -143,7 +135,7 @@ function SpotifyPlaylistCard({
           {totalTracks === null
             ? contentLoaded
               ? `${playlist.tracks.length.toLocaleString()} tracks`
-              : "Load on open"
+              : "Tracks load when opened"
             : `${totalTracks.toLocaleString()} tracks`}
         </div>
         {loadError && <div className="font-sans text-[11px] text-red-300">{loadError}</div>}
@@ -154,7 +146,7 @@ function SpotifyPlaylistCard({
         aria-label={`${isCurrentlyPlaying ? "Pause" : "Play"} ${playlist.name}`}
         disabled={isLoading || (contentLoaded && playlist.tracks.length === 0)}
         onClick={(event) => void togglePlayback(event)}
-        className="absolute bottom-3 right-4 z-30 flex size-10 items-center justify-center rounded-full bg-black/25 opacity-100 transition hover:scale-110 hover:bg-white/10 disabled:opacity-30 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+        className="absolute bottom-3 right-4 z-30 flex size-11 items-center justify-center rounded-full bg-black/45 text-white/90 opacity-90 transition duration-200 hover:scale-105 hover:bg-black/65 hover:opacity-100 active:scale-[0.98] disabled:opacity-30"
       >
         {isLoading ? (
           <Loader2 className="size-4 animate-spin" />
@@ -196,8 +188,8 @@ export function SpotifyFavoritesSection() {
     return [
       {
         id: SPOTIFY_FAVORITES_PLAYLIST_ID,
-        name: "Spotify Favorites",
-        description: "Your liked songs on Spotify",
+        name: "Liked Songs",
+        description: "Songs you've saved on Spotify",
         tracks: favorites.map(toSpotifyTrack),
         createdAt: now,
         updatedAt: now,
@@ -209,7 +201,7 @@ export function SpotifyFavoritesSection() {
       ...spotifyPlaylists.map((playlist) => ({
         ...toPlaylist(playlist),
         contentId: playlist.id,
-        contentLoaded: playlist.tracksLoaded ?? playlist.tracks.length > 0,
+        contentLoaded: playlist.tracksLoaded ?? (playlist.tracks?.length ?? 0) > 0,
         totalTracks: playlist.totalTracks,
         imageUrl: playlist.imageUrl,
       })),
@@ -258,76 +250,115 @@ export function SpotifyFavoritesSection() {
   if (!isSpotifyConfigured()) return null;
 
   return (
-    <section className="mt-10 space-y-4" aria-label="Spotify playlists">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <SpotifyLogo className="size-5 text-[#1DB954]" />
-          <h2 className="text-lg font-medium text-foreground/90">Spotify</h2>
-          {isConnected && (
-            <span className="text-xs text-muted-foreground">
-              {libraryPlaylists.length} playlists
-            </span>
-          )}
+    <section className="space-y-5" aria-label="Spotify library">
+      <div className="flex min-h-16 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <SpotifyLogo className="size-6 shrink-0 text-[#1DB954]" />
+          <div className="min-w-0">
+            <h1 className="text-xl font-medium text-foreground/90">Spotify Library</h1>
+            <p className="truncate text-xs text-muted-foreground">
+              {isConnected
+                ? profile?.displayName
+                  ? `Connected as ${profile.displayName}`
+                  : `${libraryPlaylists.length} playlists available`
+                : "Liked Songs and playlists, inside Muse"}
+            </p>
+          </div>
         </div>
 
         {isConnected && (
           <div className="flex items-center gap-1">
-            {profile && (
-              <span className="mr-1 hidden text-xs text-muted-foreground sm:inline">
-                {profile.displayName}
-              </span>
-            )}
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
+              aria-label="Sync Spotify library"
               title="Sync Spotify library"
               disabled={isSyncing}
               onClick={() => void syncLibrary()}
+              className="size-11"
             >
-              <RefreshCw className={cn("size-3.5", isSyncing && "animate-spin")} />
+              <RefreshCw className={cn("size-4", isSyncing && "animate-spin")} />
             </Button>
-            <Button variant="ghost" size="icon-sm" title="Disconnect Spotify" onClick={disconnect}>
-              <LogOut className="size-3.5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Disconnect Spotify"
+              title="Disconnect Spotify"
+              onClick={disconnect}
+              className="size-11"
+            >
+              <LogOut className="size-4" />
             </Button>
           </div>
         )}
       </div>
 
       {!isConnected ? (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-white/5 bg-card/20 p-6">
-          <p className="text-sm text-muted-foreground">
-            Connect Spotify to sync your liked songs and playlists. Playback requires Spotify
-            Premium.
-          </p>
-          {syncError && <p className="text-xs text-red-400">{syncError}</p>}
-          <Button
-            className="gap-2 rounded-full bg-[#1DB954] text-black hover:bg-[#1ed760]"
-            onClick={() => void redirectToSpotifyAuthorize()}
-          >
-            <SpotifyLogo className="size-4" />
-            Connect Spotify
-          </Button>
+        <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.035] p-6 sm:p-8">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(29,185,84,0.13),transparent_42%)]" />
+          <div className="relative max-w-xl space-y-4">
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-medium text-foreground">
+                Bring your Spotify library into Muse
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Sync Liked Songs and playlists, then listen without switching apps. In-app playback
+                requires Spotify Premium.
+              </p>
+            </div>
+            {syncError && <p className="text-xs text-red-400">{syncError}</p>}
+            <Button
+              className="h-11 gap-2 rounded-full bg-[#1DB954] px-5 font-medium text-black hover:bg-[#1ed760] active:scale-[0.98]"
+              onClick={() => void redirectToSpotifyAuthorize()}
+            >
+              <SpotifyLogo className="size-4" />
+              Connect Spotify
+            </Button>
+            <p className="text-xs text-muted-foreground">You'll continue securely on Spotify.</p>
+          </div>
         </div>
       ) : (
         <>
           {(!canPlayback || !canSyncLibrary) && (
-            <div className="flex items-center gap-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-4 py-3">
+            <div className="flex flex-col gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 sm:flex-row sm:items-center">
               <p className="flex-1 text-xs text-yellow-200/80">
-                Reconnect Spotify to grant library and playback permissions.
+                Spotify needs updated permission to sync your library and play tracks here.
               </p>
               <Button size="sm" variant="ghost" onClick={() => void redirectToSpotifyAuthorize()}>
                 Reconnect
               </Button>
             </div>
           )}
-          {canPlayback && playbackError && <p className="text-xs text-red-400">{playbackError}</p>}
+          {canPlayback && playbackError && (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-400/15 bg-red-400/5 px-4 py-3 text-sm text-red-300"
+            >
+              {playbackError}
+            </div>
+          )}
           {canPlayback && !playbackError && !playerReady && (
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="size-3 animate-spin" />
               Preparing Spotify player…
             </p>
           )}
-          {syncError && <p className="text-xs text-red-400">{syncError}</p>}
+          {syncError && (
+            <div
+              role="alert"
+              className="flex flex-col gap-3 rounded-xl border border-red-400/15 bg-red-400/5 px-4 py-3 text-sm text-red-300 sm:flex-row sm:items-center"
+            >
+              <p className="flex-1">{syncError}</p>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void syncLibrary()}
+                disabled={isSyncing}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
 
           {isSyncing && favorites.length === 0 && spotifyPlaylists.length === 0 ? (
             <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">

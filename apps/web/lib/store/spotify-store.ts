@@ -42,7 +42,10 @@ interface SpotifyActions {
   /** Returns a valid access token, refreshing it if expired. */
   getValidAccessToken: () => Promise<string | null>;
   syncLibrary: () => Promise<void>;
-  loadPlaylistContents: (playlistId: string) => Promise<SpotifyFavoriteTrack[] | null>;
+  loadPlaylistContents: (
+    playlistId: string,
+    options?: { force?: boolean },
+  ) => Promise<SpotifyFavoriteTrack[] | null>;
 }
 
 function spotifyErrorMessage(error: SpotifyApiError) {
@@ -145,10 +148,11 @@ export const useSpotifyStore = create<SpotifyState & SpotifyActions>()(
           const refreshedPlaylists = result.data.map((playlist) => {
             const previous = previousPlaylists.find((item) => item.id === playlist.id);
             if (!previous) return playlist;
+            const previousTracks = previous.tracks ?? [];
             return {
               ...playlist,
-              tracks: previous.tracks,
-              tracksLoaded: previous.tracksLoaded ?? previous.tracks.length > 0,
+              tracks: previousTracks,
+              tracksLoaded: previous.tracksLoaded ?? previousTracks.length > 0,
             };
           });
           const playlists = result.error
@@ -202,7 +206,7 @@ export const useSpotifyStore = create<SpotifyState & SpotifyActions>()(
         }
       },
 
-      loadPlaylistContents: async (playlistId) => {
+      loadPlaylistContents: async (playlistId, options) => {
         const state = get();
         const existingTracks =
           playlistId === SPOTIFY_FAVORITES_PLAYLIST_ID
@@ -213,7 +217,9 @@ export const useSpotifyStore = create<SpotifyState & SpotifyActions>()(
             ? state.favoritesLoaded
             : state.playlists.find((playlist) => playlist.id === playlistId)?.tracksLoaded;
 
-        if (isLoaded && !state.playlistErrors[playlistId]) return existingTracks ?? [];
+        if (!options?.force && isLoaded && !state.playlistErrors[playlistId]) {
+          return existingTracks ?? [];
+        }
         if (state.loadingPlaylistIds.includes(playlistId)) return null;
 
         set((current) => ({
@@ -298,6 +304,19 @@ export const useSpotifyStore = create<SpotifyState & SpotifyActions>()(
         playlists: state.playlists.map(({ tracks: _tracks, ...rest }) => rest),
         lastSyncedAt: state.lastSyncedAt,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<SpotifyState>;
+        return {
+          ...currentState,
+          ...persisted,
+          favorites: persisted.favorites ?? [],
+          playlists: (persisted.playlists ?? []).map((playlist) => ({
+            ...playlist,
+            tracks: playlist.tracks ?? [],
+            tracksLoaded: playlist.tracksLoaded ?? false,
+          })),
+        };
+      },
     },
   ),
 );
