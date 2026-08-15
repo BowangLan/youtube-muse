@@ -51,7 +51,7 @@ export function useSpotifyPlayer() {
   // Tracks position across state events so we can tell "track finished"
   // apart from "user paused at the start".
   const lastPositionRef = React.useRef(0)
-  const endedFiredRef = React.useRef(false)
+  const endedTrackUriRef = React.useRef<string | null>(null)
 
   // Spotify playback is audio-only: collapse any floating/fullscreen YouTube
   // video when a Spotify track takes over (its video-mode UI is also hidden).
@@ -101,6 +101,31 @@ export function useSpotifyPlayer() {
 
         const positionSeconds = state.position / 1000
         const durationSeconds = state.duration / 1000
+        const trackUri = state.track_window.current_track?.uri ?? null
+
+        // A natural end can produce more than one paused-at-zero snapshot for
+        // the outgoing track. After the first one requests the next queue item,
+        // letting another reach the reducer would trigger its desired-playing
+        // reconciliation and resume the old track from 0 while React is still
+        // selecting/loading the next one. Ignore terminal snapshots only for
+        // that exact URI; a state for the newly loaded track clears the guard.
+        if (endedTrackUriRef.current) {
+          if (
+            trackUri === endedTrackUriRef.current &&
+            state.paused &&
+            state.position === 0
+          ) {
+            return
+          }
+          if (
+            trackUri !== endedTrackUriRef.current ||
+            !state.paused ||
+            state.position > 0
+          ) {
+            endedTrackUriRef.current = null
+            lastPositionRef.current = 0
+          }
+        }
 
         // End-of-track: the SDK rewinds to a paused position 0 after playing
         // near the end. There is no explicit "ended" event.
@@ -111,8 +136,8 @@ export function useSpotifyPlayer() {
           lastPositionRef.current > state.duration - 5000 &&
           lastPositionRef.current > 0
 
-        if (reachedEnd && !endedFiredRef.current) {
-          endedFiredRef.current = true
+        if (reachedEnd) {
+          endedTrackUriRef.current = trackUri
           lastPositionRef.current = 0
           dispatch({
             type: "PlayerStateChanged",
@@ -120,9 +145,6 @@ export function useSpotifyPlayer() {
             duration: durationSeconds,
           })
           return
-        }
-        if (!state.paused || state.position > 0) {
-          endedFiredRef.current = false
         }
         lastPositionRef.current = state.position
 
