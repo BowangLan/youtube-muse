@@ -31,23 +31,17 @@ export function SliceRepeatControls({ className }: SliceRepeatControlsProps) {
 
   React.useEffect(() => {
     if (activeInputRef.current !== "start") {
-      setStartInput(
-        sliceRepeat.startTime !== null ? sliceRepeat.startTime.toFixed(1) : "",
-      );
+      setStartInput(sliceRepeat.startTime !== null ? sliceRepeat.startTime.toFixed(1) : "");
     }
     if (activeInputRef.current !== "end") {
-      setEndInput(
-        sliceRepeat.endTime !== null ? sliceRepeat.endTime.toFixed(1) : "",
-      );
+      setEndInput(sliceRepeat.endTime !== null ? sliceRepeat.endTime.toFixed(1) : "");
     }
   }, [sliceRepeat.startTime, sliceRepeat.endTime]);
 
   const commitStartInput = (value: string) => {
     const parsed = Number.parseFloat(value);
     if (Number.isNaN(parsed)) {
-      setStartInput(
-        sliceRepeat.startTime !== null ? sliceRepeat.startTime.toFixed(1) : "",
-      );
+      setStartInput(sliceRepeat.startTime !== null ? sliceRepeat.startTime.toFixed(1) : "");
       return;
     }
     const normalized = Math.round(parsed * 10) / 10;
@@ -59,9 +53,7 @@ export function SliceRepeatControls({ className }: SliceRepeatControlsProps) {
   const commitEndInput = (value: string) => {
     const parsed = Number.parseFloat(value);
     if (Number.isNaN(parsed)) {
-      setEndInput(
-        sliceRepeat.endTime !== null ? sliceRepeat.endTime.toFixed(1) : "",
-      );
+      setEndInput(sliceRepeat.endTime !== null ? sliceRepeat.endTime.toFixed(1) : "");
       return;
     }
     const normalized = Math.round(parsed * 10) / 10;
@@ -174,16 +166,10 @@ export function SliceRepeatControls({ className }: SliceRepeatControlsProps) {
                   ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
                   : "bg-white/5 text-neutral-400 hover:bg-white/10",
               )}
-              title={
-                sliceRepeat.autoRepeat ? "Auto-repeat: On" : "Auto-repeat: Off"
-              }
+              title={sliceRepeat.autoRepeat ? "Auto-repeat: On" : "Auto-repeat: Off"}
             >
-              <RefreshCw
-                className={cn("w-3.5 h-3.5", sliceRepeat.autoRepeat)}
-              />
-              <span className="hidden sm:inline">
-                {sliceRepeat.autoRepeat ? "Loop" : "Once"}
-              </span>
+              <RefreshCw className={cn("w-3.5 h-3.5", sliceRepeat.autoRepeat)} />
+              <span className="hidden sm:inline">{sliceRepeat.autoRepeat ? "Loop" : "Once"}</span>
             </button>
 
             {/* Clear button */}
@@ -206,18 +192,25 @@ export function SliceRepeatControls({ className }: SliceRepeatControlsProps) {
   );
 }
 
-export function SliceRepeatToggleButton({ className }: { className?: string }) {
+export function SliceRepeatToggleButton({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const dispatch = usePlayerStore((state) => state.dispatch);
   const sliceRepeat = usePlayerStore((state) => state.sliceRepeat);
 
   return (
     <button
+      type="button"
       onClick={() => dispatch({ type: "UserToggleSliceRepeatMode" })}
+      aria-label={sliceRepeat.isActive ? "Turn off slice repeat" : "Turn on slice repeat"}
+      aria-pressed={sliceRepeat.isActive}
       className={cn(
         "flex items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative transition-colors cursor-pointer hover:scale-105 active:scale-95 select-none",
-        sliceRepeat.isActive
-          ? "text-orange-400"
-          : "text-neutral-500 hover:text-white",
+        sliceRepeat.isActive ? "text-orange-400" : "text-neutral-500 hover:text-white",
         className,
       )}
       title={sliceRepeat.isActive ? "Slice repeat: On" : "Slice repeat: Off"}
@@ -228,7 +221,7 @@ export function SliceRepeatToggleButton({ className }: { className?: string }) {
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
         )}
       </div>
-      <span className="hidden sm:inline-block text-xs sm:text-sm">
+      <span className={cn("hidden text-xs sm:text-sm", !compact && "sm:inline-block")}>
         {sliceRepeat.isActive ? "Slice" : "Repeat"}
       </span>
     </button>

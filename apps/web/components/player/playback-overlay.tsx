@@ -1,158 +1,115 @@
 "use client";
 
-import { motion } from "motion/react";
-import { Icons } from "../icons";
+import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Minimize2 } from "lucide-react";
+import { Icons } from "../icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useIsPlaying } from "@/hooks/use-is-playing";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { useYouTubePlayerInstanceStore } from "@/lib/store/youtube-player-instance-store";
-import { AnimatePresence } from "motion/react";
-import { useState } from "react";
-import { ProgressBar, VolumeControl } from "./player-controls";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { formatTime } from "@/lib/utils/youtube";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { NextButton, PreviousButton, ProgressBar, VolumeControl } from "./player-controls";
+import { SliceRepeatToggleButton } from "./slice-repeat-controls";
 
-const BottomControlItemContainer = ({
-  children,
-  className,
-  ...props
-}: {
-  children: React.ReactNode;
-  className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) => {
-  return (
-    <div
-      className={cn(
-        "rounded-lg bg-white/15 flex items-center justify-center hover:bg-white/1 transition-all duration-200 ease-out active:bg-white/25 px-3 h-10 select-none",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
+const controlButtonClassName =
+  "inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-transparent text-white/85 transition-[background-color,color,transform] duration-150 hover:bg-white/10 hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-35";
 
-const BottomControlItemWithTooltip = ({
-  children,
-  className,
-  tooltip,
-  ...props
-}: {
-  children: React.ReactNode;
-  className?: string;
-  tooltip?: string;
-} & React.HTMLAttributes<HTMLDivElement>) => {
+function ControlTooltip({ label, children }: { label: string; children: React.ReactElement }) {
   return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <BottomControlItemContainer className={className} {...props}>
-          {children}
-        </BottomControlItemContainer>
-      </TooltipTrigger>
-      <TooltipContent side="top" sideOffset={6} className="z-[99]">
-        {tooltip}
+    <Tooltip delayDuration={250}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="top" sideOffset={10} className="z-[99]">
+        {label}
       </TooltipContent>
     </Tooltip>
   );
-};
+}
 
-const BottomPlayPauseButton = () => {
+function FullscreenPlayPauseButton() {
   const isPlaying = useIsPlaying();
   const dispatch = usePlayerStore((state) => state.dispatch);
 
   return (
-    <BottomControlItemWithTooltip
-      className="cursor-pointer aspect-square px-0 w-10"
-      tooltip={isPlaying ? "Pause" : "Play"}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        dispatch({ type: "UserTogglePlay" });
-      }}
-    >
-      {isPlaying ? (
-        <Icons.Pause className="h-6 w-6 text-foreground trans" />
-      ) : (
-        <Icons.Play className="h-6 w-6 translate-x-px text-foreground trans" />
-      )}
-    </BottomControlItemWithTooltip>
+    <ControlTooltip label={isPlaying ? "Pause (Space)" : "Play (Space)"}>
+      <button
+        type="button"
+        aria-label={isPlaying ? "Pause" : "Play"}
+        className={cn(controlButtonClassName, "text-white")}
+        onClick={() => dispatch({ type: "UserTogglePlay" })}
+      >
+        {isPlaying ? (
+          <Icons.Pause className="size-6" fill="currentColor" />
+        ) : (
+          <Icons.Play className="size-6 translate-x-px" fill="currentColor" />
+        )}
+      </button>
+    </ControlTooltip>
   );
-};
+}
 
-const BottomTimeDisplay = () => {
+function FullscreenMinimizeButton() {
+  const setVideoMode = useYouTubePlayerInstanceStore((state) => state.setVideoMode);
+
+  return (
+    <ControlTooltip label="Exit fullscreen (Esc)">
+      <button
+        type="button"
+        aria-label="Exit fullscreen"
+        className={controlButtonClassName}
+        onClick={() => setVideoMode("floating")}
+      >
+        <Minimize2 className="size-[18px]" aria-hidden="true" />
+      </button>
+    </ControlTooltip>
+  );
+}
+
+function FullscreenControls() {
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
 
   return (
-    <BottomControlItemContainer className="flex items-center justify-between text-sm font-mono gap-1">
-      <span className="text-foreground">{formatTime(currentTime)}</span>
-      <span className="text-foreground/50">/</span>
-      <span className="text-foreground/50">{formatTime(duration)}</span>
-    </BottomControlItemContainer>
-  );
-};
+    <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-2 sm:px-4 sm:pb-3">
+      <ProgressBar showControlButtons className="mb-1" />
 
-const BottomMinimizeButton = () => {
-  const setVideoMode = useYouTubePlayerInstanceStore(
-    (state) => state.setVideoMode
-  );
+      <div className="flex items-center gap-0.5 sm:gap-1">
+        <FullscreenPlayPauseButton />
+        <PreviousButton
+          className="size-10 rounded-md border-0 bg-transparent text-white/70 hover:scale-100 hover:border-0 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white"
+          iconClassName="size-[18px]"
+        />
+        <NextButton
+          className="size-10 rounded-md border-0 bg-transparent text-white/70 hover:scale-100 hover:border-0 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white"
+          iconClassName="size-[18px]"
+        />
 
-  return (
-    <BottomControlItemWithTooltip
-      className="cursor-pointer aspect-square px-0 w-10"
-      tooltip="Exit fullscreen"
-      onClick={(e) => {
-        e.stopPropagation();
-        setVideoMode("floating");
-      }}
-    >
-      <Minimize2 className="h-4 w-4 text-foreground" />
-    </BottomControlItemWithTooltip>
-  );
-};
-
-const BottomControls = ({ isHovering }: { isHovering: boolean }) => {
-  return (
-    <div
-      className="absolute bottom-0 inset-x-0 z-20"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="group-hover/iframe-container:bg-linear-to-t group-hover/iframe-container:from-black/70 group-hover/iframe-container:to-transparent bg-transparent transition-all duration-200 ease-out absolute inset-0"></div>
-      <div className="px-4 relative z-10">
-        <motion.div
-          layout="position"
-          transition={{ duration: 0.2, ease: "easeOut" }}
+        <div
+          className="ml-1 hidden whitespace-nowrap font-mono text-[11px] tabular-nums text-white/55 sm:block"
+          aria-label={`${formatTime(currentTime)} of ${formatTime(duration)}`}
         >
-          <ProgressBar className="my-3 group-hover/iframe-container:opacity-100 opacity-50 transition-opacity duration-200 ease-out" />
-        </motion.div>
+          <span className="text-white/90">{formatTime(currentTime)}</span>
+          <span aria-hidden="true"> / {formatTime(duration)}</span>
+        </div>
 
-        <AnimatePresence>
-          {isHovering && (
-            <motion.div
-              layout="position"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <div className="flex items-center gap-2 pb-3">
-                <BottomPlayPauseButton />
-                <BottomTimeDisplay />
-                <VolumeControl innerClassName="bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-lg" />
-                <div className="flex-1"></div>
-                <BottomMinimizeButton />
-              </div>
-            </motion.div>
-          )}
-          {/* Row */}
-        </AnimatePresence>
+        <VolumeControl
+          className="ml-1 hidden lg:flex"
+          innerClassName="h-10 rounded-md bg-transparent px-2 text-white/70 hover:bg-white/10 focus-within:ring-2 focus-within:ring-white"
+        />
+
+        <div className="flex-1" />
+
+        <SliceRepeatToggleButton
+          compact
+          className="size-10 rounded-md bg-transparent p-0 text-white/65 hover:scale-100 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white"
+        />
+        <FullscreenMinimizeButton />
       </div>
     </div>
   );
-};
+}
 
 interface VideoPlaybackOverlayProps {
   videoMode: "hidden" | "floating" | "fullscreen";
@@ -162,42 +119,53 @@ export function VideoPlaybackOverlay({ videoMode }: VideoPlaybackOverlayProps) {
   const isMobile = useIsMobile();
   const isPlaying = useIsPlaying();
   const dispatch = usePlayerStore((state) => state.dispatch);
-  const [isHovering, setIsHovering] = useState(false);
+  const [showPlaybackFeedback, setShowPlaybackFeedback] = useState(false);
 
-  if (isMobile) {
-    // Not implemented for mobile yet
-    return null;
-  }
+  if (isMobile) return null;
+
+  const togglePlayback = () => {
+    dispatch({ type: "UserTogglePlay" });
+    setShowPlaybackFeedback(true);
+    window.setTimeout(() => setShowPlaybackFeedback(false), 450);
+  };
 
   return (
-    <div
-      className="absolute inset-0 rounded-lg overflow-hidden flex items-center justify-center z-20"
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        dispatch({ type: "UserTogglePlay" });
-      }}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      {videoMode === "fullscreen" && !isMobile && (
+    <div className="absolute inset-0 z-20 overflow-hidden rounded-[inherit]">
+      <button
+        type="button"
+        aria-label={isPlaying ? "Pause video" : "Play video"}
+        className="absolute inset-0 z-0 cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+        onClick={togglePlayback}
+      />
+
+      {videoMode === "fullscreen" && (
         <>
-          <AnimatePresence mode="wait">
-            {!isPlaying && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-linear-to-t from-black via-black/75 to-transparent"
+          />
+
+          <AnimatePresence>
+            {showPlaybackFeedback && (
               <motion.div
-                key="playback-indicator" // Unique key forces fresh animation cycle for each indicator
-                className="size-16 rounded-full bg-black/20 flex items-center justify-center"
-                initial={{ scale: 0.8, opacity: 0 }} // Start scaled down and transparent
-                animate={{ scale: 1, opacity: 1 }} // Animate to full size and opaque
-                exit={{ scale: 1.2, opacity: 0 }} // Exit by scaling up and fading out
-                transition={{ duration: 0.1, ease: "easeOut" }}
+                key={isPlaying ? "playing" : "paused"}
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]"
+                initial={{ scale: 0.82, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.12, opacity: 0 }}
+                transition={{ duration: 0.16, ease: "easeOut" }}
               >
-                <Icons.Play className="size-8 text-foreground translate-x-px" />
+                {isPlaying ? (
+                  <Icons.Play className="size-10 translate-x-px" fill="currentColor" />
+                ) : (
+                  <Icons.Pause className="size-10" fill="currentColor" />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <BottomControls isHovering={isHovering} />
+          <FullscreenControls />
         </>
       )}
     </div>

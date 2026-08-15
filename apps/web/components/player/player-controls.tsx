@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  Shuffle,
-  Repeat,
-  Repeat1,
-} from "lucide-react";
+import { SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, Repeat1 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/youtube";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
@@ -37,7 +29,7 @@ function PlayerToggleButton({
       className={cn(
         "flex group/toggle-button items-center gap-2 px-2 py-2 sm:px-3 sm:py-2 rounded-lg hover:bg-white/10 relative trans cursor-pointer motion-preset-blur-up-md motion-delay-500 hover:scale-105 active:scale-95 select-none",
         active ? "text-white" : "text-neutral-500 hover:text-white",
-        className
+        className,
       )}
       {...props}
     />
@@ -45,37 +37,28 @@ function PlayerToggleButton({
 }
 
 export function PlayerControls() {
-  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } =
-    usePlaylistStore();
+  const { isShuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode } = usePlaylistStore();
   const sliceRepeat = usePlayerStore((state) => state.sliceRepeat);
 
   const repeatLabel =
-    repeatMode === "one"
-      ? "Repeat one"
-      : repeatMode === "playlist"
-        ? "Repeat playlist"
-        : "Repeat";
+    repeatMode === "one" ? "Repeat one" : repeatMode === "playlist" ? "Repeat playlist" : "Repeat";
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-center gap-6">
         <div
           className={cn(
-            "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[80px] motion-scale-in-75"
+            "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[80px] motion-scale-in-75",
           )}
         >
           <PreviousButton />
         </div>
-        <div
-          className={cn(
-            "motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg"
-          )}
-        >
+        <div className={cn("motion-opacity-in-0 motion-scale-in-50 motion-blur-in-lg")}>
           <PlayPauseButton />
         </div>
         <div
           className={cn(
-            "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[-80px] motion-scale-in-75"
+            "motion-preset-opacity-in-0 motion-blur-in-lg motion-delay-100 motion-translate-x-in-[-80px] motion-scale-in-75",
           )}
         >
           <NextButton />
@@ -132,9 +115,7 @@ export function PlayerControls() {
                 <Repeat className="size-5" />
               )}
             </div>
-            <span className="hidden sm:inline-block text-xs sm:text-sm">
-              {repeatLabel}
-            </span>
+            <span className="hidden sm:inline-block text-xs sm:text-sm">{repeatLabel}</span>
           </PlayerToggleButton>
         </div>
       </div>
@@ -143,89 +124,138 @@ export function PlayerControls() {
 }
 
 export const ProgressBar = React.memo(
-  ({ className, showControlButtons = false }: { className?: string; showControlButtons?: boolean }) => {
+  ({
+    className,
+    showControlButtons = false,
+  }: {
+    className?: string;
+    showControlButtons?: boolean;
+  }) => {
     const dispatch = usePlayerStore((state) => state.dispatch);
     const currentTime = usePlayerStore((state) => state.currentTime);
     const duration = usePlayerStore((state) => state.duration);
     const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+    const [isScrubbing, setIsScrubbing] = React.useState(false);
+
+    const stopScrubbing = (event: React.PointerEvent<HTMLInputElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      setIsScrubbing(false);
+    };
 
     return (
-      <div className={cn("relative h-1.5 rounded-full bg-white/10", showControlButtons ? "group h-4 bg-transparent" : "", className)}>
+      <div
+        className={cn(
+          "relative h-1.5 rounded-full bg-white/10",
+          showControlButtons ? "group h-4 bg-transparent" : "",
+          className,
+        )}
+      >
         <div
-          className="absolute inset-x-0 rounded-full bg-white/10 z-5"
+          className={cn(
+            "absolute inset-x-0 z-5 rounded-full bg-white/10",
+            showControlButtons &&
+              "bg-white/35 transition-[background-color,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:bg-white/55 motion-reduce:transition-none",
+            isScrubbing && "bg-white/65",
+          )}
           style={{
-            height: showControlButtons ? "2px" : undefined,
+            height: showControlButtons ? "3px" : undefined,
             top: "50%",
             transform: "translateY(-50%)",
           }}
         />
 
         <div
-          className="absolute left-0 rounded-full bg-white transition-opacity duration-200 z-6"
-          style={{ width: `${progressPercent}%`, height: showControlButtons ? "2px" : "100%", top: "50%", transform: "translateY(-50%)" }}
+          className={cn(
+            "absolute left-0 z-6 rounded-full bg-white transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
+            isScrubbing ? "opacity-90" : "opacity-100",
+          )}
+          style={{
+            width: `${progressPercent}%`,
+            height: showControlButtons ? "3px" : "100%",
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
         />
 
         <input
           type="range"
+          aria-label="Playback position"
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
           min="0"
           max={duration || 100}
           step="0.1"
           value={currentTime || 0}
-          onChange={(e) =>
-            dispatch({ type: "UserSeek", seconds: Number(e.target.value) })
-          }
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 transition-none"
+          onChange={(e) => dispatch({ type: "UserSeek", seconds: Number(e.target.value) })}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setIsScrubbing(true);
+          }}
+          onPointerUp={stopScrubbing}
+          onPointerCancel={stopScrubbing}
+          onLostPointerCapture={() => setIsScrubbing(false)}
+          onBlur={() => setIsScrubbing(false)}
+          className={cn(
+            "absolute left-0 w-full cursor-ew-resize opacity-0 transition-none",
+            isScrubbing && "cursor-grabbing",
+            showControlButtons ? "-inset-y-3 h-auto" : "inset-y-0 h-full",
+          )}
         />
 
         {showControlButtons && (
           <div
-            className="absolute rounded-full bg-white pointer-events-none"
+            className="pointer-events-none absolute"
             style={{
-              width: 16,
-              height: 16,
+              width: 12,
+              height: 12,
               left: `${progressPercent}%`,
               top: "50%",
               transform: "translate(-50%, -50%)",
-              boxShadow: "0 0 10px 0 rgba(255, 255, 255, 0.5)",
-            }}>
+            }}
+          >
+            <div
+              className={cn(
+                "absolute inset-0 rounded-full bg-white opacity-0 shadow-[0_1px_4px_rgba(0,0,0,0.55)] transition-[transform,opacity] duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100 motion-reduce:transition-none",
+                isScrubbing ? "scale-125 opacity-100" : "scale-75 opacity-0",
+              )}
+            />
+            <div
+              className={cn(
+                "absolute inset-0 rounded-full bg-white opacity-0 transition-[transform,opacity] duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
+                isScrubbing && "scale-[1.9] opacity-20",
+              )}
+            />
           </div>
         )}
       </div>
     );
-  }
+  },
 );
 
 ProgressBar.displayName = "ProgressBar";
 
-export const TimeDisplay = React.memo(
-  ({ className }: { className?: string }) => {
-    const currentTime = usePlayerStore((state) => state.currentTime);
-    const duration = usePlayerStore((state) => state.duration);
+export const TimeDisplay = React.memo(({ className }: { className?: string }) => {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const duration = usePlayerStore((state) => state.duration);
 
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-between text-xs font-mono text-muted-foreground",
-          className
-        )}
-      >
-        <span>{formatTime(currentTime)}</span>
-        <span>{formatTime(duration)}</span>
-      </div>
-    );
-  }
-);
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between text-xs font-mono text-muted-foreground",
+        className,
+      )}
+    >
+      <span>{formatTime(currentTime)}</span>
+      <span>{formatTime(duration)}</span>
+    </div>
+  );
+});
 
 TimeDisplay.displayName = "TimeDisplay";
 
 export const VolumeControl = React.memo(
-  ({
-    className,
-    innerClassName,
-  }: {
-    className?: string;
-    innerClassName?: string;
-  }) => {
+  ({ className, innerClassName }: { className?: string; innerClassName?: string }) => {
     const volume = usePlayerStore((state) => state.volume);
     const dispatch = usePlayerStore((state) => state.dispatch);
     const isMuted = volume === 0;
@@ -235,8 +265,7 @@ export const VolumeControl = React.memo(
         const previousVolume =
           typeof window === "undefined"
             ? 100
-            : ((window as Window & { __previousVolume?: number })
-              .__previousVolume ?? 100);
+            : ((window as Window & { __previousVolume?: number }).__previousVolume ?? 100);
         dispatch({ type: "UserSetVolume", volume: previousVolume });
         return;
       }
@@ -244,22 +273,16 @@ export const VolumeControl = React.memo(
       const currentVolume = volume;
       dispatch({ type: "UserSetVolume", volume: 0 });
       if (typeof window !== "undefined") {
-        (window as Window & { __previousVolume?: number }).__previousVolume =
-          currentVolume;
+        (window as Window & { __previousVolume?: number }).__previousVolume = currentVolume;
       }
     };
 
     return (
-      <div
-        className={cn(
-          "flex items-center gap-1 text-muted-foreground",
-          className
-        )}
-      >
+      <div className={cn("flex items-center gap-1 text-muted-foreground", className)}>
         <div
           className={cn(
             "flex h-10 w-auto px-4 md:px-3 items-center justify-center rounded-full text-inherit hover:bg-white/10 trans",
-            innerClassName
+            innerClassName,
           )}
         >
           <button
@@ -269,11 +292,7 @@ export const VolumeControl = React.memo(
             title={isMuted ? "Unmute" : "Mute"}
             className="flex items-center justify-center flex-none hover:text-foreground active:scale-95 trans"
           >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
           <div className="relative h-1.5 w-[50vw] md:w-16 lg:w-32 rounded-full bg-white/10 ml-4 md:ml-3">
             <div
@@ -282,6 +301,8 @@ export const VolumeControl = React.memo(
             />
             <input
               type="range"
+              aria-label="Volume"
+              aria-valuetext={`${Math.round(volume)} percent`}
               min="0"
               max="100"
               step="1"
@@ -302,16 +323,15 @@ export const VolumeControl = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 VolumeControl.displayName = "VolumeControl";
 
 export const PreviousButton = React.memo(
-  ({ className }: { className?: string }) => {
+  ({ className, iconClassName }: { className?: string; iconClassName?: string }) => {
     const dispatch = usePlayerStore((state) => state.dispatch);
-    const { currentTrackIndex } =
-      usePlaylistStore();
+    const { currentTrackIndex } = usePlaylistStore();
 
     const canPlayPrevious = currentTrackIndex > 0;
 
@@ -320,26 +340,26 @@ export const PreviousButton = React.memo(
         className={cn(
           "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
           "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10",
-          className
+          className,
         )}
         onClick={() => dispatch({ type: "UserPreviousTrack" })}
         disabled={!canPlayPrevious}
         title="Previous"
+        aria-label="Previous track"
         type="button"
       >
-        <SkipBack className="h-5 w-5" />
+        <SkipBack className={cn("h-5 w-5", iconClassName)} aria-hidden="true" />
       </button>
     );
-  }
+  },
 );
 
 PreviousButton.displayName = "PreviousButton";
 
 export const NextButton = React.memo(
-  ({ className }: { className?: string }) => {
+  ({ className, iconClassName }: { className?: string; iconClassName?: string }) => {
     const dispatch = usePlayerStore((state) => state.dispatch);
-    const { playlists, currentPlaylistId, currentTrackIndex, repeatMode } =
-      usePlaylistStore();
+    const { playlists, currentPlaylistId, currentTrackIndex, repeatMode } = usePlaylistStore();
 
     const currentPlaylist = playlists.find((p) => p.id === currentPlaylistId);
     const canPlayNext =
@@ -353,17 +373,18 @@ export const NextButton = React.memo(
         className={cn(
           "flex h-12 w-12 items-center justify-center rounded-full cursor-pointer trans hover:scale-110 active:scale-95",
           "border border-white/10 text-white hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed disabled:border-transparent disabled:hover:border-white/10",
-          className
+          className,
         )}
         onClick={() => dispatch({ type: "UserNextTrack" })}
         disabled={!canPlayNext}
         title="Next"
+        aria-label="Next track"
         type="button"
       >
-        <SkipForward className="h-5 w-5" />
+        <SkipForward className={cn("h-5 w-5", iconClassName)} aria-hidden="true" />
       </button>
     );
-  }
+  },
 );
 
 NextButton.displayName = "NextButton";
@@ -380,9 +401,7 @@ export const PlayPauseButton = React.memo(
   }) => {
     const isPlaying = useIsPlaying();
     const dispatch = usePlayerStore((state) => state.dispatch);
-    const isLoadingNewVideo = usePlayerStore(
-      (state) => state.isLoadingNewVideo
-    );
+    const isLoadingNewVideo = usePlayerStore((state) => state.isLoadingNewVideo);
     const apiReady = usePlayerStore((state) => state.apiReady);
     const sliceRepeat = usePlayerStore((state) => state.sliceRepeat);
 
@@ -393,7 +412,7 @@ export const PlayPauseButton = React.memo(
           "flex h-14 w-14 items-center justify-center rounded-full hover:scale-105 active:scale-95 trans cursor-pointer bg-white",
           variant === "ghost" && "bg-transparent hover:bg-white/10",
           variant === "default" && "bg-white",
-          className
+          className,
         )}
         onClick={(e) => {
           e.stopPropagation();
@@ -411,13 +430,14 @@ export const PlayPauseButton = React.memo(
           dispatch({ type: "UserTogglePlay" });
         }}
         disabled={isLoadingNewVideo || !apiReady}
+        aria-label={isPlaying ? "Pause" : "Play"}
       >
         {isPlaying ? (
           <Icons.Pause
             className={cn(
               "h-6 w-6 text-black trans",
               variant === "ghost" && "text-white",
-              iconClassName
+              iconClassName,
             )}
             fill={variant === "ghost" ? "white" : "black"}
           />
@@ -426,14 +446,14 @@ export const PlayPauseButton = React.memo(
             className={cn(
               "h-6 w-6 translate-x-px text-black trans",
               variant === "ghost" && "text-white",
-              iconClassName
+              iconClassName,
             )}
             fill={variant === "ghost" ? "white" : "black"}
           />
         )}
       </motion.button>
     );
-  }
+  },
 );
 
 PlayPauseButton.displayName = "PlayPauseButton";

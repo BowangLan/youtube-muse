@@ -4,10 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  PLAYER_CONTAINER_ID,
-  PLAYER_ELEMENT_ID,
-} from "@/components/player/youtube-player-element";
+import { PLAYER_CONTAINER_ID, PLAYER_ELEMENT_ID } from "@/components/player/youtube-player-element";
 import {
   useYouTubePlayerInstanceStore,
   type YouTubePlayerInstanceStore,
@@ -44,7 +41,7 @@ const fullscreenStyles: React.CSSProperties = {
   pointerEvents: "auto",
   borderRadius: "0",
   boxShadow: "none",
-  zIndex: "80",
+  zIndex: "1000",
 };
 
 const hiddenStyles: React.CSSProperties = {
@@ -64,17 +61,15 @@ const hiddenStyles: React.CSSProperties = {
 
 export function YouTubePlayerContainer() {
   const videoMode = useYouTubePlayerInstanceStore(
-    (state: YouTubePlayerInstanceStore) => state.videoMode
+    (state: YouTubePlayerInstanceStore) => state.videoMode,
   );
   const hostElement = useYouTubePlayerInstanceStore(
-    (state: YouTubePlayerInstanceStore) => state.hostElement
+    (state: YouTubePlayerInstanceStore) => state.hostElement,
   );
   const setVideoMode = useYouTubePlayerInstanceStore(
-    (state: YouTubePlayerInstanceStore) => state.setVideoMode
+    (state: YouTubePlayerInstanceStore) => state.setVideoMode,
   );
-  const player = useYouTubePlayerInstanceStore(
-    (state: YouTubePlayerInstanceStore) => state.player
-  );
+  const player = useYouTubePlayerInstanceStore((state: YouTubePlayerInstanceStore) => state.player);
   const isMobile = useIsMobile();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const iframeContainerRef = React.useRef<HTMLDivElement>(null);
@@ -83,7 +78,7 @@ export function YouTubePlayerContainer() {
     rafId: 0 as number | null,
   });
   const [floatingStyle, setFloatingStyle] = React.useState<React.CSSProperties>(
-    getFloatingFallbackStyles()
+    getFloatingFallbackStyles(),
   );
   const [customPosition, setCustomPosition] = React.useState<{
     x: number;
@@ -129,11 +124,7 @@ export function YouTubePlayerContainer() {
 
       const dominantDelta = -event.deltaX;
       const deltaMultiplier =
-        event.deltaMode === 1
-          ? 16
-          : event.deltaMode === 2
-            ? window.innerHeight
-            : 1;
+        event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
 
       const state = wheelSeekStateRef.current;
       state.accumulatedDelta += dominantDelta * deltaMultiplier;
@@ -144,16 +135,9 @@ export function YouTubePlayerContainer() {
         const { currentTime, duration, dispatch } = usePlayerStore.getState();
         const secondsPerPixel = 0.05;
         const deltaSeconds = state.accumulatedDelta * secondsPerPixel;
-        const nextTime = Math.min(
-          duration,
-          Math.max(0, currentTime + deltaSeconds)
-        );
+        const nextTime = Math.min(duration, Math.max(0, currentTime + deltaSeconds));
 
-        if (
-          duration > 0 &&
-          Math.abs(deltaSeconds) > 0.01 &&
-          nextTime !== currentTime
-        ) {
+        if (duration > 0 && Math.abs(deltaSeconds) > 0.01 && nextTime !== currentTime) {
           dispatch({ type: "UserSeek", seconds: nextTime });
         }
 
@@ -199,7 +183,7 @@ export function YouTubePlayerContainer() {
 
     let observer: ResizeObserver | null = null;
     const anchor = document.querySelector(
-      '[data-video-anchor="mini-player-cover"]'
+      '[data-video-anchor="mini-player-cover"]',
     ) as HTMLElement | null;
     if (anchor && "ResizeObserver" in window) {
       observer = new ResizeObserver(() => updateFromAnchor());
@@ -217,19 +201,19 @@ export function YouTubePlayerContainer() {
       return videoMode === "hidden"
         ? hiddenStyles
         : {
-          width: "100%",
-          height: "100%",
-          position: "",
-          left: "",
-          right: "",
-          top: "",
-          bottom: "",
-          opacity: "",
-          pointerEvents: "auto",
-          borderRadius: "",
-          boxShadow: "",
-          zIndex: "",
-        };
+            width: "100%",
+            height: "100%",
+            position: "",
+            left: "",
+            right: "",
+            top: "",
+            bottom: "",
+            opacity: "",
+            pointerEvents: "auto",
+            borderRadius: "",
+            boxShadow: "",
+            zIndex: "",
+          };
     }
 
     switch (videoMode) {
@@ -332,38 +316,32 @@ export function YouTubePlayerContainer() {
         id={PLAYER_CONTAINER_ID}
         ref={containerRef}
         layout
-        transition={dragStateRef.current ? {
-          duration: 0,
-          ease: "easeOut"
-        } : {
-          duration: 0.5,
-          ease: EASING_EASE_OUT,
-        }}
+        transition={
+          dragStateRef.current
+            ? {
+                duration: 0,
+                ease: "easeOut",
+              }
+            : {
+                duration: 0.5,
+                ease: EASING_EASE_OUT,
+              }
+        }
         className={cn(
           "group",
           videoMode === "fullscreen" &&
-          "flex flex-col justify-start p-6",
-          !isMobile &&
-          videoMode === "floating" &&
-          "cursor-grab active:cursor-grabbing"
+            "flex flex-col items-center justify-center overflow-y-auto bg-[#050505] p-3 sm:p-6",
+          !isMobile && videoMode === "floating" && "cursor-grab active:cursor-grabbing",
         )}
         style={style as React.CSSProperties}
         onClick={handleContainerClick}
         onPointerDown={
-          !isMobile && videoMode === "floating"
-            ? handleFloatingPointerDown
-            : undefined
+          !isMobile && videoMode === "floating" ? handleFloatingPointerDown : undefined
         }
         onPointerMove={
-          !isMobile && videoMode === "floating"
-            ? handleFloatingPointerMove
-            : undefined
+          !isMobile && videoMode === "floating" ? handleFloatingPointerMove : undefined
         }
-        onPointerUp={
-          !isMobile && videoMode === "floating"
-            ? handleFloatingPointerUp
-            : undefined
-        }
+        onPointerUp={!isMobile && videoMode === "floating" ? handleFloatingPointerUp : undefined}
       >
         {videoMode === "floating" && <FloatingPlayerControls />}
 
@@ -374,14 +352,19 @@ export function YouTubePlayerContainer() {
           // transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
             "z-10 group/iframe-container",
-            videoMode === "floating" &&
-            "h-full w-full relative rounded-lg overflow-hidden",
+            videoMode === "floating" && "h-full w-full relative rounded-lg overflow-hidden",
             videoMode === "fullscreen" &&
-            "w-full aspect-video mx-auto mt-8 max-w-6xl rounded-2xl overflow-hidden relative",
-            videoMode === "hidden" &&
-            "hidden"
+              "relative mx-auto aspect-video w-full max-w-6xl shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_32px_100px_rgba(0,0,0,0.65)]",
+            videoMode === "hidden" && "hidden",
           )}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          style={
+            videoMode === "fullscreen"
+              ? {
+                  width: "min(100%, calc((100dvh - 11rem) * 1.7777777778))",
+                }
+              : undefined
+          }
         >
           <VideoPlaybackOverlay videoMode={videoMode} />
         </div>
@@ -398,8 +381,7 @@ export function YouTubePlayerContainer() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="absolute inset-0 z-70 bg-black/80 backdrop-blur-xl pointer-events-none"
-          >
-          </motion.div>
+          ></motion.div>
         </AnimatePresence>
       )}
     </>
