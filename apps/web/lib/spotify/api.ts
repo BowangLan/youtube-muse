@@ -1,9 +1,87 @@
 // Thin client for the Spotify Web API endpoints this app uses.
 
+import type {
+  CatalogSearchAuthor,
+  CatalogSearchImage,
+  CatalogSearchResultBase,
+} from "@/lib/types/catalog-search";
+
 const API_BASE = "https://api.spotify.com/v1";
 const SAVED_TRACKS_PAGE_SIZE = 50;
 const PLAYLISTS_PAGE_SIZE = 50;
 const PLAYLIST_ITEMS_PAGE_SIZE = 50;
+// Spotify's current development-mode Search endpoint accepts at most 10 items.
+const SEARCH_PAGE_SIZE = 10;
+const SEARCH_PREVIEW_SIZE = 4;
+
+export type SpotifySearchType = "track" | "album" | "artist" | "playlist";
+export type SpotifySearchFilter = SpotifySearchType | "all";
+
+export interface SpotifyTrackSearchResult extends CatalogSearchResultBase<
+  "spotify",
+  "track",
+  RawTrack
+> {
+  duration: number;
+  album: {
+    id: string;
+    name: string;
+    url: string | null;
+    images: CatalogSearchImage[];
+    albumType: string | null;
+    releaseDate: string | null;
+    totalTracks: number | null;
+  };
+  discNumber: number | null;
+  trackNumber: number | null;
+  explicit: boolean | null;
+  popularity: number | null;
+  previewUrl: string | null;
+}
+
+export interface SpotifyAlbumSearchResult extends CatalogSearchResultBase<
+  "spotify",
+  "album",
+  RawSearchAlbum
+> {
+  albumType: string | null;
+  releaseDate: string | null;
+  releaseDatePrecision: string | null;
+  totalTracks: number | null;
+}
+
+export interface SpotifyArtistSearchResult extends CatalogSearchResultBase<
+  "spotify",
+  "artist",
+  RawSearchArtist
+> {
+  genres: string[];
+  followersTotal: number | null;
+  popularity: number | null;
+}
+
+export interface SpotifyPlaylistSearchResult extends CatalogSearchResultBase<
+  "spotify",
+  "playlist",
+  RawSearchPlaylist
+> {
+  description: string;
+  totalItems: number | null;
+  collaborative: boolean | null;
+  public: boolean | null;
+}
+
+export type SpotifySearchResult =
+  | SpotifyTrackSearchResult
+  | SpotifyAlbumSearchResult
+  | SpotifyArtistSearchResult
+  | SpotifyPlaylistSearchResult;
+
+export interface SpotifyCatalogSearchPage {
+  results: SpotifySearchResult[];
+  hasMore: boolean;
+  nextOffset: number;
+}
 
 export interface SpotifyFavoriteTrack {
   id: string;
@@ -175,16 +253,274 @@ async function spotifyFetch<T>(accessToken: string, path: string, init?: Request
   }
 }
 
-interface RawTrack {
+interface RawSpotifyImage {
+  url: string;
+  width: number | null;
+  height?: number | null;
+}
+
+interface RawSpotifyAuthor {
+  id?: string | null;
+  name: string;
+  external_urls?: { spotify?: string };
+  images?: RawSpotifyImage[];
+  [key: string]: unknown;
+}
+
+export interface RawTrack {
   id: string | null;
   name: string;
   type?: string;
   duration_ms: number;
   external_urls: { spotify: string };
-  artists: Array<{ name: string }>;
+  artists: RawSpotifyAuthor[];
   album: {
+    id?: string;
     name: string;
-    images: Array<{ url: string; width: number | null }>;
+    album_type?: string;
+    release_date?: string;
+    total_tracks?: number;
+    external_urls?: { spotify?: string };
+    artists?: RawSpotifyAuthor[];
+    images: RawSpotifyImage[];
+    [key: string]: unknown;
+  };
+  disc_number?: number;
+  track_number?: number;
+  explicit?: boolean;
+  popularity?: number;
+  preview_url?: string | null;
+  [key: string]: unknown;
+}
+
+export interface RawSearchAlbum {
+  id: string;
+  name: string;
+  album_type?: string;
+  release_date?: string;
+  release_date_precision?: string;
+  total_tracks?: number;
+  external_urls: { spotify: string };
+  artists: RawSpotifyAuthor[];
+  images: RawSpotifyImage[];
+  [key: string]: unknown;
+}
+
+export interface RawSearchArtist {
+  id: string;
+  name: string;
+  external_urls: { spotify: string };
+  images: RawSpotifyImage[];
+  genres?: string[];
+  followers?: { total: number };
+  popularity?: number;
+  [key: string]: unknown;
+}
+
+export interface RawSearchPlaylist {
+  id: string;
+  name: string;
+  description?: string | null;
+  external_urls: { spotify: string };
+  images?: RawSpotifyImage[] | null;
+  owner?: {
+    display_name?: string | null;
+    id?: string;
+    external_urls?: { spotify?: string };
+    [key: string]: unknown;
+  };
+  items?: { total: number };
+  tracks?: { total: number };
+  collaborative?: boolean;
+  public?: boolean | null;
+  [key: string]: unknown;
+}
+
+type SpotifySearchResponse = Partial<{
+  tracks: SpotifyPage<RawTrack>;
+  albums: SpotifyPage<RawSearchAlbum>;
+  artists: SpotifyPage<RawSearchArtist>;
+  playlists: SpotifyPage<RawSearchPlaylist | null>;
+}>;
+
+function normalizeImages(
+  images: Array<{ url: string; width?: number | null; height?: number | null }> | null | undefined,
+): CatalogSearchImage[] {
+  return (images ?? []).map((image) => ({
+    url: image.url,
+    width: image.width ?? null,
+    height: image.height ?? null,
+  }));
+}
+
+function normalizeAuthors(authors: RawSpotifyAuthor[]): CatalogSearchAuthor[] {
+  return authors.map((author) => ({
+    id: author.id ?? null,
+    name: author.name,
+    url: author.external_urls?.spotify ?? null,
+    images: normalizeImages(author.images),
+    raw: author,
+  }));
+}
+
+const normalizeTracks = (tracks: RawTrack[]): SpotifyTrackSearchResult[] =>
+  tracks.flatMap((track) =>
+    track.id
+      ? [
+          {
+            source: "spotify" as const,
+            resultType: "track" as const,
+            id: track.id,
+            title: track.name,
+            url: track.external_urls.spotify,
+            authors: normalizeAuthors(track.artists),
+            images: normalizeImages(track.album.images),
+            raw: track,
+            duration: Math.round(track.duration_ms / 1000),
+            album: {
+              id: track.album.id ?? "",
+              name: track.album.name,
+              url: track.album.external_urls?.spotify ?? null,
+              images: normalizeImages(track.album.images),
+              albumType: track.album.album_type ?? null,
+              releaseDate: track.album.release_date ?? null,
+              totalTracks: track.album.total_tracks ?? null,
+            },
+            discNumber: track.disc_number ?? null,
+            trackNumber: track.track_number ?? null,
+            explicit: track.explicit ?? null,
+            popularity: track.popularity ?? null,
+            previewUrl: track.preview_url ?? null,
+          },
+        ]
+      : [],
+  );
+
+const normalizeAlbums = (albums: RawSearchAlbum[]): SpotifyAlbumSearchResult[] =>
+  albums.map((album) => ({
+    source: "spotify" as const,
+    resultType: "album" as const,
+    id: album.id,
+    title: album.name,
+    url: album.external_urls.spotify,
+    authors: normalizeAuthors(album.artists),
+    images: normalizeImages(album.images),
+    raw: album,
+    albumType: album.album_type ?? null,
+    releaseDate: album.release_date ?? null,
+    releaseDatePrecision: album.release_date_precision ?? null,
+    totalTracks: album.total_tracks ?? null,
+  }));
+
+const normalizeArtists = (artists: RawSearchArtist[]): SpotifyArtistSearchResult[] =>
+  artists.map((artist) => ({
+    source: "spotify" as const,
+    resultType: "artist" as const,
+    id: artist.id,
+    title: artist.name,
+    url: artist.external_urls.spotify,
+    authors: [
+      {
+        id: artist.id,
+        name: artist.name,
+        url: artist.external_urls.spotify,
+        images: normalizeImages(artist.images),
+        raw: artist,
+      },
+    ],
+    images: normalizeImages(artist.images),
+    raw: artist,
+    genres: artist.genres ?? [],
+    followersTotal: artist.followers?.total ?? null,
+    popularity: artist.popularity ?? null,
+  }));
+
+const normalizePlaylists = (
+  playlists: Array<RawSearchPlaylist | null>,
+): SpotifyPlaylistSearchResult[] =>
+  playlists.flatMap((playlist) =>
+    playlist
+      ? [
+          {
+            source: "spotify" as const,
+            resultType: "playlist" as const,
+            id: playlist.id,
+            title: playlist.name,
+            url: playlist.external_urls.spotify,
+            authors: playlist.owner
+              ? [
+                  {
+                    id: playlist.owner.id ?? null,
+                    name: playlist.owner.display_name ?? playlist.owner.id ?? "Spotify",
+                    url: playlist.owner.external_urls?.spotify ?? null,
+                    images: [],
+                    raw: playlist.owner,
+                  },
+                ]
+              : [],
+            images: normalizeImages(playlist.images),
+            raw: playlist,
+            description: playlist.description ?? "",
+            totalItems: playlist.items?.total ?? playlist.tracks?.total ?? null,
+            collaborative: playlist.collaborative ?? null,
+            public: playlist.public ?? null,
+          },
+        ]
+      : [],
+  );
+
+/** Searches Spotify's catalog and normalizes each supported result type for the search UI. */
+export async function searchSpotifyCatalog(
+  accessToken: string,
+  query: string,
+  filter: SpotifySearchFilter,
+  offset = 0,
+): Promise<SpotifyCatalogSearchPage> {
+  const type = filter === "all" ? "track,album,artist,playlist" : filter;
+  const params = new URLSearchParams({
+    q: query,
+    type,
+    limit: String(filter === "all" ? SEARCH_PREVIEW_SIZE : SEARCH_PAGE_SIZE),
+    offset: String(offset),
+  });
+  const data = await spotifyFetch<SpotifySearchResponse>(accessToken, `/search?${params}`);
+
+  if (filter === "all") {
+    return {
+      results: [
+        ...normalizeTracks(data.tracks?.items ?? []),
+        ...normalizeAlbums(data.albums?.items ?? []),
+        ...normalizeArtists(data.artists?.items ?? []),
+        ...normalizePlaylists(data.playlists?.items ?? []),
+      ],
+      hasMore: false,
+      nextOffset: 0,
+    };
+  }
+
+  const page =
+    filter === "track"
+      ? data.tracks
+      : filter === "album"
+        ? data.albums
+        : filter === "artist"
+          ? data.artists
+          : data.playlists;
+  const rawItems = page?.items ?? [];
+  const results =
+    filter === "track"
+      ? normalizeTracks(rawItems as RawTrack[])
+      : filter === "album"
+        ? normalizeAlbums(rawItems as RawSearchAlbum[])
+        : filter === "artist"
+          ? normalizeArtists(rawItems as RawSearchArtist[])
+          : normalizePlaylists(rawItems as Array<RawSearchPlaylist | null>);
+  const nextOffset = (page?.offset ?? offset) + rawItems.length;
+
+  return {
+    results,
+    hasMore: nextOffset < (page?.total ?? 0),
+    nextOffset,
   };
 }
 

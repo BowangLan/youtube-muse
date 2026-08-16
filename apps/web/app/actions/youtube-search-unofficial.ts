@@ -63,7 +63,7 @@ const DURATION_FILTERS: Record<DurationFilter, string> = {
 };
 
 // Types for unofficial YouTube search API response structures
-interface YouTubeSearchVideoRenderer {
+export interface YouTubeSearchVideoRenderer {
   videoId: string;
   title: {
     runs: Array<{
@@ -96,6 +96,7 @@ interface YouTubeSearchVideoRenderer {
       height: number;
     }>;
   };
+  [key: string]: unknown;
 }
 
 interface YouTubeSearchChannelRenderer {
@@ -188,6 +189,7 @@ export type SearchVideoResult = {
   lengthText: string;
   thumbnail: string;
   url: string;
+  raw: YouTubeSearchVideoRenderer;
 };
 
 export type SearchChannelResult = {
@@ -270,7 +272,7 @@ function extractJsonBlock(html: string, marker: string): string {
 export async function searchYouTubeUnofficial(
   query: string,
   type: "video" | "channel" | "playlist" = "video",
-  duration: "short" | "long" | "any" = "any"
+  duration: "short" | "long" | "any" = "any",
 ): Promise<{ results: SearchResult[]; error?: string }> {
   try {
     if (!query.trim()) {
@@ -307,7 +309,9 @@ export async function searchYouTubeUnofficial(
     const initialData: YouTubeSearchInitialData = JSON.parse(initialDataJson);
 
     // Extract search results
-    const primaryContents = initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents ?? [];
+    const primaryContents =
+      initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer
+        ?.contents ?? [];
     const results: SearchResult[] = [];
 
     // Process each section in the search results
@@ -324,13 +328,14 @@ export async function searchYouTubeUnofficial(
               title: videoRenderer.title?.runs?.[0]?.text ?? "",
               channelTitle: videoRenderer.ownerText?.runs?.[0]?.text ?? "",
               channelId:
-                videoRenderer.ownerText?.runs?.[0]?.navigationEndpoint
-                  ?.browseEndpoint?.browseId ?? "",
+                videoRenderer.ownerText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ??
+                "",
               publishedTime: videoRenderer.publishedTimeText?.simpleText ?? "",
               viewCount: videoRenderer.viewCountText?.simpleText ?? "",
               lengthText: videoRenderer.lengthText?.simpleText ?? "",
               thumbnail: videoRenderer.thumbnail?.thumbnails?.[0]?.url ?? "",
               url: `https://www.youtube.com/watch?v=${videoRenderer.videoId}`,
+              raw: videoRenderer,
             } as SearchVideoResult);
           }
         } else if (type === "channel") {
@@ -375,11 +380,10 @@ export async function searchYouTubeUnofficial(
               title: playlistRenderer.title?.simpleText ?? "",
               channelTitle: playlistRenderer.ownerText?.runs?.[0]?.text ?? "",
               channelId:
-                playlistRenderer.ownerText?.runs?.[0]?.navigationEndpoint
-                  ?.browseEndpoint?.browseId ?? "",
+                playlistRenderer.ownerText?.runs?.[0]?.navigationEndpoint?.browseEndpoint
+                  ?.browseId ?? "",
               videoCount: playlistRenderer.videoCount ?? "",
-              thumbnail:
-                playlistRenderer.thumbnails?.[0]?.thumbnails?.[0]?.url ?? "",
+              thumbnail: playlistRenderer.thumbnails?.[0]?.thumbnails?.[0]?.url ?? "",
               url: `https://www.youtube.com/playlist?list=${playlistRenderer.playlistId}`,
             } as SearchPlaylistResult);
           }
@@ -409,7 +413,7 @@ export async function searchYouTubeUnofficial(
  */
 export async function searchYouTubeChannels(
   query: string,
-  maxResults: number = 20
+  maxResults: number = 20,
 ): Promise<{ results: SearchChannelResult[]; error?: string }> {
   try {
     if (!query.trim()) {
@@ -434,7 +438,8 @@ export async function searchYouTubeChannels(
     const initialData: YouTubeSearchInitialData = JSON.parse(initialDataJson);
 
     const primaryContents =
-      initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents ?? [];
+      initialData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer
+        ?.contents ?? [];
 
     const results: SearchChannelResult[] = [];
 
@@ -446,8 +451,7 @@ export async function searchYouTubeChannels(
         if (channelRenderer) {
           // Get the best quality thumbnail (last one is usually highest res)
           const thumbnails = channelRenderer.thumbnail?.thumbnails ?? [];
-          const bestThumbnail =
-            thumbnails[thumbnails.length - 1]?.url ?? thumbnails[0]?.url ?? "";
+          const bestThumbnail = thumbnails[thumbnails.length - 1]?.url ?? thumbnails[0]?.url ?? "";
 
           // Ensure thumbnail URL has protocol
           const thumbnailUrl = bestThumbnail.startsWith("//")

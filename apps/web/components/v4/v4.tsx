@@ -19,10 +19,7 @@ import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog"
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
 import { DesktopPlayerSync } from "@/components/desktop/desktop-player-sync";
 import { parseDuration } from "@/lib/utils/youtube";
-import {
-  SEARCH_RESULTS_PLAYLIST_ID,
-  useYouTubeSearchStore,
-} from "@/lib/store/youtube-search-store";
+import { SEARCH_RESULTS_PLAYLIST_ID, useSearchStore } from "@/lib/store/search-store";
 import { cn } from "@/lib/utils";
 import { V4TabsContent } from "./v4-tabs-content";
 import V1Sidebar from "./v4-sidebar";
@@ -30,8 +27,15 @@ import { useV4AppStateStore } from "@/lib/store/v4-app-state-store";
 import { Focus } from "./focus/focus";
 import { AnimatePresence, motion } from "motion/react";
 import { EASING_EASE_OUT } from "@/lib/styles/animation";
-import { V4_HEADER_HEIGHT, V4_PAGE_P, V4_SIDEBAR_COLLAPSED_WIDTH, V4_SIDEBAR_WIDTH } from "./v4-constants";
+import {
+  V4_HEADER_HEIGHT,
+  V4_PAGE_P,
+  V4_SIDEBAR_COLLAPSED_WIDTH,
+  V4_SIDEBAR_WIDTH,
+} from "./v4-constants";
 import { V4MainContentHeader } from "./v4-main-content-header";
+import type { Track } from "@/lib/types/playlist";
+import { catalogAuthorNames, catalogPrimaryImage } from "@/lib/types/catalog-search";
 
 export default function Home() {
   const hasMounted = useHasMounted();
@@ -48,54 +52,69 @@ export default function Home() {
 
   const apiReady = usePlayerStore((state) => state.apiReady);
 
-  const searchResults = useYouTubeSearchStore((state) => state.results);
+  const searchResults = useSearchStore((state) => state.results);
+  const searchSource = useSearchStore((state) => state.source);
 
-  const searchTracks = React.useMemo(
+  const searchTracks = React.useMemo<Track[]>(
     () =>
-      searchResults.map((result, index) => ({
-        id: result.videoId,
-        title: result.title,
-        author: result.channelTitle,
-        authorUrl: `https://www.youtube.com/channel/${result.channelId}`,
-        duration: parseDuration(result.lengthText),
-        thumbnailUrl: result.thumbnail.startsWith("//")
-          ? `https:${result.thumbnail}`
-          : result.thumbnail,
-        addedAt: index,
-        publishedAt: undefined,
-        publishedTimeText: result.publishedTime,
-      })),
-    [searchResults]
+      searchResults.flatMap<Track>((result, index) => {
+        if (result.source === "spotify") {
+          if (result.resultType !== "track") return [];
+          return [
+            {
+              id: result.id,
+              title: result.title,
+              author: catalogAuthorNames(result.authors),
+              authorUrl: result.authors[0]?.url ?? result.url,
+              duration: result.duration,
+              thumbnailUrl: catalogPrimaryImage(result.images) ?? "",
+              addedAt: index,
+              source: "spotify" as const,
+            },
+          ];
+        }
+        return [
+          {
+            id: result.id,
+            title: result.title,
+            author: catalogAuthorNames(result.authors),
+            authorUrl: result.authors[0]?.url ?? result.url,
+            duration: parseDuration(result.durationText),
+            thumbnailUrl: catalogPrimaryImage(result.images) ?? "",
+            addedAt: index,
+            publishedAt: undefined,
+            publishedTimeText: result.publishedTimeText,
+            source: "youtube" as const,
+          },
+        ];
+      }),
+    [searchResults],
   );
 
   React.useEffect(() => {
     ensurePlaylist(
       SEARCH_RESULTS_PLAYLIST_ID,
       "Search Results",
-      "YouTube video search results",
-      searchTracks
+      `${searchSource === "spotify" ? "Spotify" : "YouTube"} search results`,
+      searchTracks,
     );
     const playlistState = usePlaylistStore.getState();
-    const isPlayingFromSearch =
-      playlistState.currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID;
-    const currentTrack = isPlayingFromSearch
-      ? playlistState.getCurrentTrack()
-      : null;
+    const isPlayingFromSearch = playlistState.currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID;
+    const currentTrack = isPlayingFromSearch ? playlistState.getCurrentTrack() : null;
 
     // Keep the currently playing search track in the playlist if it is not in the new results,
     // so a new search cannot implicitly switch playback to the same index in the new list.
     const nextTracks =
-      currentTrack &&
-        !searchTracks.some((track) => track.id === currentTrack.id)
+      currentTrack && !searchTracks.some((track) => track.id === currentTrack.id)
         ? [
-          ...searchTracks.slice(0, playlistState.currentTrackIndex),
-          currentTrack,
-          ...searchTracks.slice(playlistState.currentTrackIndex),
-        ]
+            ...searchTracks.slice(0, playlistState.currentTrackIndex),
+            currentTrack,
+            ...searchTracks.slice(playlistState.currentTrackIndex),
+          ]
         : searchTracks;
 
     setPlaylistTracks(SEARCH_RESULTS_PLAYLIST_ID, nextTracks);
-  }, [ensurePlaylist, searchTracks, setPlaylistTracks]);
+  }, [ensurePlaylist, searchSource, searchTracks, setPlaylistTracks]);
 
   if (!hasMounted || !apiReady) {
     return <AppLoadingUI />;
@@ -104,14 +123,16 @@ export default function Home() {
   return (
     <main
       className="h-screen w-screen grid grid-rows-1"
-      style={{
-        "--v4-sidebar-width": `${sidebarCollapsed ? V4_SIDEBAR_COLLAPSED_WIDTH : V4_SIDEBAR_WIDTH}px`,
-        "--v4-header-height": `${V4_HEADER_HEIGHT}px`,
-        gridTemplateColumns: `var(--v4-sidebar-width) 1fr`,
-        padding: V4_PAGE_P,
-        gap: V4_PAGE_P,
-        transition: "grid-template-columns 350ms cubic-bezier(0.4,0,0.2,1)",
-      } as React.CSSProperties}
+      style={
+        {
+          "--v4-sidebar-width": `${sidebarCollapsed ? V4_SIDEBAR_COLLAPSED_WIDTH : V4_SIDEBAR_WIDTH}px`,
+          "--v4-header-height": `${V4_HEADER_HEIGHT}px`,
+          gridTemplateColumns: `var(--v4-sidebar-width) 1fr`,
+          padding: V4_PAGE_P,
+          gap: V4_PAGE_P,
+          transition: "grid-template-columns 350ms cubic-bezier(0.4,0,0.2,1)",
+        } as React.CSSProperties
+      }
     >
       <AnimatedBackground />
 
@@ -146,7 +167,7 @@ export default function Home() {
             <V1Sidebar />
             <motion.div
               key="main-content"
-              initial={{ opacity: 0, }}
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
               exit={{ opacity: 0, transition: { duration: 0.3, ease: EASING_EASE_OUT } }}
               className={cn("flex min-h-0 flex-col z-10 isolate relative")}
