@@ -1,4 +1,5 @@
 export interface YTPlayer {
+  destroy?: () => void;
   playVideo: () => void;
   pauseVideo: () => void;
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;

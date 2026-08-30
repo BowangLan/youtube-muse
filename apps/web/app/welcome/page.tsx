@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useYouTubePlayer } from "@/hooks/use-youtube-player";
+import { usePlaybackSession } from "@/hooks/use-playback-session";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { useInitializePlaylist } from "@/hooks/use-initialize-playlist";
 import { PlaylistSection } from "./playlist-section";
@@ -43,7 +43,7 @@ const ClockAndDate = () => {
 
 export default function Home() {
   // Initialize YouTube player
-  useYouTubePlayer();
+  usePlaybackSession();
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();

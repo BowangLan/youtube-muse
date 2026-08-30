@@ -1,11 +1,19 @@
 import type { YTPlayer } from "@/lib/types/youtube"
-import type { PlaybackAdapter } from "./playback-adapters"
+import type { PlaybackAdapter } from "@/lib/playback-session/types"
 import { normalizeVolume100 } from "./volume"
 
 export function createYouTubeAdapter(
   getPlayer: () => YTPlayer | null
 ): PlaybackAdapter {
   return {
+    read: () => {
+      const player = getPlayer()
+      if (!player) return null
+      return {
+        trackId: player.getVideoData().video_id,
+        currentTime: player.getCurrentTime(),
+      }
+    },
     play: () => {
       getPlayer()?.playVideo()
     },

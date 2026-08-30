@@ -700,12 +700,14 @@ export async function startPlayback(
   deviceId: string,
   trackId: string,
   positionMs = 0,
+  signal?: AbortSignal,
 ) {
   await spotifyFetch<void>(
     accessToken,
     `/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
     {
       method: "PUT",
+      signal,
       body: JSON.stringify({
         uris: [`spotify:track:${trackId}`],
         position_ms: positionMs,

@@ -38,6 +38,8 @@ export type PlayerCommand =
 
 export type PlayerEvent =
   | { type: "ApiReady" }
+  | { type: "SourceAvailabilityChanged"; ready: boolean }
+  | { type: "SelectionCleared" }
   | { type: "PlayerReady"; duration: number }
   | { type: "PlayerStateChanged"; state: PlaybackState; duration?: number }
   | { type: "PlayerLoadFailed"; reason?: string }
@@ -66,7 +68,9 @@ export type PlayerEvent =
   | { type: "SliceBoundaryReached" }
 
 export interface PlayerState {
+  /** YouTube script bootstrap flag, retained for the existing startup screen. */
   apiReady: boolean
+  /** Readiness of the selected playback source, not YouTube's readiness. */
   playerReady: boolean
   isPlaying: boolean
   pendingPlayState: boolean | null
@@ -88,6 +92,9 @@ export interface PlayerState {
     autoRepeat: boolean
   }
 }
+
+/** UI intent and bootstrap notification; source events use a scoped connection. */
+export type PlayerAction = Extract<PlayerEvent, { type: `User${string}` | "ApiReady" }>;
 
 export const initialPlayerState: PlayerState = {
   apiReady: false,

@@ -6,7 +6,10 @@ export const PLAYER_CONTAINER_ID = "youtube-player-container";
 let cachedElement: HTMLDivElement | null = null;
 
 export const setYouTubePlayerElement = (element: HTMLElement | null) => {
-  if (!element) return;
+  if (!element) {
+    cachedElement = null;
+    return;
+  }
   if (element instanceof HTMLDivElement) {
     cachedElement = element;
     return;

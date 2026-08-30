@@ -1,30 +1,24 @@
-import { create } from "zustand"
-import type { PlayerCommand, PlayerEvent, PlayerState } from "@/lib/player-core/types"
-import { assertPlayerInvariants } from "@/lib/player-core/invariants"
-import { createPlayerState, reducePlayerState } from "@/lib/player-core/reduce"
+import { create } from "zustand";
+import type { PlayerAction, PlayerState } from "@/lib/player-core/types";
+import { createPlaybackSession } from "@/lib/playback-session/session";
+import { usePlaylistStore } from "@/lib/store/playlist-store";
 
-type CommandRunner = (commands: PlayerCommand[]) => void
-
-let commandRunner: CommandRunner = () => {}
-
-export const setPlayerCommandRunner = (runner: CommandRunner) => {
-  commandRunner = runner
-}
+export const playbackSession = createPlaybackSession({
+  queue: {
+    next: () => usePlaylistStore.getState().playNext(),
+    previous: () => usePlaylistStore.getState().playPrevious(),
+    repeatMode: () => usePlaylistStore.getState().repeatMode,
+  },
+});
 
 interface PlayerStore extends PlayerState {
-  dispatch: (event: PlayerEvent) => void
+  dispatch: (event: PlayerAction) => void;
 }
 
-export const usePlayerStore = create<PlayerStore>((set, get) => ({
-  ...createPlayerState(),
-  dispatch: (event) => {
-    const result = reducePlayerState(get(), event)
+// Compatibility view: controls retain the same state and dispatch.
+export const usePlayerStore = create<PlayerStore>(() => ({
+  ...playbackSession.getState(),
+  dispatch: playbackSession.dispatch,
+}));
 
-    if (process.env.NODE_ENV !== "production") {
-      assertPlayerInvariants(result.state)
-    }
-
-    set(result.state)
-    commandRunner(result.commands)
-  },
-}))
+playbackSession.subscribe((state) => usePlayerStore.setState(state));

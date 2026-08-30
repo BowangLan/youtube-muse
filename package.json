@@ -12,6 +12,7 @@
     "build": "turbo build",
     "build:web": "bun --filter @youtube-muse/web build",
     "lint": "oxlint .",
+    "test": "bun run --cwd apps/web test",
     "lint:fix": "oxlint . --fix",
     "lint:framework": "bun run --cwd apps/web lint:next",
     "start:web": "bun --filter @youtube-muse/web start",

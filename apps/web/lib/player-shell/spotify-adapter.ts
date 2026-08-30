@@ -1,86 +1,108 @@
-import type { PlaybackAdapter } from "./playback-adapters"
-import { startPlayback } from "@/lib/spotify/api"
-import { useSpotifyStore } from "@/lib/store/spotify-store"
-import { useSpotifyPlayerStore } from "@/lib/store/spotify-player-store"
-import { usePlayerStore } from "@/lib/store/player-store"
-import { normalizeVolume1 } from "./volume"
+import type { PlaybackAdapter, PlaybackObservation } from "@/lib/playback-session/types";
+import { normalizeVolume1 } from "./volume";
 
-/**
- * Drives the Spotify Web Playback SDK device.
- *
- * Spotify has no "cue without playing" API — `PUT /me/player/play` always
- * starts playback. So `load` with autoplay starts immediately, while `load`
- * without autoplay only remembers the track; the deferred start happens on
- * the next `play()`. `loadedTrackId` tracks what the device is actually
- * playing so `play()` can distinguish resume from fresh start.
- */
-export function createSpotifyAdapter(): PlaybackAdapter {
-  let pendingTrackId: string | null = null
-  let loadedTrackId: string | null = null
-  let loadSeq = 0
+export function spotifyObservation(state: SpotifySDK.WebPlaybackState): PlaybackObservation {
+  return {
+    trackId: state.track_window.current_track?.uri.replace("spotify:track:", "") ?? "",
+    state: state.loading ? "buffering" : state.paused ? "paused" : "playing",
+    currentTime: state.position / 1000,
+    duration: state.duration / 1000,
+  };
+}
 
-  const getPlayer = () => useSpotifyPlayerStore.getState().getPlayer()
+interface SpotifyDependencies {
+  getPlayer: () => Pick<
+    SpotifySDK.Player,
+    "resume" | "pause" | "seek" | "setVolume" | "getCurrentState"
+  > | null;
+  getDeviceId: () => string | null;
+  getAccessToken: () => Promise<string | null>;
+  startPlayback: (
+    token: string,
+    deviceId: string,
+    trackId: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
+}
 
-  const startTrack = async (trackId: string) => {
-    const seq = ++loadSeq
-    const { deviceId } = useSpotifyPlayerStore.getState()
-    const accessToken = await useSpotifyStore.getState().getValidAccessToken()
-    if (!deviceId || !accessToken) {
-      usePlayerStore.getState().dispatch({
-        type: "PlayerLoadFailed",
-        reason: "Spotify player is not ready",
-      })
-      return
-    }
-    try {
-      await startPlayback(accessToken, deviceId, trackId)
-      if (seq !== loadSeq) return // superseded by a newer load
-      loadedTrackId = trackId
-      pendingTrackId = null
-    } catch (error) {
-      if (seq !== loadSeq) return
-      const status = (error as Error & { status?: number }).status
-      usePlayerStore.getState().dispatch({
-        type: "PlayerLoadFailed",
-        reason:
+/** The SDK has no cue operation: remember a non-autoplay load until play. */
+export function createSpotifyAdapter(dependencies: SpotifyDependencies): PlaybackAdapter {
+  const { getPlayer, getDeviceId, getAccessToken, startPlayback } = dependencies;
+  let selection: {
+    id: string;
+    signal: AbortSignal;
+    loaded: boolean;
+    starting: Promise<void> | null;
+  } | null = null;
+  let hasContext = false;
+  let wantsPlayback = false;
+
+  const startTrack = () => {
+    const track = selection;
+    if (!track || track.signal.aborted) return;
+    if (track.starting) return track.starting;
+    track.starting = (async () => {
+      const deviceId = getDeviceId();
+      const token = await getAccessToken();
+      if (track.signal.aborted || selection !== track) return;
+      if (!deviceId || !token) throw new Error("Spotify player is not ready");
+      try {
+        await startPlayback(token, deviceId, track.id, track.signal);
+        if (track.signal.aborted || selection !== track) return;
+        track.loaded = true;
+        hasContext = true;
+        // A pause can arrive while the remote start is in flight.
+        if (!wantsPlayback) await getPlayer()?.pause();
+      } catch (error) {
+        if (track.signal.aborted || selection !== track) return;
+        const status = (error as Error & { status?: number }).status;
+        throw new Error(
           status === 403
             ? "Spotify playback requires a Premium account"
             : `Failed to start Spotify playback (${status ?? "network error"})`,
-      })
-    }
-  }
+        );
+      } finally {
+        track.starting = null;
+      }
+    })();
+    return track.starting;
+  };
 
   return {
+    endsByRewinding: true,
     play: () => {
-      if (pendingTrackId) {
-        void startTrack(pendingTrackId)
-        return
-      }
-      if (loadedTrackId) {
-        void getPlayer()?.resume()
-      }
+      wantsPlayback = true;
+      if (!selection || selection.signal.aborted) return;
+      return selection.loaded ? getPlayer()?.resume() : startTrack();
     },
-    pause: () => {
-      // The SDK errors ("no list was loaded") on transport commands sent to
-      // a device with no loaded context — e.g. pauseOtherSources() on a
-      // source switch before any Spotify track has played.
-      if (!loadedTrackId) return
-      void getPlayer()?.pause()
+    pause: async () => {
+      wantsPlayback = false;
+      // The SDK rejects pause/seek on a device that has never loaded a context.
+      if (hasContext) return getPlayer()?.pause();
+      const player = getPlayer();
+      const state = await player?.getCurrentState();
+      if (state) {
+        hasContext = true;
+        // A newer play/load may have superseded this asynchronous context check.
+        if (!wantsPlayback) await player?.pause();
+      }
     },
     seek: (seconds) => {
-      if (!loadedTrackId) return
-      void getPlayer()?.seek(Math.max(0, Math.round(seconds * 1000)))
+      if (selection?.loaded) return getPlayer()?.seek(Math.max(0, Math.round(seconds * 1000)));
     },
-    load: (trackRef, autoplay) => {
-      if (autoplay) {
-        void startTrack(trackRef)
-      } else {
-        pendingTrackId = trackRef
-        loadedTrackId = null
-      }
+    load: (id, autoplay, signal) => {
+      selection = { id, signal, loaded: false, starting: null };
+      wantsPlayback = autoplay;
+      if (autoplay) return startTrack();
+      if (hasContext) return getPlayer()?.pause();
     },
-    setVolume: (volume) => {
-      void getPlayer()?.setVolume(normalizeVolume1(volume))
+    setVolume: (volume) => getPlayer()?.setVolume(normalizeVolume1(volume)),
+    read: async () => {
+      const state = await getPlayer()?.getCurrentState();
+      if (!state) return null;
+      // Observed SDK context also permits silencing a late remote start.
+      hasContext = true;
+      return spotifyObservation(state);
     },
-  }
+  };
 }

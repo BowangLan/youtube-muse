@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { useYouTubePlayer } from "@/hooks/use-youtube-player";
+import { usePlaybackSession } from "@/hooks/use-playback-session";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { AnimatedPlayerHeader } from "@/components/player/animated-player-header";
 import { PlaylistSection } from "@/components/playlist/playlist-section";
@@ -21,7 +21,7 @@ export default function Home() {
   usePlaylistStore();
 
   // Initialize YouTube player
-  useYouTubePlayer();
+  usePlaybackSession();
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();

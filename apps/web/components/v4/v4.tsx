@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { usePlaylistStore } from "@/lib/store/playlist-store";
-import { useYouTubePlayer } from "@/hooks/use-youtube-player";
-import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
+import { usePlaybackSession } from "@/hooks/use-playback-session";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { usePlayerStore } from "@/lib/store/player-store";
 import { AppLoadingUI } from "@/components/layout/app-loading-ui";
@@ -45,8 +44,7 @@ export default function Home() {
   const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
   const sidebarCollapsed = useV4AppStateStore((state) => state.sidebarCollapsed);
 
-  useYouTubePlayer();
-  useSpotifyPlayer();
+  usePlaybackSession();
   useKeyboardShortcuts();
   useInitializePlaylist();
 

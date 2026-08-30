@@ -2,7 +2,7 @@ import type { PlayerCommand, PlayerEvent, PlayerState } from "./types"
 import { initialPlayerState } from "./types"
 
 /* eslint-disable no-console */
-const DEBUG_PLAYER = true
+const DEBUG_PLAYER = false
 const debug = (...args: unknown[]) => {
   if (DEBUG_PLAYER) console.log("[player-reduce]", ...args)
 }
@@ -30,7 +30,7 @@ const applyDerivedState = (state: PlayerState): PlayerState => {
   }
 }
 
-export const createPlayerState = () => initialPlayerState
+export const createPlayerState = () => ({ ...initialPlayerState, sliceRepeat: { ...initialPlayerState.sliceRepeat } })
 
 export function reducePlayerState(
   state: PlayerState,
@@ -40,6 +40,20 @@ export function reducePlayerState(
   const commands: PlayerCommand[] = []
 
   switch (event.type) {
+    case "SourceAvailabilityChanged": {
+      nextState.playerReady = event.ready
+      if (!event.ready) nextState.observedPlayback = "paused"
+      break
+    }
+    case "SelectionCleared": {
+      nextState.mode = { tag: "uninitialized" }
+      nextState.desiredPlayback = "paused"
+      nextState.observedPlayback = "paused"
+      nextState.currentTime = 0
+      nextState.duration = 0
+      nextState.playerReady = false
+      break
+    }
     case "ApiReady": {
       nextState.apiReady = true
       break
@@ -115,9 +129,7 @@ export function reducePlayerState(
       nextState.currentTime = 0
       nextState.duration = 0
       nextState.observedPlayback = "paused"
-      if (event.autoplay) {
-        nextState.desiredPlayback = "playing"
-      }
+      nextState.desiredPlayback = event.autoplay ? "playing" : "paused"
 
       debug("TrackSelected", {
         videoId: event.videoId,
@@ -134,10 +146,6 @@ export function reducePlayerState(
           autoplay: event.autoplay,
           source,
         })
-        // Each backend holds its own volume; sync it when the source changes
-        if (source !== state.activeSource) {
-          commands.push({ type: "SetVolume", volume: state.volume })
-        }
       } else {
         debug("TrackSelected: Load DEFERRED (player not ready)")
       }
