@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { usePlaylistStore } from "@/lib/store/playlist-store";
 import { usePlaybackSession } from "@/hooks/use-playback-session";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { usePlayerStore } from "@/lib/store/player-store";
@@ -17,8 +16,6 @@ import { ChannelsDataLoader } from "@/components/data-loaders/channels-data-load
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { KeyboardFeedback } from "@/components/keyboard-feedback";
 import { DesktopPlayerSync } from "@/components/desktop/desktop-player-sync";
-import { parseDuration } from "@/lib/utils/youtube";
-import { SEARCH_RESULTS_PLAYLIST_ID, useSearchStore } from "@/lib/store/search-store";
 import { cn } from "@/lib/utils";
 import { V4TabsContent } from "./v4-tabs-content";
 import V1Sidebar from "./v4-sidebar";
@@ -33,14 +30,10 @@ import {
   V4_SIDEBAR_WIDTH,
 } from "./v4-constants";
 import { V4MainContentHeader } from "./v4-main-content-header";
-import type { Track } from "@/lib/types/playlist";
-import { catalogAuthorNames, catalogPrimaryImage } from "@/lib/types/catalog-search";
 
 export default function Home() {
   const hasMounted = useHasMounted();
   const isMobile = useIsMobile();
-  const ensurePlaylist = usePlaylistStore((state) => state.ensurePlaylist);
-  const setPlaylistTracks = usePlaylistStore((state) => state.setPlaylistTracks);
   const isFocusMode = useV4AppStateStore((state) => state.isFocusMode);
   const sidebarCollapsed = useV4AppStateStore((state) => state.sidebarCollapsed);
 
@@ -49,70 +42,6 @@ export default function Home() {
   useInitializePlaylist();
 
   const apiReady = usePlayerStore((state) => state.apiReady);
-
-  const searchResults = useSearchStore((state) => state.results);
-  const searchSource = useSearchStore((state) => state.source);
-
-  const searchTracks = React.useMemo<Track[]>(
-    () =>
-      searchResults.flatMap<Track>((result, index) => {
-        if (result.source === "spotify") {
-          if (result.resultType !== "track") return [];
-          return [
-            {
-              id: result.id,
-              title: result.title,
-              author: catalogAuthorNames(result.authors),
-              authorUrl: result.authors[0]?.url ?? result.url,
-              duration: result.duration,
-              thumbnailUrl: catalogPrimaryImage(result.images) ?? "",
-              addedAt: index,
-              source: "spotify" as const,
-            },
-          ];
-        }
-        return [
-          {
-            id: result.id,
-            title: result.title,
-            author: catalogAuthorNames(result.authors),
-            authorUrl: result.authors[0]?.url ?? result.url,
-            duration: parseDuration(result.durationText),
-            thumbnailUrl: catalogPrimaryImage(result.images) ?? "",
-            addedAt: index,
-            publishedAt: undefined,
-            publishedTimeText: result.publishedTimeText,
-            source: "youtube" as const,
-          },
-        ];
-      }),
-    [searchResults],
-  );
-
-  React.useEffect(() => {
-    ensurePlaylist(
-      SEARCH_RESULTS_PLAYLIST_ID,
-      "Search Results",
-      `${searchSource === "spotify" ? "Spotify" : "YouTube"} search results`,
-      searchTracks,
-    );
-    const playlistState = usePlaylistStore.getState();
-    const isPlayingFromSearch = playlistState.currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID;
-    const currentTrack = isPlayingFromSearch ? playlistState.getCurrentTrack() : null;
-
-    // Keep the currently playing search track in the playlist if it is not in the new results,
-    // so a new search cannot implicitly switch playback to the same index in the new list.
-    const nextTracks =
-      currentTrack && !searchTracks.some((track) => track.id === currentTrack.id)
-        ? [
-            ...searchTracks.slice(0, playlistState.currentTrackIndex),
-            currentTrack,
-            ...searchTracks.slice(playlistState.currentTrackIndex),
-          ]
-        : searchTracks;
-
-    setPlaylistTracks(SEARCH_RESULTS_PLAYLIST_ID, nextTracks);
-  }, [ensurePlaylist, searchSource, searchTracks, setPlaylistTracks]);
 
   if (!hasMounted || !apiReady) {
     return <AppLoadingUI />;

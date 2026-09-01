@@ -475,6 +475,7 @@ export async function searchSpotifyCatalog(
   query: string,
   filter: SpotifySearchFilter,
   offset = 0,
+  signal?: AbortSignal,
 ): Promise<SpotifyCatalogSearchPage> {
   const type = filter === "all" ? "track,album,artist,playlist" : filter;
   const params = new URLSearchParams({
@@ -483,7 +484,7 @@ export async function searchSpotifyCatalog(
     limit: String(filter === "all" ? SEARCH_PREVIEW_SIZE : SEARCH_PAGE_SIZE),
     offset: String(offset),
   });
-  const data = await spotifyFetch<SpotifySearchResponse>(accessToken, `/search?${params}`);
+  const data = await spotifyFetch<SpotifySearchResponse>(accessToken, `/search?${params}`, { signal });
 
   if (filter === "all") {
     return {

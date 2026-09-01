@@ -16,32 +16,16 @@ import {
 } from "@/lib/store/search-store";
 import { PlaylistCardGrid } from "../playlist/playlist-card-grid";
 import { PlaylistDetailSection } from "../playlist/playlist-detail-section";
-import {
-  searchYouTubeUnofficial,
-  type SearchVideoResult,
-} from "@/app/actions/youtube-search-unofficial";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/ui/search";
 import { SpotifyFavoritesSection } from "../spotify/spotify-favorites-section";
 import { SpotifyLogo } from "../spotify/spotify-logo";
 import { Button } from "@/components/ui/button";
 import { Youtube } from "lucide-react";
-import {
-  searchSpotifyCatalog,
-  SpotifyApiError,
-  type SpotifySearchFilter,
-  type SpotifySearchType,
-} from "@/lib/spotify/api";
+import { type SpotifySearchFilter } from "@/lib/spotify/api";
 import { useSpotifyStore } from "@/lib/store/spotify-store";
 import { isSpotifyConfigured, redirectToSpotifyAuthorize } from "@/lib/spotify/auth";
 import { cn } from "@/lib/utils";
-
-function spotifySearchErrorMessage(error: unknown) {
-  if (!(error instanceof SpotifyApiError)) return "Failed to search Spotify. Please try again.";
-  if (error.status === 429) return "Spotify's search limit was reached. Try again shortly.";
-  if (error.status === 401) return "Your Spotify session expired. Reconnect and try again.";
-  return `Spotify search failed (${error.status}). Please try again.`;
-}
 
 function V4TabsContentPlaylists() {
   const intents = useCustomIntentsStore((state) => state.intentPlaylistOrder);
@@ -110,101 +94,15 @@ function SearchBar() {
   const setSource = useSearchStore((state) => state.setSource);
   const setYouTubeDuration = useSearchStore((state) => state.setYouTubeDuration);
   const setSpotifyType = useSearchStore((state) => state.setSpotifyType);
-  const startSearch = useSearchStore((state) => state.startSearch);
-  const setSearchResults = useSearchStore((state) => state.setResults);
-  const setSearchError = useSearchStore((state) => state.setError);
-  const clearSearch = useSearchStore((state) => state.clearSearch);
-  const getValidSpotifyAccessToken = useSpotifyStore((state) => state.getValidAccessToken);
+  const search = useSearchStore((state) => state.search);
   const openSearch = useV4AppStateStore((state) => state.openSearch);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      const normalizedQuery = query.trim();
-      if (!normalizedQuery) {
-        clearSearch();
-        return;
-      }
-      startSearch(normalizedQuery);
-      try {
-        if (source === "spotify") {
-          const accessToken = await getValidSpotifyAccessToken();
-          if (!accessToken) {
-            setSearchError("Connect Spotify to search its catalog.");
-            openSearch();
-            return;
-          }
-          const page = await searchSpotifyCatalog(accessToken, normalizedQuery, spotifyType);
-          setSearchResults(page.results, page);
-          openSearch();
-          return;
-        }
-
-        const { results, error } = await searchYouTubeUnofficial(
-          normalizedQuery,
-          "video",
-          youtubeDuration,
-        );
-        if (error) {
-          setSearchError(error);
-          return;
-        }
-        const videoResults = results.filter((r): r is SearchVideoResult => "videoId" in r);
-        const filteredResults = videoResults.filter((r) => /^[a-zA-Z0-9_-]{11}$/.test(r.videoId));
-        const uniqueResults = Array.from(
-          new Map(filteredResults.map((r) => [r.videoId, r])).values(),
-        );
-        setSearchResults(
-          uniqueResults.map((result) => ({
-            source: "youtube" as const,
-            resultType: "video" as const,
-            id: result.videoId,
-            title: result.title,
-            url: result.url,
-            authors: [
-              {
-                id: result.channelId || null,
-                name: result.channelTitle,
-                url: result.channelId
-                  ? `https://www.youtube.com/channel/${result.channelId}`
-                  : null,
-                images: [],
-                raw: result.raw.ownerText?.runs?.[0] ?? null,
-              },
-            ],
-            images: result.raw.thumbnail.thumbnails.map((image) => ({
-              url: image.url.startsWith("//") ? `https:${image.url}` : image.url,
-              width: image.width,
-              height: image.height,
-            })),
-            raw: result.raw,
-            publishedTimeText: result.publishedTime,
-            viewCountText: result.viewCount,
-            durationText: result.lengthText,
-          })),
-        );
-        openSearch();
-      } catch (error) {
-        setSearchError(
-          source === "spotify"
-            ? spotifySearchErrorMessage(error)
-            : "Failed to search YouTube. Please try again.",
-        );
-        openSearch();
-      }
+      if (await search()) openSearch();
     },
-    [
-      query,
-      source,
-      spotifyType,
-      youtubeDuration,
-      clearSearch,
-      getValidSpotifyAccessToken,
-      openSearch,
-      setSearchError,
-      setSearchResults,
-      startSearch,
-    ],
+    [search, openSearch],
   );
 
   const sourceOptions: Array<{ value: SearchSource; label: string; icon: React.ReactNode }> = [
@@ -223,34 +121,6 @@ function SearchBar() {
     { value: "artist", label: "Artists" },
     { value: "playlist", label: "Playlists" },
   ];
-
-  const handleSpotifyFilterChange = useCallback(
-    async (filter: SpotifySearchFilter) => {
-      setSpotifyType(filter);
-      const normalizedQuery = query.trim();
-      if (!normalizedQuery) return;
-      startSearch(normalizedQuery);
-      try {
-        const accessToken = await getValidSpotifyAccessToken();
-        if (!accessToken) {
-          setSearchError("Connect Spotify to search its catalog.");
-          return;
-        }
-        const page = await searchSpotifyCatalog(accessToken, normalizedQuery, filter);
-        setSearchResults(page.results, page);
-      } catch (error) {
-        setSearchError(spotifySearchErrorMessage(error));
-      }
-    },
-    [
-      getValidSpotifyAccessToken,
-      query,
-      setSearchError,
-      setSearchResults,
-      setSpotifyType,
-      startSearch,
-    ],
-  );
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-3xl space-y-3">
@@ -322,7 +192,7 @@ function SearchBar() {
                   if (source === "youtube") {
                     setYouTubeDuration(filter.value as YouTubeDurationFilter);
                   } else {
-                    void handleSpotifyFilterChange(filter.value as SpotifySearchFilter);
+                    void setSpotifyType(filter.value as SpotifySearchFilter);
                   }
                 }}
                 className={cn(
@@ -348,110 +218,17 @@ function V4TabsContentSearch() {
   const results = useSearchStore((state) => state.results);
   const spotifyType = useSearchStore((state) => state.spotifyType);
   const setSpotifyType = useSearchStore((state) => state.setSpotifyType);
-  const startSearch = useSearchStore((state) => state.startSearch);
-  const setSearchResults = useSearchStore((state) => state.setResults);
   const isLoadingMore = useSearchStore((state) => state.isLoadingMore);
   const hasMore = useSearchStore((state) => state.hasMore);
-  const nextOffset = useSearchStore((state) => state.nextOffset);
   const loadMoreError = useSearchStore((state) => state.loadMoreError);
-  const startLoadingMore = useSearchStore((state) => state.startLoadingMore);
-  const appendResults = useSearchStore((state) => state.appendResults);
-  const setLoadMoreError = useSearchStore((state) => state.setLoadMoreError);
-  const setSearchError = useSearchStore((state) => state.setError);
+  const loadMore = useSearchStore((state) => state.loadMore);
+  const playResult = useSearchStore((state) => state.playResult);
   const spotifyTokens = useSpotifyStore((state) => state.tokens);
-  const getValidSpotifyAccessToken = useSpotifyStore((state) => state.getValidAccessToken);
 
   const currentPlaylistId = usePlaylistStore((state) => state.currentPlaylistId);
   const currentTrackId = usePlaylistStore((state) => state.getCurrentTrack()?.id ?? null);
-  const setCurrentPlaylist = usePlaylistStore((state) => state.setCurrentPlaylist);
-  const setCurrentTrackIndex = usePlaylistStore((state) => state.setCurrentTrackIndex);
 
   const currentResultId = currentPlaylistId === SEARCH_RESULTS_PLAYLIST_ID ? currentTrackId : null;
-
-  const handleResultClick = (index: number) => {
-    setCurrentPlaylist(SEARCH_RESULTS_PLAYLIST_ID);
-    setCurrentTrackIndex(index);
-  };
-
-  const handleSpotifySectionMore = useCallback(
-    async (type: SpotifySearchType) => {
-      const normalizedQuery = query.trim();
-      if (!normalizedQuery) return;
-      setSpotifyType(type);
-      startSearch(normalizedQuery);
-      try {
-        const accessToken = await getValidSpotifyAccessToken();
-        if (!accessToken) {
-          setSearchError("Connect Spotify to search its catalog.");
-          return;
-        }
-        const page = await searchSpotifyCatalog(accessToken, normalizedQuery, type);
-        setSearchResults(page.results, page);
-      } catch (error) {
-        setSearchError(spotifySearchErrorMessage(error));
-      }
-    },
-    [
-      getValidSpotifyAccessToken,
-      query,
-      setSearchError,
-      setSearchResults,
-      setSpotifyType,
-      startSearch,
-    ],
-  );
-
-  const handleLoadMore = useCallback(async () => {
-    const normalizedQuery = query.trim();
-    if (
-      source !== "spotify" ||
-      spotifyType === "all" ||
-      !normalizedQuery ||
-      isSearching ||
-      isLoadingMore ||
-      !hasMore
-    ) {
-      return;
-    }
-
-    startLoadingMore();
-    try {
-      const accessToken = await getValidSpotifyAccessToken();
-      if (!accessToken) {
-        setLoadMoreError("Spotify session expired. Reconnect to continue loading results.");
-        return;
-      }
-      const page = await searchSpotifyCatalog(
-        accessToken,
-        normalizedQuery,
-        spotifyType,
-        nextOffset,
-      );
-      const currentSearch = useSearchStore.getState();
-      if (
-        currentSearch.source !== "spotify" ||
-        currentSearch.spotifyType !== spotifyType ||
-        currentSearch.isSearching
-      ) {
-        return;
-      }
-      appendResults(page.results, page);
-    } catch (error) {
-      setLoadMoreError(spotifySearchErrorMessage(error));
-    }
-  }, [
-    appendResults,
-    getValidSpotifyAccessToken,
-    hasMore,
-    isLoadingMore,
-    isSearching,
-    nextOffset,
-    query,
-    setLoadMoreError,
-    source,
-    spotifyType,
-    startLoadingMore,
-  ]);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -466,9 +243,9 @@ function V4TabsContentSearch() {
         loadMoreError={loadMoreError}
         results={results}
         currentResultId={currentResultId}
-        onResultClick={handleResultClick}
-        onSpotifySectionMore={(type) => void handleSpotifySectionMore(type)}
-        onLoadMore={() => void handleLoadMore()}
+        onResultClick={playResult}
+        onSpotifySectionMore={(type) => void setSpotifyType(type)}
+        onLoadMore={() => void loadMore()}
         searchBar={<SearchBar />}
         emptyState={
           source === "spotify" && !spotifyTokens ? (
